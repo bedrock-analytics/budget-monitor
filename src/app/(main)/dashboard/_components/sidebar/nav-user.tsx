@@ -1,5 +1,7 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+
 import { CircleUser, CreditCard, EllipsisVertical, LogOut, MessageSquareDot } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -24,6 +26,7 @@ export function NavUser({
     readonly avatar: string;
   };
 }) {
+  const router = useRouter();
   const { isMobile } = useSidebar();
 
   return (
@@ -80,7 +83,7 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push("/auth/logout")}>
               <LogOut />
               Log out
             </DropdownMenuItem>
