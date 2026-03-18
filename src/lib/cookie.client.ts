@@ -8,10 +8,9 @@ export function setClientCookie(key: string, value: string, days = 7) {
 }
 
 export function getClientCookie(key: string) {
-  return document.cookie
-    .split("; ")
-    .find((row) => row.startsWith(`${key}=`))
-    ?.split("=")[1];
+  const row = document.cookie.split("; ").find((r) => r.startsWith(`${key}=`));
+  if (!row) return undefined;
+  return row.split("=").slice(1).join("=");
 }
 
 export function deleteClientCookie(key: string) {
