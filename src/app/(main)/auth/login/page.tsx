@@ -1,10 +1,16 @@
-import { Globe } from "lucide-react";
+import { redirect } from "next/navigation";
 
+import { Globe } from "lucide-react";
+import { getServerSession } from "next-auth";
+
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { APP_CONFIG } from "@/config/app-config";
 
 import { MicrosoftButton } from "../_components/social-auth/microsoft-button";
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const session = await getServerSession(authOptions);
+  if (session) redirect("/chat");
   return (
     <>
       <div className="mx-auto flex w-full flex-col justify-center space-y-8 sm:w-[350px]">

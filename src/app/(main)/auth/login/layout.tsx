@@ -13,7 +13,7 @@ export default function Layout({ children }: Readonly<{ children: ReactNode }>) 
           <div className="absolute top-10 space-y-1 px-10 text-primary-foreground">
             <Command className="size-10" />
             <h1 className="font-medium text-2xl">{APP_CONFIG.name}</h1>
-            <p className="text-sm">Design. Build. Launch. Repeat.</p>
+            {/* <p className="text-sm">Design. Build. Launch. Repeat.</p> */}
           </div>
 
           <div className="absolute bottom-10 flex w-full justify-between px-10">

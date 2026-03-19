@@ -8,6 +8,7 @@ import { APP_CONFIG } from "@/config/app-config";
 import { fontVars } from "@/lib/fonts/registry";
 import { PREFERENCE_DEFAULTS } from "@/lib/preferences/preferences-config";
 import { MsalAuthProvider } from "@/providers/msal-auth-provider";
+import { NextAuthSessionProvider } from "@/providers/next-auth-session-provider";
 import { ThemeBootScript } from "@/scripts/theme-boot";
 import { PreferencesStoreProvider } from "@/stores/preferences/preferences-provider";
 
@@ -40,18 +41,20 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
       <body className={`${fontVars} min-h-screen antialiased`}>
         <Suspense>
           <MsalAuthProvider>
-            <TooltipProvider>
-              <PreferencesStoreProvider
-                themeMode={theme_mode}
-                themePreset={theme_preset}
-                contentLayout={content_layout}
-                navbarStyle={navbar_style}
-                font={font}
-              >
-                {children}
-                <Toaster />
-              </PreferencesStoreProvider>
-            </TooltipProvider>
+            <NextAuthSessionProvider>
+              <TooltipProvider>
+                <PreferencesStoreProvider
+                  themeMode={theme_mode}
+                  themePreset={theme_preset}
+                  contentLayout={content_layout}
+                  navbarStyle={navbar_style}
+                  font={font}
+                >
+                  {children}
+                  <Toaster />
+                </PreferencesStoreProvider>
+              </TooltipProvider>
+            </NextAuthSessionProvider>
           </MsalAuthProvider>
         </Suspense>
       </body>
