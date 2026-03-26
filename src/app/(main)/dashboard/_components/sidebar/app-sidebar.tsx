@@ -2,7 +2,15 @@
 
 import Link from "next/link";
 
-import { CircleHelp, ClipboardList, Command, Database, File, Search, Settings } from "lucide-react";
+import {
+  CircleHelp,
+  ClipboardList,
+  Command,
+  Database,
+  File,
+  Search,
+  Settings,
+} from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useShallow } from "zustand/react/shallow";
 
@@ -20,8 +28,8 @@ import { sidebarItems } from "@/navigation/sidebar/sidebar-items";
 import { usePreferencesStore } from "@/stores/preferences/preferences-provider";
 
 import { NavMain } from "./nav-main";
+import { ChatHistory } from "./chat-history";
 import { NavUser } from "./nav-user";
-import { SidebarSupportCard } from "./sidebar-support-card";
 
 const _data = {
   navSecondary: [
@@ -61,7 +69,7 @@ const _data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
 
   const rootUser = {
     name: session?.user?.name ?? "",
@@ -88,7 +96,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenuButton asChild>
               <Link prefetch={false} href="/dashboard/default">
                 <Command />
-                <span className="font-semibold text-base">{APP_CONFIG.name}</span>
+                <span className="font-semibold text-base">
+                  {APP_CONFIG.name}
+                </span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -96,6 +106,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={sidebarItems} />
+        <ChatHistory items={[]} />
         {/* <NavDocuments items={data.documents} /> */}
         {/* <NavSecondary items={data.navSecondary} className="mt-auto" /> */}
       </SidebarContent>

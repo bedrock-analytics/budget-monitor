@@ -29,7 +29,13 @@ export function formatCurrency(
     noDecimals?: boolean;
   },
 ) {
-  const { currency = "USD", locale = "en-US", minimumFractionDigits, maximumFractionDigits, noDecimals } = opts ?? {};
+  const {
+    currency = "USD",
+    locale = "en-US",
+    minimumFractionDigits,
+    maximumFractionDigits,
+    noDecimals,
+  } = opts ?? {};
 
   const formatOptions: Intl.NumberFormatOptions = {
     style: "currency",
@@ -40,3 +46,40 @@ export function formatCurrency(
 
   return new Intl.NumberFormat(locale, formatOptions).format(amount);
 }
+
+export const formatTHB = (value: number): string => {
+  // const abs = Math.abs(value);
+  // const sign = value < 0 ? "-" : "";
+
+  // if (abs >= 1_000_000) {
+  //   return `${sign}฿${(abs / 1_000_000).toFixed(2)}M`;
+  // }
+  // if (abs >= 1_000) {
+  //   return `${sign}฿${(abs / 1_000).toFixed(2)}K`;
+  // }
+  // return `${sign}฿${abs.toFixed(2)}`;
+  value = Number(value);
+
+  return value.toLocaleString("th-TH", {
+    style: "currency",
+    currency: "THB",
+  });
+};
+
+export const formatUSD = (value: number): string => {
+  // const abs = Math.abs(value);
+  // const sign = value < 0 ? "-" : "";
+
+  // if (abs >= 1_000_000) {
+  //   return `${sign}฿${(abs / 1_000_000).toFixed(2)}M`;
+  // }
+  // if (abs >= 1_000) {
+  //   return `${sign}฿${(abs / 1_000).toFixed(2)}K`;
+  // }
+  // return `${sign}฿${abs.toFixed(2)}`;
+  value = Number(value);
+  return value.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+  });
+};

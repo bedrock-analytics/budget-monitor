@@ -1,0 +1,89 @@
+# Default values for charts.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+environment: dev
+
+image:
+  repository: 309100466116.dkr.ecr.ap-southeast-1.amazonaws.com/subsea-x-app
+  tag: dev-latest
+  pullPolicy: IfNotPresent
+  port:
+    - name: app
+      port: 8080
+      # https://github.com/kubernetes/enhancements/tree/master/keps/sig-network/1507-app-protocol
+      appProtocol: http
+
+
+
+env:
+      - name: NEXT_PUBLIC_AZURE_CLIENT_ID
+        valueFrom:
+            configMapKeyRef:
+                name: subsea-x-app
+                key: NEXT_PUBLIC_AZURE_CLIENT_ID
+      - name: NEXT_PUBLIC_AZURE_TENANT_ID
+        valueFrom:
+            configMapKeyRef:
+                name: subsea-x-app
+                key: NEXT_PUBLIC_AZURE_TENANT_ID
+      - name: NEXT_PUBLIC_AZURE_REDIRECT_URI
+        valueFrom:
+            configMapKeyRef:
+                name: subsea-x-app
+                key: NEXT_PUBLIC_AZURE_REDIRECT_URI
+      - name: AWS_ACCESS_KEY_ID
+        valueFrom:
+            configMapKeyRef:
+                name: subsea-x-app
+                key: AWS_ACCESS_KEY_ID
+      - name: AWS_SECRET_ACCESS_KEY
+        valueFrom:
+            configMapKeyRef:
+                name: subsea-x-app
+                key: AWS_SECRET_ACCESS_KEY
+      - name: AWS_REGION
+        valueFrom:
+            configMapKeyRef:
+                name: subsea-x-app
+                key: AWS_REGION
+      - name: KB_ID
+        valueFrom:
+            secretKeyRef:
+                name: subsea-x-app
+                key: KB_ID
+      - name: NEXTAUTH_URL
+        valueFrom:
+            secretKeyRef:
+                name: subsea-x-app
+                key: NEXTAUTH_URL
+      - name: NEXTAUTH_SECRET
+        valueFrom:
+            secretKeyRef:
+                name: subsea-x-app
+                key: NEXTAUTH_SECRET
+      - name: AZURE_CLIENT_ID
+        valueFrom:
+            secretKeyRef:
+                name: subsea-x-app
+                key: AZURE_CLIENT_ID
+      - name: AZURE_CLIENT_SECRET
+        valueFrom:
+            secretKeyRef:
+                name: subsea-x-app
+                key: AZURE_CLIENT_SECRET
+      - name: AZURE_TENANT_ID
+        valueFrom:
+            configMapKeyRef:
+                name: subsea-x-app
+                key: AZURE_TENANT_ID
+      - name: DATABASE_URL
+        valueFrom:
+            configMapKeyRef:
+                name: subsea-x-app
+                key: DATABASE_URL
+
+serviceAccount:
+    create: true
+    annotations:
+        eks.amazonaws.com/role-arn: arn:aws:iam::174466744028:role/xspector-dev-s3-fullaccess
+    name: 'x-app'

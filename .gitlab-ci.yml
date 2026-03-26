@@ -1,0 +1,57 @@
+include:
+  - project: 'cloud_arv/subsea/infra-base/pipeline-template'
+    ref: main
+    file:
+      - workflow.gitlab-ci.yml
+
+stages:
+  - test
+  - build
+  - security-test
+  - deploy
+  - post-test
+
+variables:
+  # Expected env vars: AWS_REGION, APP_NAME, DEVOPS_ACCOUNT_ID, SUBSEA_DEV_ACCOUNT_ID, SUBSEA_QA_ACCOUNT_ID, SUBSEA_PROD_ACCOUNT_ID
+  SERVICE_NAME: app
+  APP_NAME: x
+  KUBERNETES_SERVICE_ACCOUNT_OVERWRITE: $GITLAB_SA_NONPROD
+
+test:
+  image: node:22-alpine
+  variables:
+    KUBERNETES_MEMORY_LIMIT: 6Gi
+  tags:
+    - rovula-runner-devops
+  script:
+    - npm install --force
+    - npm test
+    - npm run lint:fix
+
+snyk_sca_scan:
+  script:
+    - npm install
+    - snyk test --trust-policies --policy-path=$SNYK_POLICY_PATH --severity-threshold=$SNYK_SEVERITY --org=$SNYK_BU_ID --json-file-output=sca_vuln.json
+
+build:
+  variables:
+    KUBERNETES_MEMORY_LIMIT: 6Gi
+    DOCKERFILE: Dockerfile
+
+deploy-svc:
+  extends: .deploy_helm
+  stage: deploy
+  environment:
+    name: $STAGE
+  variables:
+    # Template prerequisite variables
+    RELEASE_NAME: subsea-${APP_NAME}-${SERVICE_NAME}
+    NAMESPACE: ${STAGE}
+    HELM_REPO_NAME: oci://${HELM_REGISTRY}/helm-charts/general
+    HELM_VAR_FILE_CMD: >
+      -f ./deployments/default.yaml
+      -f ./deployments/$STAGE.yaml
+    HELM_VAR_CMD: >
+      --set image.repository=$CONTAINER_IMAGE
+      --set image.tag=${VERSION}
+    HELM_TEST: 'false'

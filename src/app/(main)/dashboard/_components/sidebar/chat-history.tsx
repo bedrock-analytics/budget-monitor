@@ -3,9 +3,7 @@
 import Link from "next/link";
 import { redirect, usePathname } from "next/navigation";
 
-import { ChevronRight, MailIcon, PlusCircleIcon } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
+import { ChevronRight } from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -30,8 +28,6 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import type { NavGroup, NavMainItem } from "@/navigation/sidebar/sidebar-items";
-
-import { v4 as uuidv4 } from "uuid";
 
 interface NavMainProps {
   readonly items: readonly NavGroup[];
@@ -176,7 +172,7 @@ const NavItemCollapsed = ({
   );
 };
 
-export function NavMain({ items }: NavMainProps) {
+export function ChatHistory({ items }: NavMainProps) {
   const path = usePathname();
   const { state, isMobile } = useSidebar();
 
@@ -191,49 +187,21 @@ export function NavMain({ items }: NavMainProps) {
     return subItems?.some((sub) => path.startsWith(sub.url)) ?? false;
   };
 
-  const createChat = async (id: string) => {
+  const getHistoryChat = async () => {
     const res = await fetch("/api/chats", {
-      method: "POST",
+      method: "GET",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ chatId: id }),
+      // body: JSON.stringify({ chatId: id }),
     });
-    return await res.json();
-  };
-
-  const onCreateChat = async () => {
-    const data = await createChat(uuidv4());
-    redirect(`/chat/${data.chat.id}`);
+    const data = await res.json();
+    // router.push(`/chat/${data.chat.id}`);
   };
 
   return (
     <>
-      <SidebarGroup>
-        <SidebarGroupContent className="flex flex-col gap-2">
-          <SidebarMenu>
-            <SidebarMenuItem className="flex items-center gap-2">
-              <SidebarMenuButton
-                tooltip="Quick Create"
-                className="min-w-8 bg-primary text-primary-foreground duration-200 ease-linear hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground"
-                onClick={onCreateChat}
-              >
-                <PlusCircleIcon />
-                <span>Quick Create</span>
-              </SidebarMenuButton>
-              <Button
-                size="icon"
-                className="h-9 w-9 shrink-0 group-data-[collapsible=icon]:opacity-0"
-                variant="outline"
-              >
-                <MailIcon />
-                <span className="sr-only">Inbox</span>
-              </Button>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
       {items.map((group) => (
-        <SidebarGroup key={group.id}>
-          {group.label && <SidebarGroupLabel>{group.label}</SidebarGroupLabel>}
+        <SidebarGroup>
+          <SidebarGroupLabel>History</SidebarGroupLabel>
           <SidebarGroupContent className="flex flex-col gap-2">
             <SidebarMenu>
               {group.items.map((item) => {

@@ -1,21 +1,7 @@
 import {
   Banknote,
-  Calendar,
-  ChartBar,
-  Fingerprint,
   Forklift,
-  Gauge,
-  GraduationCap,
-  Kanban,
-  LayoutDashboard,
-  Lock,
   type LucideIcon,
-  Mail,
-  MessageSquare,
-  ReceiptText,
-  ShoppingBag,
-  SquareArrowUpRight,
-  Users,
 } from "lucide-react";
 
 export interface NavSubItem {
@@ -93,20 +79,27 @@ export const sidebarItems: NavGroup[] = [
       //   comingSoon: true,
       // },
       {
+        title: "Budget",
+        url: "/budget",
+        icon: Banknote,
+        comingSoon: false,
+      },
+      {
         title: "Chat",
         url: "/chat",
         icon: Forklift,
         comingSoon: false,
       },
+
       {
-        title: "Budget",
-        url: "/budget",
+        title: "E-SOC",
+        url: "/e-soc",
         icon: Forklift,
         comingSoon: true,
       },
       {
-        title: "E-SOC",
-        url: "/e-soc",
+        title: "Purchase request",
+        url: "/purchase",
         icon: Forklift,
         comingSoon: true,
       },

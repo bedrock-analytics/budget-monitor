@@ -10,13 +10,15 @@ import { MicrosoftButton } from "../_components/social-auth/microsoft-button";
 
 export default async function LoginPage() {
   const session = await getServerSession(authOptions);
-  if (session) redirect("/chat");
+  if (session) redirect("/budget");
   return (
     <>
       <div className="mx-auto flex w-full flex-col justify-center space-y-8 sm:w-[350px]">
         <div className="space-y-2 text-center">
           <h1 className="font-medium text-3xl">Login to your account</h1>
-          <p className="text-muted-foreground text-sm">Please sign in with your Microsoft account to continue.</p>
+          <p className="text-muted-foreground text-sm">
+            Please sign in with your Microsoft account to continue.
+          </p>
         </div>
         <MicrosoftButton className="w-full" />
       </div>

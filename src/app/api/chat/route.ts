@@ -1,7 +1,10 @@
 // import { BedrockRuntimeClient, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime";
 import { type NextRequest, NextResponse } from "next/server";
 
-import { BedrockAgentRuntimeClient, RetrieveAndGenerateCommand } from "@aws-sdk/client-bedrock-agent-runtime";
+import {
+  BedrockAgentRuntimeClient,
+  RetrieveAndGenerateCommand,
+} from "@aws-sdk/client-bedrock-agent-runtime";
 
 const client = new BedrockAgentRuntimeClient({
   region: process.env.AWS_REGION || "ap-southeast-1",
@@ -62,9 +65,6 @@ $search_results$
 
 Question:
 $query$
-
-If the answer is not in the context, say:
-"I don't have enough information."
 
 Answer:
 `,

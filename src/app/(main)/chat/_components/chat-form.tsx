@@ -1,26 +1,98 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
-export default function ChatSection() {
+export default function ChatSection(prop: { chatId: string }) {
+  const router = useRouter();
+  const { data: session } = useSession();
+
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [chatId, setChatId] = useState<string | null>(null);
+
+  const SUGGESTIONS = [
+    "ISO",
+    "Budget 2026",
+    // "Explain quantum computing",
+    // "Give me a recipe idea",
+  ];
+
+  useEffect(() => {
+    setChatId(prop.chatId);
+    if (!prop.chatId) {
+      createChat();
+    } else {
+      getMessages(prop.chatId);
+      // const getMessage = fetchMessages({ chatId: prop.chatId });
+      // console.log("data ", getMessage);
+    }
+  }, []);
+
+  const getMessages = async (chatId: string) => {
+    const res = await fetch(`/api/chats/${chatId}/messages`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      // body: JSON.stringify({ chatId: chatId }),
+    });
+    const data = await res.json();
+    if (data.messages.length) {
+      setMessages(data.messages);
+    }
+  };
+
+  const createChat = async () => {
+    const res = await fetch("/api/chats", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      // body: JSON.stringify({ chatId: id }),
+    });
+    const data = await res.json();
+    router.push(`/chat/${data.chat.id}`);
+  };
 
   const sendMessage = async (
     content: string,
-    // nextMessages: Array<{ role: "system" | "user" | "assistant"; content: string }>,
+    // nextMessages: Array<{
+    //   role: "system" | "user" | "assistant";
+    //   content: string;
+    // }>,
   ) => {
-    console.log("content ", content);
-    const res = await fetch("/api/chat", {
+    const res = await fetch(`/api/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: content }),
+      body: JSON.stringify({ role: "user", message: content }),
     });
-    return (await res.json()) as { reply?: string; error?: string; success?: boolean };
+    await saveMessage(content, "user");
+
+    const response = (await res.json()) as {
+      reply?: string;
+      error?: string;
+      success?: boolean;
+    };
+
+    if (response.reply) {
+      await saveMessage(response?.reply, "assistant");
+    }
+    return response;
+  };
+
+  const saveMessage = async (
+    content: string,
+    role: "system" | "user" | "assistant",
+  ) => {
+    const res = await fetch(`/api/chats/${chatId}/messages`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role: role, message: content }),
+    });
+    return await res.json();
   };
 
   const handleSend = async () => {
@@ -46,7 +118,10 @@ export default function ChatSection() {
         throw new Error(response.error || "No reply from server");
       }
 
-      setMessages((prev) => [...prev, { role: "assistant", content: response.reply ?? "" }]);
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: response.reply ?? "" },
+      ]);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Failed to send message";
       setError(msg);
@@ -55,18 +130,46 @@ export default function ChatSection() {
     }
   };
 
-  const canSend = useMemo(() => input.trim().length > 0 && !isSending, [input, isSending]);
+  const canSend = useMemo(
+    () => input.trim().length > 0 && !isSending,
+    [input, isSending],
+  );
 
   return (
     <div className="@container/main flex h-[calc(100dvh-10rem)] flex-col gap-4 md:gap-6">
       <div className="flex-1 space-y-3 overflow-auto rounded-xl border bg-background p-4">
-        {messages.length === 0 ? <div className="text-muted-foreground text-sm">Ask me anything.</div> : null}
+        {messages.length === 0 ? (
+          <div className="flex h-full flex-col items-center justify-center gap-4">
+            <p className="text-muted-foreground text-sm">
+              Ask me anything, {session?.user?.name ?? ""}. ?
+            </p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {SUGGESTIONS.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  className="rounded-full border bg-muted px-4 py-2 text-sm hover:bg-accent"
+                  onClick={() => {
+                    setInput(s);
+                  }}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
         {messages.map((msg, index) => (
-          <div key={index} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+          <div
+            key={index}
+            className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+          >
             <div
               className={`max-w-[80%] whitespace-pre-wrap rounded-2xl px-4 py-2 text-sm ${
-                msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
+                msg.role === "user"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-foreground"
               }`}
             >
               {msg.content}

@@ -3,12 +3,11 @@ import packageJson from "../../package.json";
 const currentYear = new Date().getFullYear();
 
 export const APP_CONFIG = {
-  name: "X by Rovula",
+  name: "Rovula",
   version: packageJson.version,
-  copyright: `© ${currentYear}, X by Rovula.`,
+  copyright: `© ${currentYear}, Rovula.`,
   meta: {
-    title: "X by Rovula",
-    description:
-      "Studio Admin is a modern, open-source dashboard starter template built with Next.js 16, Tailwind CSS v4, and shadcn/ui. Perfect for SaaS apps, admin panels, and internal tools—fully customizable and production-ready.",
+    title: "Rovula (Thailand) Company Limited.",
+    description: "A LEADING PLATFORM SOLUTIONS FOR SUBSEA IRM TO OIL AND GAS",
   },
 };
