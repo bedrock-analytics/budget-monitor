@@ -124,7 +124,7 @@ export function BudgetDetailTable({ rows }: Props) {
                     </td>
                     <td
                       className={`px-4 py-2.5 text-right tabular-nums ${row.budgetTHB < 0 ? "text-destructive" : ""}
-                        ${row.budgetTHB === 0 ? "text-muted-foreground" : ""}
+                        ${Number(row.budgetTHB) === 0 ? "text-muted-foreground" : ""}
                         `}
                     >
                       <div>{formatTHB(row.budgetTHB)}</div>
@@ -132,7 +132,7 @@ export function BudgetDetailTable({ rows }: Props) {
                     </td>
                     <td
                       className={`px-4 py-2.5 text-right tabular-nums ${row.reservedTHB < 0 ? "text-destructive" : ""}
-                       ${row.reservedTHB === 0 ? "text-muted-foreground" : ""}
+                       ${Number(row.reservedTHB) === 0 ? "text-muted-foreground" : ""}
                        `}
                     >
                       <div>{formatTHB(row.reservedTHB)}</div>
@@ -140,15 +140,15 @@ export function BudgetDetailTable({ rows }: Props) {
                     </td>
                     <td
                       className={`px-4 py-2.5 text-right tabular-nums ${row.actualTHB < 0 ? "text-destructive" : ""}
-                       ${row.actualTHB === 0 ? "text-muted-foreground" : ""}
+                       ${Number(row.actualTHB) === 0 ? "text-muted-foreground" : ""}
                        `}
                     >
-                      <div>{formatTHB(row.actualTHB)} THB</div>
+                      <div>{formatTHB(row.actualTHB)}</div>
                       <div>{formatUSD(row.actualUSD)}</div>
                     </td>
                     <td
                       className={`px-4 py-2.5 text-right tabular-nums ${row.availableTHB < 0 ? "text-destructive" : ""}
-                       ${row.availableTHB === 0 ? "text-muted-foreground" : ""}`}
+                       ${Number(row.availableTHB) === 0 ? "text-muted-foreground" : ""}`}
                     >
                       <div>{formatTHB(row.availableTHB)}</div>
                       <div>{formatUSD(row.availableUSD)}</div>
@@ -222,7 +222,7 @@ export function BudgetDetailTable({ rows }: Props) {
                       <td
                         className={`px-4 py-2.5 text-right tabular-nums ${totalActualTHB < 0 ? "text-destructive" : ""}`}
                       >
-                        <div>{formatTHB(totalActualTHB)} THB</div>
+                        <div>{formatTHB(totalActualTHB)}</div>
                         <div>{formatUSD(totalActualUSD)}</div>
                       </td>
                       <td

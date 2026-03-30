@@ -66,17 +66,21 @@ export function BudgetProjectChart({ byProject }: Props) {
         <ChartContainer config={chartConfig} className="h-80 w-full">
           <BarChart
             data={data}
+            layout="vertical"
             margin={{ top: 4, right: 8, bottom: 4, left: 8 }}
           >
-            <CartesianGrid vertical={false} />
-            <XAxis
+            <CartesianGrid horizontal={true} />
+            <YAxis
               dataKey="name"
+              type="category"
               tickLine={false}
               axisLine={false}
               tickMargin={8}
               tick={{ fontSize: 11 }}
+              width={120}
             />
-            <YAxis
+            <XAxis
+              type="number"
               tickLine={false}
               axisLine={false}
               tickMargin={8}
@@ -98,17 +102,17 @@ export function BudgetProjectChart({ byProject }: Props) {
             <Bar
               dataKey="budgetTHB"
               fill="var(--color-budgetTHB)"
-              radius={[4, 4, 0, 0]}
+              radius={[0, 4, 4, 0]}
             />
             <Bar
               dataKey="reservedTHB"
               fill="var(--color-reservedTHB)"
-              radius={[4, 4, 0, 0]}
+              radius={[0, 4, 4, 0]}
             />
             <Bar
               dataKey="actualTHB"
               fill="var(--color-actualTHB)"
-              radius={[4, 4, 0, 0]}
+              radius={[0, 4, 4, 0]}
             />
           </BarChart>
         </ChartContainer>

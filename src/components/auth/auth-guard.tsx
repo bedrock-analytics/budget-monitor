@@ -1,23 +1,24 @@
 "use client";
 
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, use, useEffect, useState } from "react";
 
 import { useRouter } from "next/navigation";
 
-import { getClientCookie } from "@/lib/cookie.client";
+import { useSession } from "next-auth/react";
 
 export function AuthGuard({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const { data: session } = useSession();
 
   useEffect(() => {
-    const token = getClientCookie("accessToken");
-    if (!token) {
-      router.replace("/auth/login");
-    } else {
+    if (session) {
       setIsAuthorized(true);
     }
-  }, [router]);
+    if (!session) {
+      router.replace("/auth/login");
+    }
+  }, [router, session]);
 
   if (!isAuthorized) {
     return (

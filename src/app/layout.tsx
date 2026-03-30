@@ -7,7 +7,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { APP_CONFIG } from "@/config/app-config";
 import { fontVars } from "@/lib/fonts/registry";
 import { PREFERENCE_DEFAULTS } from "@/lib/preferences/preferences-config";
-import { MsalAuthProvider } from "@/providers/msal-auth-provider";
 import { NextAuthSessionProvider } from "@/providers/next-auth-session-provider";
 import { ThemeBootScript } from "@/scripts/theme-boot";
 import { PreferencesStoreProvider } from "@/stores/preferences/preferences-provider";
@@ -19,9 +18,18 @@ export const metadata: Metadata = {
   description: APP_CONFIG.meta.description,
 };
 
-export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
-  const { theme_mode, theme_preset, content_layout, navbar_style, sidebar_variant, sidebar_collapsible, font } =
-    PREFERENCE_DEFAULTS;
+export default function RootLayout({
+  children,
+}: Readonly<{ children: ReactNode }>) {
+  const {
+    theme_mode,
+    theme_preset,
+    content_layout,
+    navbar_style,
+    sidebar_variant,
+    sidebar_collapsible,
+    font,
+  } = PREFERENCE_DEFAULTS;
   return (
     <html
       lang="en"
@@ -40,22 +48,20 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
       </head>
       <body className={`${fontVars} min-h-screen antialiased`}>
         <Suspense>
-          <MsalAuthProvider>
-            <NextAuthSessionProvider>
-              <TooltipProvider>
-                <PreferencesStoreProvider
-                  themeMode={theme_mode}
-                  themePreset={theme_preset}
-                  contentLayout={content_layout}
-                  navbarStyle={navbar_style}
-                  font={font}
-                >
-                  {children}
-                  <Toaster />
-                </PreferencesStoreProvider>
-              </TooltipProvider>
-            </NextAuthSessionProvider>
-          </MsalAuthProvider>
+          <NextAuthSessionProvider>
+            <TooltipProvider>
+              <PreferencesStoreProvider
+                themeMode={theme_mode}
+                themePreset={theme_preset}
+                contentLayout={content_layout}
+                navbarStyle={navbar_style}
+                font={font}
+              >
+                {children}
+                <Toaster />
+              </PreferencesStoreProvider>
+            </TooltipProvider>
+          </NextAuthSessionProvider>
         </Suspense>
       </body>
     </html>

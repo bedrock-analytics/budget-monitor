@@ -111,7 +111,8 @@ export function parseBudgetCSV(): BudgetRow[] {
   return parseCSVContent(content);
 }
 
-export function aggregateBudgetData(rows: BudgetRow[]): BudgetData {
+// export function aggregateBudgetData(rows: BudgetRow[]): BudgetData {
+export function aggregateBudgetData(rows: any[]): BudgetData {
   const summary: BudgetSummary = {
     totalBudgetTHB: rows.reduce((s, r) => Number(s) + Number(r.budgetTHB), 0),
     totalReservedTHB: rows.reduce(

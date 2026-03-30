@@ -15,9 +15,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { cn, getInitials } from "@/lib/utils";
+import { getInitials } from "@/lib/utils";
 import { useSession } from "next-auth/react";
-
 
 export function AccountSwitcher({
   users,
@@ -39,27 +38,40 @@ export function AccountSwitcher({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Avatar className="size-9 rounded-lg">
-          <AvatarImage src={activeUser.avatar || undefined} alt={activeUser.name} />
-          <AvatarFallback className="rounded-lg">{getInitials(activeUser.name)}</AvatarFallback>
+          <AvatarImage
+            src={activeUser.avatar || undefined}
+            alt={activeUser.name}
+          />
+          <AvatarFallback className="rounded-lg">
+            {getInitials(activeUser.name)}
+          </AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="min-w-56 space-y-1 rounded-lg" side="bottom" align="end" sideOffset={4}>
-          <DropdownMenuItem
-            key={session?.user?.email}
-            className={cn("p-0", session?.user?.id === activeUser.id && "border-l-2 border-l-primary bg-accent/50")}
-          
-          >
-            <div className="flex w-full items-center justify-between gap-2 px-1 py-1.5">
-              {/* <Avatar className="size-9 rounded-lg">
+      <DropdownMenuContent
+        className="min-w-56 space-y-1 rounded-lg"
+        side="bottom"
+        align="end"
+        sideOffset={4}
+      >
+        <DropdownMenuItem
+          key={session?.user?.email}
+          // className={cn("p-0", session?.user?.id === activeUser.id && "border-l-2 border-l-primary bg-accent/50")}
+        >
+          <div className="flex w-full items-center justify-between gap-2 px-1 py-1.5">
+            {/* <Avatar className="size-9 rounded-lg">
                 <AvatarImage src={session?.user?.image || undefined} alt={session?.user?.name} />
                 <AvatarFallback className="rounded-lg">{getInitials(session?.user?.name)}</AvatarFallback>
               </Avatar> */}
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">{session?.user?.name}</span>
-                <span className="truncate text-xs capitalize">{session?.user?.email}</span>
-              </div>
+            <div className="grid flex-1 text-left text-sm leading-tight">
+              <span className="truncate font-semibold">
+                {session?.user?.name}
+              </span>
+              <span className="truncate text-xs capitalize">
+                {session?.user?.email}
+              </span>
             </div>
-          </DropdownMenuItem>
+          </div>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem>

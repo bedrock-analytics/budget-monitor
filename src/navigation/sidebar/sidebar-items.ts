@@ -1,8 +1,4 @@
-import {
-  Banknote,
-  Forklift,
-  type LucideIcon,
-} from "lucide-react";
+import { Banknote, ClipboardList, Forklift, type LucideIcon } from "lucide-react";
 
 export interface NavSubItem {
   title: string;
@@ -98,8 +94,14 @@ export const sidebarItems: NavGroup[] = [
         comingSoon: true,
       },
       {
-        title: "Purchase request",
+        title: "Purchase Request",
         url: "/purchase",
+        icon: ClipboardList,
+        comingSoon: false,
+      },
+      {
+        title: "BTM",
+        url: "/btm",
         icon: Forklift,
         comingSoon: true,
       },

@@ -23,7 +23,8 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  chats Chat[]
+  chats            Chat[]
+  purchaseRequests PurchaseRequest[]
 
   @@index([createdAt])
 }
@@ -73,6 +74,59 @@ model Budget {
   createdAt         DateTime    @default(now())
   updatedAt         DateTime @updatedAt
 
+  purchaseRequestItems PurchaseRequestItem[]
 
   @@index([ createdAt])
+}
+
+enum PurchaseRequestStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+model PurchaseRequest {
+  id            String                @id @default(cuid())
+  prNumber      String                @unique
+  title         String
+  description   String?
+  requesterId   String
+  department    String?
+  status        PurchaseRequestStatus @default(DRAFT)
+  currency      String                @default("THB")
+  totalAmount   Decimal               @db.Decimal(20, 2) @default(0)
+  notes         String?
+  submittedAt   DateTime?
+  approvedAt    DateTime?
+  rejectedAt    DateTime?
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+
+  requester User                  @relation(fields: [requesterId], references: [id])
+  items     PurchaseRequestItem[]
+
+  @@index([requesterId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model PurchaseRequestItem {
+  id                  String   @id @default(cuid())
+  purchaseRequestId   String
+  budgetId            String
+  description         String
+  quantity            Int
+  unit                String   @default("EA")
+  unitPrice           Decimal  @db.Decimal(20, 2)
+  totalPrice          Decimal  @db.Decimal(20, 2)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  purchaseRequest PurchaseRequest @relation(fields: [purchaseRequestId], references: [id], onDelete: Cascade)
+  budget          Budget          @relation(fields: [budgetId], references: [id])
+
+  @@index([purchaseRequestId])
+  @@index([budgetId])
 }
