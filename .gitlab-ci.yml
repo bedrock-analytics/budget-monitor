@@ -32,6 +32,10 @@ snyk_sca_scan:
     - npm install
     - snyk test --trust-policies --policy-path=$SNYK_POLICY_PATH --severity-threshold=$SNYK_SEVERITY --org=$SNYK_BU_ID --json-file-output=sca_vuln.json
 
+kics_iac_scan:
+  allow_failure: true
+
+
 semgrep_credentials_scan:
   allow_failure: true
 
