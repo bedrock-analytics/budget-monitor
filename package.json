@@ -14,7 +14,11 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "prepare": "husky",
-    "generate:presets": "ts-node -P tsconfig.scripts.json src/scripts/generate-theme-presets.ts"
+    "generate:presets": "ts-node -P tsconfig.scripts.json src/scripts/generate-theme-presets.ts",
+        "build:local": "NEXT_PUBLIC_NODE_ENVIRONMENT=local next build",
+    "build:dev": "NEXT_PUBLIC_NODE_ENVIRONMENT=development next build",
+    "build:qa": "NEXT_PUBLIC_NODE_ENVIRONMENT=qa next build",
+    "build:prod": "NEXT_PUBLIC_NODE_ENVIRONMENT=production next build"
   },
   "lint-staged": {
     "*.{js,ts,jsx,tsx}": [
