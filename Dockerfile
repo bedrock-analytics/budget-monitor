@@ -1,4 +1,4 @@
-FROM node:20-slim AS base
+FROM node:22-alpine AS base
 
 # Stage 1: Install dependencies
 FROM base AS deps
@@ -27,6 +27,8 @@ FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
+
+RUN apt-get update && apt-get install -y openssl
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
