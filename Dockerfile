@@ -1,4 +1,4 @@
-FROM node:20-slim AS base
+FROM node:20-bookworm-slim AS base
 
 # Stage 1: Install dependencies
 FROM base AS deps
@@ -15,6 +15,10 @@ RUN npx prisma generate
 # Stage 2: Build the application
 FROM base AS builder
 WORKDIR /app
+
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    rm -rf /var/lib/apt/lists/*
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
