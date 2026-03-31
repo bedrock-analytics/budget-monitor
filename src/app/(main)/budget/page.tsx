@@ -10,8 +10,10 @@ import { BudgetKpiCards } from "./_components/budget-kpi-cards";
 import { BudgetProjectChart } from "./_components/budget-project-chart";
 import { BudgetUploadButton } from "./_components/budget-upload-button";
 import { BudgetUtilization } from "./_components/budget-utilization";
+import { useSession } from "next-auth/react";
 
 export default function BudgetPage() {
+  const { data: session } = useSession();
   const [data, setData] = useState<BudgetData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,7 +50,10 @@ export default function BudgetPage() {
             Budget overview across all projects
           </p>
         </div>
-        <BudgetUploadButton onSuccess={fetchBudget} />
+        {session?.user?.email?.toLocaleLowerCase() ===
+          "thanabutC@rovula.com" && (
+          <BudgetUploadButton onSuccess={fetchBudget} />
+        )}
       </div>
 
       {loading && (
