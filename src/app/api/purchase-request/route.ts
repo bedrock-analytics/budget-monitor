@@ -25,10 +25,10 @@ export async function GET() {
       },
     });
 
-    const rows = data.map((pr) => ({
+    const rows = data.map((pr: any) => ({
       ...pr,
       totalAmount: toNumber(pr.totalAmount),
-      items: pr.items.map((item) => ({
+      items: pr.items.map((item: any) => ({
         ...item,
         unitPrice: toNumber(item.unitPrice),
         totalPrice: toNumber(item.totalPrice),
@@ -53,7 +53,15 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { title, description, requesterId, department, currency, notes, items } = body;
+    const {
+      title,
+      description,
+      requesterId,
+      department,
+      currency,
+      notes,
+      items,
+    } = body;
 
     if (!title || !requesterId || !items?.length) {
       return NextResponse.json(
