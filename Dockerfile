@@ -1,9 +1,11 @@
-FROM node:22-alpine AS base
+FROM node:20-slim AS base
 
 # Stage 1: Install dependencies
 FROM base AS deps
-RUN apk add --no-cache libc6-compat
+
+
 WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 
 COPY package.json package-lock.json* ./
 COPY prisma ./prisma/
@@ -28,7 +30,8 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-RUN apt-get update && apt-get install -y openssl
+# RUN apt-get update && apt-get install -y openssl
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
