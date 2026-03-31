@@ -18,7 +18,7 @@ export async function GET() {
       },
     });
 
-    const options = budgets.map((b) => ({
+    const options = budgets.map((b: any) => ({
       ...b,
       availableTHB: toNumber(b.availableTHB),
       availableUSD: toNumber(b.availableUSD),
