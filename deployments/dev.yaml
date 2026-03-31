@@ -26,11 +26,6 @@ env:
             secretKeyRef:
                 name: subsea-x-app
                 key: KB_ID
-      - name: NEXTAUTH_URL
-        valueFrom:
-            secretKeyRef:
-                name: subsea-x-app
-                key: NEXTAUTH_URL
       - name: NEXTAUTH_SECRET
         valueFrom:
             secretKeyRef:
