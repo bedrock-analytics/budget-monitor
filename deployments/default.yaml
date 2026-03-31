@@ -10,7 +10,7 @@ nameOverride: subsea-x-app
 
 env:
   - name: PORT
-    value: '8080'
+    value: '3000'
 
   # livenessProbe:
   #   httpGet:
@@ -36,8 +36,8 @@ autoscaling:
 
 service:
   type: ClusterIP
-  port: 80
-  targetPort: 8080
+  port: 3000
+  targetPort: 3000
 
 ingress:
   enabled: false

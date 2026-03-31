@@ -16,31 +16,6 @@ image:
 
 
 env:
-      - name: NEXT_PUBLIC_AZURE_CLIENT_ID
-        valueFrom:
-            configMapKeyRef:
-                name: subsea-x-app
-                key: NEXT_PUBLIC_AZURE_CLIENT_ID
-      - name: NEXT_PUBLIC_AZURE_TENANT_ID
-        valueFrom:
-            configMapKeyRef:
-                name: subsea-x-app
-                key: NEXT_PUBLIC_AZURE_TENANT_ID
-      - name: NEXT_PUBLIC_AZURE_REDIRECT_URI
-        valueFrom:
-            configMapKeyRef:
-                name: subsea-x-app
-                key: NEXT_PUBLIC_AZURE_REDIRECT_URI
-      - name: AWS_ACCESS_KEY_ID
-        valueFrom:
-            configMapKeyRef:
-                name: subsea-x-app
-                key: AWS_ACCESS_KEY_ID
-      - name: AWS_SECRET_ACCESS_KEY
-        valueFrom:
-            configMapKeyRef:
-                name: subsea-x-app
-                key: AWS_SECRET_ACCESS_KEY
       - name: AWS_REGION
         valueFrom:
             configMapKeyRef:
