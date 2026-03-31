@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 
-import { APP_CONFIG } from "@/config/app-config";
 import Image from "next/image";
 
 import LogoImage from "@/lib/images/logo.png";
