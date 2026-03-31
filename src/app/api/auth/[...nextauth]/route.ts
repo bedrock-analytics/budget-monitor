@@ -8,6 +8,11 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.AZURE_CLIENT_SECRET ?? "",
       tenantId: process.env.AZURE_TENANT_ID ?? "",
       checks: ["pkce"], // ✅ IMPORTANT
+      authorization: {
+        params: {
+          scope: "openid profile email",
+        },
+      },
     }),
   ],
   secret: process.env.NEXTAUTH_SECRET,
