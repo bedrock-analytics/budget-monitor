@@ -1,8 +1,22 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-import type { BudgetData } from "@/lib/budget";
+import type {
+  BudgetData,
+  BudgetItemSummary,
+  BudgetRow,
+  BudgetSummary,
+  ProjectSummary,
+} from "@/lib/budget";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import { BudgetDetailTable } from "./_components/budget-detail-table";
 import { BudgetItemsBreakdown } from "./_components/budget-items-breakdown";
@@ -12,11 +26,87 @@ import { BudgetUploadButton } from "./_components/budget-upload-button";
 import { BudgetUtilization } from "./_components/budget-utilization";
 import { useSession } from "next-auth/react";
 
+function aggregateFiltered(rows: BudgetRow[]) {
+  const summary: BudgetSummary = {
+    totalBudgetTHB: rows.reduce((s, r) => s + Number(r.budgetTHB), 0),
+    totalReservedTHB: rows.reduce((s, r) => s + Number(r.reservedTHB), 0),
+    totalActualTHB: rows.reduce((s, r) => s + Number(r.actualTHB), 0),
+    totalAvailableTHB: rows.reduce((s, r) => s + Number(r.availableTHB), 0),
+    totalBudgetUSD: rows.reduce((s, r) => s + Number(r.budgetUSD), 0),
+    totalReservedUSD: rows.reduce((s, r) => s + Number(r.reservedUSD), 0),
+    totalActualUSD: rows.reduce((s, r) => s + Number(r.actualUSD), 0),
+    totalAvailableUSD: rows.reduce((s, r) => s + Number(r.availableUSD), 0),
+  };
+
+  const projectMap = new Map<string, ProjectSummary>();
+  for (const row of rows) {
+    if (!projectMap.has(row.projectType)) {
+      projectMap.set(row.projectType, {
+        projectType: row.projectType,
+        projectName: row.projectTypeName,
+        budgetTHB: 0,
+        reservedTHB: 0,
+        actualTHB: 0,
+        availableTHB: 0,
+        budgetUSD: 0,
+        reservedUSD: 0,
+        actualUSD: 0,
+        availableUSD: 0,
+      });
+    }
+    const p = projectMap.get(row.projectType)!;
+    p.budgetTHB += Number(row.budgetTHB);
+    p.reservedTHB += Number(row.reservedTHB);
+    p.actualTHB += Number(row.actualTHB);
+    p.availableTHB += Number(row.availableTHB);
+    p.budgetUSD += Number(row.budgetUSD);
+    p.reservedUSD += Number(row.reservedUSD);
+    p.actualUSD += Number(row.actualUSD);
+    p.availableUSD += Number(row.availableUSD);
+  }
+  const byProject = Array.from(projectMap.values()).filter(
+    (p) =>
+      Math.abs(p.budgetTHB) + Math.abs(p.actualTHB) + Math.abs(p.reservedTHB) >
+      0,
+  );
+
+  const itemMap = new Map<string, BudgetItemSummary>();
+  for (const row of rows) {
+    if (!itemMap.has(row.budgetItemName)) {
+      itemMap.set(row.budgetItemName, {
+        budgetItemName: row.budgetItemName,
+        budgetTHB: 0,
+        reservedTHB: 0,
+        actualTHB: 0,
+        budgetUSD: 0,
+        reservedUSD: 0,
+        actualUSD: 0,
+        createdAt: new Date(),
+      });
+    }
+    const item = itemMap.get(row.budgetItemName)!;
+    item.budgetTHB += Number(row.budgetTHB);
+    item.reservedTHB += Number(row.reservedTHB);
+    item.actualTHB += Number(row.actualTHB);
+    item.budgetUSD += Number(row.budgetUSD);
+    item.reservedUSD += Number(row.reservedUSD);
+    item.actualUSD += Number(row.actualUSD);
+  }
+  const byBudgetItem = Array.from(itemMap.values())
+    .filter((i) => Math.abs(i.budgetTHB) + Math.abs(i.actualTHB) > 0)
+    .sort((a, b) => b.budgetTHB - a.budgetTHB);
+
+  return { summary, byProject, byBudgetItem };
+}
+
 export default function BudgetPage() {
   const { data: session } = useSession();
   const [data, setData] = useState<BudgetData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [projectFilter, setProjectFilter] = useState("all");
+  const [projectNameFilter, setProjectNameFilter] = useState("all");
 
   const fetchBudget = useCallback(async () => {
     setLoading(true);
@@ -41,18 +131,116 @@ export default function BudgetPage() {
     fetchBudget();
   }, [fetchBudget]);
 
+  const activeRows = useMemo(
+    () =>
+      data?.rows.filter(
+        (r) =>
+          Math.abs(r.budgetTHB) +
+            Math.abs(r.actualTHB) +
+            Math.abs(r.reservedTHB) >
+          0,
+      ) ?? [],
+    [data],
+  );
+
+  const projectOptions = useMemo(
+    () =>
+      Array.from(
+        new Map(
+          activeRows.map((r) => [r.projectType, r.projectTypeName]),
+        ).entries(),
+      ).sort((a, b) => a[1].localeCompare(b[1])),
+    [activeRows],
+  );
+
+  const projectNameOptions = useMemo(
+    () =>
+      Array.from(new Set(activeRows.map((r) => r.projectTypeName)))
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b)),
+    [activeRows],
+  );
+
+  const filteredRows = useMemo(() => {
+    return activeRows.filter((r) => {
+      const matchesProject =
+        projectFilter === "all" || r.projectType === projectFilter;
+      const matchesProjectName =
+        projectNameFilter === "all" || r.projectTypeName === projectNameFilter;
+      const q = search.toLowerCase();
+      const matchesSearch =
+        !q ||
+        r.projectTypeName.toLowerCase().includes(q) ||
+        r.budgetItemName.toLowerCase().includes(q) ||
+        r.projectType.toLowerCase().includes(q);
+      return matchesProject && matchesProjectName && matchesSearch;
+    });
+  }, [activeRows, search, projectFilter, projectNameFilter]);
+
+  const filtered = useMemo(
+    () => aggregateFiltered(filteredRows),
+    [filteredRows],
+  );
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-start justify-between">
         <div>
           <h1 className="font-bold text-2xl">Budget Dashboard</h1>
-          <p className="mt-1 text-muted-foreground text-sm">
-            Budget overview across all projects
-          </p>
+
+          {data?.rows.length && (
+            <p className="mt-1 text-muted-foreground text-sm">
+              last updated on {new Date(data?.rows[0].createdAt).toDateString()}
+            </p>
+          )}
         </div>
-        {session?.user?.email?.toLocaleLowerCase() ===
-          "thanabutC@rovula.com" && (
-          <BudgetUploadButton onSuccess={fetchBudget} />
+        <div>
+          {session?.user?.email?.toLocaleLowerCase() ===
+            "thanabutc@rovula.com" ||
+            (session?.user?.email?.toLocaleLowerCase() ===
+              "nuttapongsa@rovula.com" && (
+              <BudgetUploadButton onSuccess={fetchBudget} />
+            ))}
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <Input
+          placeholder="Search by project or category..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="max-w-sm"
+        />
+        {/* <Select value={projectFilter} onValueChange={setProjectFilter}>
+          <SelectTrigger className="w-[220px]">
+            <SelectValue placeholder="All projects" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All projects</SelectItem>
+            {projectOptions.map(([type, name]) => (
+              <SelectItem key={type} value={type}>
+                {type}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select> */}
+        <Select value={projectNameFilter} onValueChange={setProjectNameFilter}>
+          <SelectTrigger className="w-[220px]">
+            <SelectValue placeholder="All project names" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All projects</SelectItem>
+            {projectNameOptions.map((name) => (
+              <SelectItem key={name} value={name}>
+                {name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {(search || projectFilter !== "all" || projectNameFilter !== "all") && (
+          <p className="text-muted-foreground text-sm">
+            Showing {filteredRows.length} of {activeRows.length} items
+          </p>
         )}
       </div>
 
@@ -62,12 +250,12 @@ export default function BudgetPage() {
       {error && <p className="text-destructive text-sm">{error}</p>}
       {data && (
         <>
-          <BudgetKpiCards summary={data.summary} />
-          <BudgetDetailTable rows={data.rows} />
-          <BudgetProjectChart byProject={data.byProject} />
+          <BudgetKpiCards summary={filtered.summary} />
+          <BudgetDetailTable rows={filteredRows} />
+          <BudgetProjectChart byProject={filtered.byProject} />
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <BudgetUtilization byProject={data.byProject} />
-            <BudgetItemsBreakdown byBudgetItem={data.byBudgetItem} />
+            <BudgetUtilization byProject={filtered.byProject} />
+            <BudgetItemsBreakdown byBudgetItem={filtered.byBudgetItem} />
           </div>
         </>
       )}

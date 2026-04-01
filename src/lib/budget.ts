@@ -14,6 +14,7 @@ export interface BudgetRow {
   reservedUSD: number;
   actualUSD: number;
   availableUSD: number;
+  createdAt: Date;
 }
 
 export interface ProjectSummary {
@@ -37,6 +38,7 @@ export interface BudgetItemSummary {
   budgetUSD: number;
   reservedUSD: number;
   actualUSD: number;
+  createdAt: Date;
 }
 
 export interface BudgetSummary {
@@ -101,6 +103,7 @@ export function parseCSVContent(content: string): BudgetRow[] {
       reservedUSD: parseNum(cols[9] ?? "0"),
       actualUSD: parseNum(cols[10] ?? "0"),
       availableUSD: parseNum(cols[11] ?? "0"),
+      createdAt: new Date(),
     };
   });
 }
@@ -180,6 +183,7 @@ export function aggregateBudgetData(rows: any[]): BudgetData {
         budgetUSD: 0,
         reservedUSD: 0,
         actualUSD: 0,
+        createdAt: new Date(),
       });
     }
     const item = itemMap.get(row.budgetItemName)!;

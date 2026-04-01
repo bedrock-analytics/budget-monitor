@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-
 import {
   Card,
   CardContent,
@@ -9,14 +7,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 import { formatTHB, formatUSD } from "@/lib/utils";
 import type { BudgetRow } from "@/lib/budget";
@@ -26,62 +16,15 @@ interface Props {
 }
 
 export function BudgetDetailTable({ rows }: Props) {
-  const [search, setSearch] = useState("");
-  const [projectFilter, setProjectFilter] = useState("all");
-
-  const activeRows = rows.filter(
-    (r) =>
-      Math.abs(r.budgetTHB) + Math.abs(r.actualTHB) + Math.abs(r.reservedTHB) >
-      0,
-  );
-
-  const projectOptions = Array.from(
-    new Map(
-      activeRows.map((r) => [r.projectType, r.projectTypeName]),
-    ).entries(),
-  ).sort((a, b) => a[1].localeCompare(b[1]));
-
-  const filtered = activeRows.filter((r) => {
-    const matchesProject =
-      projectFilter === "all" || r.projectType === projectFilter;
-    const matchesSearch =
-      r.projectTypeName.toLowerCase().includes(search.toLowerCase()) ||
-      r.budgetItemName.toLowerCase().includes(search.toLowerCase()) ||
-      r.projectType.toLowerCase().includes(search.toLowerCase());
-    return matchesProject && matchesSearch;
-  });
-
   return (
     <Card>
       <CardHeader>
         <CardTitle>Budget Line Items</CardTitle>
         <CardDescription>
-          All active budget entries ({filtered.length} of {activeRows.length}{" "}
-          items)
+          {rows.length} active budget entries
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex flex-wrap gap-2">
-          <Input
-            placeholder="Search by project or category..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="max-w-sm"
-          />
-          <Select value={projectFilter} onValueChange={setProjectFilter}>
-            <SelectTrigger className="w-[220px]">
-              <SelectValue placeholder="All projects" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All projects</SelectItem>
-              {projectOptions.map(([type, name]) => (
-                <SelectItem key={type} value={type}>
-                  {name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <CardContent>
         <div className="overflow-x-auto rounded-md border">
           <table className="w-full text-sm">
             <thead>
@@ -107,7 +50,7 @@ export function BudgetDetailTable({ rows }: Props) {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((row, i) => {
+              {rows.map((row, i) => {
                 return (
                   <tr
                     key={`${row.projectType}-${row.budgetItemName}-${i}`}
@@ -156,7 +99,7 @@ export function BudgetDetailTable({ rows }: Props) {
                   </tr>
                 );
               })}
-              {filtered.length === 0 && (
+              {rows.length === 0 && (
                 <tr>
                   <td
                     colSpan={6}
@@ -167,37 +110,37 @@ export function BudgetDetailTable({ rows }: Props) {
                 </tr>
               )}
             </tbody>
-            {filtered.length > 0 &&
+            {rows.length > 0 &&
               (() => {
-                const totalBudgetTHB = filtered.reduce(
+                const totalBudgetTHB = rows.reduce(
                   (s, r) => s + Number(r.budgetTHB),
                   0,
                 );
-                const totalBudgetUSD = filtered.reduce(
+                const totalBudgetUSD = rows.reduce(
                   (s, r) => s + Number(r.budgetUSD),
                   0,
                 );
-                const totalReservedTHB = filtered.reduce(
+                const totalReservedTHB = rows.reduce(
                   (s, r) => s + Number(r.reservedTHB),
                   0,
                 );
-                const totalReservedUSD = filtered.reduce(
+                const totalReservedUSD = rows.reduce(
                   (s, r) => s + Number(r.reservedUSD),
                   0,
                 );
-                const totalActualTHB = filtered.reduce(
+                const totalActualTHB = rows.reduce(
                   (s, r) => s + Number(r.actualTHB),
                   0,
                 );
-                const totalActualUSD = filtered.reduce(
+                const totalActualUSD = rows.reduce(
                   (s, r) => s + Number(r.actualUSD),
                   0,
                 );
-                const totalAvailableTHB = filtered.reduce(
+                const totalAvailableTHB = rows.reduce(
                   (s, r) => s + Number(r.availableTHB),
                   0,
                 );
-                const totalAvailableUSD = filtered.reduce(
+                const totalAvailableUSD = rows.reduce(
                   (s, r) => s + Number(r.availableUSD),
                   0,
                 );
@@ -205,7 +148,7 @@ export function BudgetDetailTable({ rows }: Props) {
                   <tfoot>
                     <tr className="border-t-2 bg-muted/50 font-semibold">
                       <td className="px-4 py-2.5" colSpan={2}>
-                        Total ({filtered.length} items)
+                        Total ({rows.length} items)
                       </td>
                       <td
                         className={`px-4 py-2.5 text-right tabular-nums ${totalBudgetTHB < 0 ? "text-destructive" : ""}`}

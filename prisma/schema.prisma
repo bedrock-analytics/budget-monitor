@@ -17,15 +17,19 @@ enum MessageRole {
 
 model User {
   id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  image     String?
-  azureOid  String?  @unique
+  email       String    @unique
+  name        String?
+  image       String?
+  phone       String?
+  dateOfBirth DateTime? @db.Date
+  azureOid    String?   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   chats            Chat[]
   purchaseRequests PurchaseRequest[]
+  carBookings      CarBooking[]
+  carBookingPassengers CarBookingPassenger[]
 
   @@index([createdAt])
 }
@@ -130,4 +134,112 @@ model PurchaseRequestItem {
 
   @@index([purchaseRequestId])
   @@index([budgetId])
+}
+
+enum CarBookingStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  IN_USE
+  RETURNED
+  CANCELLED
+}
+
+model CarBooking {
+  id              String           @id @default(cuid())
+  bookingNumber   String           @unique
+  userId          String
+  projectCode     String?
+  projectType     String?
+  carName         String
+  licensePlate    String
+  purpose         String
+  destination     String?
+  startDate     DateTime
+  endDate       DateTime
+  status        CarBookingStatus @default(PENDING)
+  notes         String?
+  approvedAt    DateTime?
+  rejectedAt    DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  user       User                 @relation(fields: [userId], references: [id])
+  passengers CarBookingPassenger[]
+  hotels     CarBookingHotel[]
+  flights    CarBookingFlight[]
+  trips      CarBookingTrip[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([startDate, endDate])
+  @@index([createdAt])
+}
+
+model CarBookingPassenger {
+  id             String     @id @default(cuid())
+  bookingId      String
+  userId         String?
+  role           String     @default("passenger")
+  name           String
+  email          String?
+  phone          String?
+  dateOfBirth    DateTime?  @db.Date
+  usePersonalCar Boolean    @default(false)
+  createdAt      DateTime   @default(now())
+
+  booking CarBooking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  user    User?      @relation(fields: [userId], references: [id])
+
+  @@index([bookingId])
+  @@index([userId])
+}
+
+model CarBookingHotel {
+  id           String   @id @default(cuid())
+  bookingId    String
+  hotelName    String
+  checkInDate  DateTime
+  checkOutDate DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  booking CarBooking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+}
+
+model CarBookingFlight {
+  id             String   @id @default(cuid())
+  bookingId      String
+  flightNumber   String?
+  airline        String?
+  route          String
+  departureTime  DateTime
+  arrivalTime    DateTime
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  booking CarBooking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+}
+
+model CarBookingTrip {
+  id            String   @id @default(cuid())
+  bookingId     String
+  date          DateTime @db.Date
+  departureTime DateTime
+  arrivalTime   DateTime
+  origin        String
+  destination   String
+  description   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  booking CarBooking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+  @@index([date])
 }
