@@ -10,7 +10,7 @@ import { MicrosoftButton } from "../_components/social-auth/microsoft-button";
 
 export default async function LoginPage() {
   const session = await getServerSession(authOptions);
-  // if (session) redirect("/budget");
+  if (session) redirect("/budget");
   return (
     <>
       <div className="mx-auto flex w-full flex-col justify-center space-y-8 sm:w-[350px]">

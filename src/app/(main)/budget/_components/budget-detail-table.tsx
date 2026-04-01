@@ -20,9 +20,7 @@ export function BudgetDetailTable({ rows }: Props) {
     <Card>
       <CardHeader>
         <CardTitle>Budget Line Items</CardTitle>
-        <CardDescription>
-          {rows.length} active budget entries
-        </CardDescription>
+        <CardDescription>{rows.length} active budget entries</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto rounded-md border">
@@ -163,10 +161,10 @@ export function BudgetDetailTable({ rows }: Props) {
                         <div>{formatUSD(totalReservedUSD)}</div>
                       </td>
                       <td
-                        className={`px-4 py-2.5 text-right tabular-nums ${totalActualTHB < 0 ? "text-destructive" : ""}`}
+                        className={`px-4 py-2.5 text-right tabular-nums ${Number(Math.abs(totalActualTHB)) < 0 ? "text-destructive" : ""}`}
                       >
-                        <div>{formatTHB(totalActualTHB)}</div>
-                        <div>{formatUSD(totalActualUSD)}</div>
+                        <div>{formatTHB(Math.abs(totalActualTHB))}</div>
+                        <div>{formatUSD(Math.abs(totalActualUSD))}</div>
                       </td>
                       <td
                         className={`px-4 py-2.5 text-right tabular-nums ${totalAvailableTHB < 0 ? "text-destructive" : ""}`}

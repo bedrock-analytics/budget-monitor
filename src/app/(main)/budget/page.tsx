@@ -30,7 +30,7 @@ function aggregateFiltered(rows: BudgetRow[]) {
   const summary: BudgetSummary = {
     totalBudgetTHB: rows.reduce((s, r) => s + Number(r.budgetTHB), 0),
     totalReservedTHB: rows.reduce((s, r) => s + Number(r.reservedTHB), 0),
-    totalActualTHB: rows.reduce((s, r) => s + Number(r.actualTHB), 0),
+    totalActualTHB: rows.reduce((s, r) => s + Number(Math.abs(r.actualTHB)), 0),
     totalAvailableTHB: rows.reduce((s, r) => s + Number(r.availableTHB), 0),
     totalBudgetUSD: rows.reduce((s, r) => s + Number(r.budgetUSD), 0),
     totalReservedUSD: rows.reduce((s, r) => s + Number(r.reservedUSD), 0),
@@ -57,7 +57,7 @@ function aggregateFiltered(rows: BudgetRow[]) {
     const p = projectMap.get(row.projectType)!;
     p.budgetTHB += Number(row.budgetTHB);
     p.reservedTHB += Number(row.reservedTHB);
-    p.actualTHB += Number(row.actualTHB);
+    p.actualTHB += Number(Math.abs(row.actualTHB));
     p.availableTHB += Number(row.availableTHB);
     p.budgetUSD += Number(row.budgetUSD);
     p.reservedUSD += Number(row.reservedUSD);

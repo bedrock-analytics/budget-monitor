@@ -33,43 +33,39 @@ export function BudgetItemsBreakdown({ byBudgetItem }: Props) {
       </CardHeader>
       <CardContent className="space-y-3">
         {byBudgetItem.map((item, index) => {
-          const budgetPct = (item.budgetTHB / maxBudget) * 100;
-          const actualPct =
+          const utilizationPct =
             item.budgetTHB > 0
               ? Math.min((item.actualTHB / item.budgetTHB) * 100, 100)
               : 0;
-          const alpha = Math.max(0.4, 1 - index * 0.05);
+          const isOverBudget =
+            Number(Math.abs(item.actualTHB)) > item.budgetTHB;
 
           return (
             <div key={item.budgetItemName} className="space-y-1">
               <div className="flex items-center justify-between text-sm">
+                <div>
+                  <span className="truncate font-medium">
+                    {item.budgetItemName}
+                  </span>
+                </div>
                 <span
-                  className="truncate font-medium"
-                  title={item.budgetItemName}
+                  className={`shrink-0 tabular-nums text-xs ${isOverBudget ? "text-destructive font-semibold" : "text-muted-foreground"}`}
                 >
-                  {item.budgetItemName}
-                </span>
-                <span className="ml-4 shrink-0 text-muted-foreground tabular-nums">
-                  {formatTHB(item.actualTHB)} / {formatTHB(item.budgetTHB)}
+                  {item.budgetTHB > 0
+                    ? `${((item.actualTHB / item.budgetTHB) * 100).toFixed(0)}%`
+                    : "—"}
                 </span>
               </div>
-              <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted">
+              <div className="flex h-2 w-full overflow-hidden rounded-full bg-muted">
                 <div
-                  className="absolute inset-y-0 left-0 rounded-full"
-                  style={{
-                    width: `${budgetPct}%`,
-                    background: `color-mix(in oklch, var(--primary) ${alpha * 60}%, transparent)`,
-                  }}
+                  className={`h-full rounded-full transition-all ${isOverBudget ? "bg-destructive" : "bg-primary"}`}
+                  // style={{ width: `${utilizationPct}%` }}
+                  style={{ width: `${isOverBudget ? "100" : utilizationPct}%` }}
                 />
-                {item.actualTHB > 0 && (
-                  <div
-                    className="absolute inset-y-0 left-0 rounded-full"
-                    style={{
-                      width: `${(actualPct / 100) * budgetPct}%`,
-                      background: `color-mix(in oklch, var(--primary) ${alpha * 100}%, transparent)`,
-                    }}
-                  />
-                )}
+              </div>
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Actual: {formatTHB(item.actualTHB)}</span>
+                <span>Budget: {formatTHB(item.budgetTHB)}</span>
               </div>
             </div>
           );
