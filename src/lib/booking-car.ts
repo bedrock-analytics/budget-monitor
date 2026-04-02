@@ -83,7 +83,10 @@ export type CarBookingStatus =
   | "CANCELLED";
 
 export const CAR_OPTIONS = [
-  { name: "Van", licensePlate: "กข-1234" },
+  { name: "Taxi", licensePlate: "กข-1" },
+  { name: "Van", licensePlate: "กข-2" },
+  { name: "Van (Take off seat)", licensePlate: "กข-3" },
+  { name: "Other (please specify at note box)", licensePlate: "กข-4" },
   // { name: "Toyota Hilux Revo", licensePlate: "กค-5678" },
   // { name: "Ford Ranger", licensePlate: "ขก-9012" },
   // { name: "Isuzu D-Max", licensePlate: "คก-3456" },

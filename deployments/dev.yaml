@@ -9,7 +9,7 @@ image:
   pullPolicy: IfNotPresent
   port:
     - name: app
-      port: 8080
+      port: 3000
       # https://github.com/kubernetes/enhancements/tree/master/keps/sig-network/1507-app-protocol
       appProtocol: http
 

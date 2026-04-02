@@ -450,7 +450,7 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
               name="startDate"
               render={({ field, fieldState }) => (
                 <Field className="gap-1.5" data-invalid={fieldState.invalid}>
-                  <FieldLabel>Start Date</FieldLabel>
+                  <FieldLabel>Business Date From</FieldLabel>
                   <Input {...field} type="datetime-local" />
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
@@ -464,7 +464,7 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
               name="endDate"
               render={({ field, fieldState }) => (
                 <Field className="gap-1.5" data-invalid={fieldState.invalid}>
-                  <FieldLabel>End Date</FieldLabel>
+                  <FieldLabel>Business Date To</FieldLabel>
                   <Input {...field} type="datetime-local" />
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
