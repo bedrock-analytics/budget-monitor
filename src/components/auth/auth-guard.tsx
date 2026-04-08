@@ -11,6 +11,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
   const { status } = useSession();
 
   useEffect(() => {
+    console.log("auth guard status ", status);
     if (status === "unauthenticated") {
       router.replace("/auth/login");
     }
