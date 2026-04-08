@@ -6,15 +6,22 @@ import { useRouter } from "next/navigation";
 
 import { deleteClientCookie } from "@/lib/cookie.client";
 
+import { signOut, useSession } from "next-auth/react";
+
 export default function LogoutPage() {
   const router = useRouter();
   const handled = useRef(false);
+  const { data: session } = useSession();
 
   useEffect(() => {
     if (handled.current) return;
     handled.current = true;
 
     deleteClientCookie("accessToken");
+
+    if (session) {
+      signOut();
+    }
     router.replace("/auth/login");
   }, [router]);
 

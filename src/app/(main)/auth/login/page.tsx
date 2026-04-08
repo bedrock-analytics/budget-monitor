@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 
-import { Globe } from "lucide-react";
 import { getServerSession } from "next-auth";
 
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
@@ -23,12 +22,12 @@ export default async function LoginPage() {
         <MicrosoftButton className="w-full" />
       </div>
 
-      <div className="absolute bottom-5 flex w-full justify-between px-10">
+      <div className="absolute bottom-5 flex w-full justify-between px-4">
         <div className="text-sm">{APP_CONFIG.copyright}</div>
-        <div className="flex items-center gap-1 text-sm">
+        {/* <div className="flex items-center gap-1 text-sm">
           <Globe className="size-4 text-muted-foreground" />
           ENG
-        </div>
+        </div> */}
       </div>
     </>
   );

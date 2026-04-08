@@ -5,7 +5,7 @@ const currentYear = new Date().getFullYear();
 export const APP_CONFIG = {
   name: "Rovula",
   version: packageJson.version,
-  copyright: `© ${currentYear}, Rovula.`,
+  copyright: `© ${currentYear}, Rovula (Thailand) Company Limited.`,
   meta: {
     title: "Rovula (Thailand) Company Limited.",
     description: "A LEADING PLATFORM SOLUTIONS FOR SUBSEA IRM TO OIL AND GAS",

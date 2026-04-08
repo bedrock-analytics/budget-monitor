@@ -51,6 +51,13 @@ env:
             configMapKeyRef:
                 name: subsea-x-app
                 key: DATABASE_URL
+      - name: NEXTAUTH_URL
+        valueFrom:
+            configMapKeyRef:
+                name: subsea-x-app
+                key: NEXTAUTH_URL
+
+
 
 serviceAccount:
     create: true
