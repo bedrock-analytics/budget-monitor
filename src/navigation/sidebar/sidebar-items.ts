@@ -1,10 +1,4 @@
-import {
-  Banknote,
-  Car,
-  ClipboardList,
-  Forklift,
-  type LucideIcon,
-} from "lucide-react";
+import { Banknote, Car, ClipboardCheck, ClipboardList, Forklift, type LucideIcon } from "lucide-react";
 
 export interface NavSubItem {
   title: string;
@@ -106,6 +100,12 @@ export const sidebarItems: NavGroup[] = [
         comingSoon: false,
       },
       {
+        title: "Facility QI",
+        url: "/facility-quality-inspection",
+        icon: ClipboardCheck,
+        comingSoon: false,
+      },
+      {
         title: "SSHE",
         url: "/booking-car",
         icon: Car,
@@ -117,11 +117,31 @@ export const sidebarItems: NavGroup[] = [
             newTab: true,
             comingSoon: true,
           },
-          { title: "ISO Center", url: "/auth/v2/login", newTab: true },
-          { title: "Inspection", url: "/auth/v1/register", newTab: true },
-          { title: "E-Permit", url: "/auth/v2/register", newTab: true },
-          { title: "E-Audit", url: "/auth/v2/register", newTab: true },
-          { title: "E-Mom", url: "/auth/v2/register", newTab: true },
+          {
+            title: "ISO Center",
+            url: "/auth/v2/login",
+            newTab: true,
+            comingSoon: true,
+          },
+          { title: "Inspection", url: "/auth/v1/register" },
+          {
+            title: "E-Permit",
+            url: "/auth/v2/register",
+            newTab: true,
+            comingSoon: true,
+          },
+          {
+            title: "E-Audit",
+            url: "/auth/v2/register",
+            newTab: true,
+            comingSoon: true,
+          },
+          {
+            title: "E-Mom",
+            url: "/auth/v2/register",
+            newTab: true,
+            comingSoon: true,
+          },
         ],
       },
     ],
