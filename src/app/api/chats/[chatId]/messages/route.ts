@@ -16,7 +16,7 @@ async function requireChatForUser(chatId: string, email: string) {
 
   return db.chat.findFirst({
     where: { id: chatId, userId: user.id },
-    select: { id: true },
+    select: { id: true, title: true },
   });
 }
 
@@ -90,10 +90,13 @@ export async function POST(
       createdAt: true,
     },
   });
-
+  let chatPayload = { updatedAt: new Date(), title: chat.title };
+  if (!chat.title) {
+    chatPayload = { ...chatPayload, title: body.data.message };
+  }
   await db.chat.update({
     where: { id: chatId },
-    data: { updatedAt: new Date() },
+    data: chatPayload,
     select: { id: true },
   });
 

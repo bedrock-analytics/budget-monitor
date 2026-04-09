@@ -30,6 +30,8 @@ import { usePreferencesStore } from "@/stores/preferences/preferences-provider";
 import { NavMain } from "./nav-main";
 import { ChatHistory } from "./chat-history";
 import { NavUser } from "./nav-user";
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 
 const _data = {
   navSecondary: [
@@ -70,6 +72,9 @@ const _data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { data: session } = useSession();
+  const [chats, setChats] = useState([]);
+  const params = useParams();
+  const [chatId, setChatId] = useState<string | string[] | null>(null);
 
   const rootUser = {
     name: session?.user?.name ?? "",
@@ -85,8 +90,26 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     })),
   );
 
+  useEffect(() => {
+    const id = params.chatId;
+    if (id) {
+      setChatId(id);
+    }
+    getHistoryChat();
+  }, [params]);
+
   const variant = isSynced ? sidebarVariant : props.variant;
   const collapsible = isSynced ? sidebarCollapsible : props.collapsible;
+
+  const getHistoryChat = async () => {
+    console.log("getHistoryChat");
+    const res = await fetch("/api/chats?limit=10", {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+    const { chats } = await res.json();
+    setChats(chats);
+  };
 
   return (
     <Sidebar {...props} variant={variant} collapsible={collapsible}>
@@ -106,7 +129,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={sidebarItems} />
-        <ChatHistory items={[]} />
+        <ChatHistory items={chats} />
         {/* <NavDocuments items={data.documents} /> */}
         {/* <NavSecondary items={data.navSecondary} className="mt-auto" /> */}
       </SidebarContent>

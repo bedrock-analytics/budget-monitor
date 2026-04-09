@@ -5,7 +5,7 @@ import { z } from "zod";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { db } from "@/lib/db";
 
-import { v4 as uuidv4 } from "uuid";
+import { NextRequest } from "next/server";
 
 async function getOrCreateUserByEmail(
   email: string,
@@ -26,7 +26,10 @@ async function getOrCreateUserByEmail(
   });
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const searchParams = req.nextUrl.searchParams;
+  const limit = searchParams.get("limit");
+
   const session = await getServerSession(authOptions);
   const email = session?.user?.email;
   if (!email)
@@ -40,6 +43,7 @@ export async function GET() {
 
   const chats = await db.chat.findMany({
     where: { userId: user.id },
+    take: limit ? Number(limit) : 25,
     orderBy: { updatedAt: "desc" },
     select: {
       id: true,

@@ -9,10 +9,7 @@ export type Chat = {
 };
 
 async function fetchChats(): Promise<Chat[]> {
-  const res = await fetch("/api/chats", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-  });
+  const res = await fetch("/api/chats");
   if (!res.ok) throw new Error("Failed to fetch chats");
   const data = await res.json();
   return data.chats;

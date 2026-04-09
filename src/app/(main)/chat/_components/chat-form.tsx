@@ -14,6 +14,7 @@ export default function ChatSection(prop: { chatId: string }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [chatId, setChatId] = useState<string | null>(null);
 
@@ -36,25 +37,37 @@ export default function ChatSection(prop: { chatId: string }) {
   }, []);
 
   const getMessages = async (chatId: string) => {
-    const res = await fetch(`/api/chats/${chatId}/messages`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-      // body: JSON.stringify({ chatId: chatId }),
-    });
-    const data = await res.json();
-    if (data.messages.length) {
-      setMessages(data.messages);
+    try {
+      setIsLoading(true);
+      const res = await fetch(`/api/chats/${chatId}/messages`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        // body: JSON.stringify({ chatId: chatId }),
+      });
+      const data = await res.json();
+      if (data.messages.length) {
+        setMessages(data.messages);
+        setIsLoading(false);
+      }
+    } catch (error) {
+      setIsLoading(false);
     }
   };
 
   const createChat = async () => {
-    const res = await fetch("/api/chats", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      // body: JSON.stringify({ chatId: id }),
-    });
-    const data = await res.json();
-    router.push(`/chat/${data.chat.id}`);
+    try {
+      setIsLoading(true);
+
+      const res = await fetch("/api/chats", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // body: JSON.stringify({ chatId: id }),
+      });
+      const data = await res.json();
+      router.push(`/chat/${data.chat.id}`);
+    } catch (error) {
+      setIsLoading(false);
+    }
   };
 
   const sendMessage = async (
@@ -178,6 +191,7 @@ export default function ChatSection(prop: { chatId: string }) {
         ))}
       </div>
 
+      {isLoading ? <div className="text text-sm">Loading...</div> : null}
       {error ? <div className="text-destructive text-sm">{error}</div> : null}
 
       <div className="flex gap-2">

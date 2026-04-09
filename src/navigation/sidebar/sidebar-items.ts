@@ -29,6 +29,7 @@ export interface NavGroup {
   id: number;
   label?: string;
   items: NavMainItem[];
+  dynamicChats?: boolean;
 }
 
 export const sidebarItems: NavGroup[] = [
@@ -92,13 +93,6 @@ export const sidebarItems: NavGroup[] = [
         icon: Forklift,
         comingSoon: false,
       },
-
-      {
-        title: "E-SOC",
-        url: "/e-soc",
-        icon: Forklift,
-        comingSoon: true,
-      },
       {
         title: "Purchase Request",
         url: "/purchase",
@@ -111,63 +105,90 @@ export const sidebarItems: NavGroup[] = [
         icon: Car,
         comingSoon: false,
       },
+      {
+        title: "SSHE",
+        url: "/booking-car",
+        icon: Car,
+        comingSoon: false,
+        subItems: [
+          {
+            title: "E-SOC",
+            url: "/auth/v1/login",
+            newTab: true,
+            comingSoon: true,
+          },
+          { title: "ISO Center", url: "/auth/v2/login", newTab: true },
+          { title: "Inspection", url: "/auth/v1/register", newTab: true },
+          { title: "E-Permit", url: "/auth/v2/register", newTab: true },
+          { title: "E-Audit", url: "/auth/v2/register", newTab: true },
+          { title: "E-Mom", url: "/auth/v2/register", newTab: true },
+        ],
+      },
     ],
   },
   // {
   //   id: 2,
+  //   label: "History chat",
+  //   dynamicChats: true,
+  //   items: [],
+  // },
+  // {
+  //   id: 3,
   //   label: "Pages",
   //   items: [
   //     {
   //       title: "Email",
   //       url: "/dashboard/coming-soon",
-  //       icon: Mail,
+  //       icon: Car,
   //       comingSoon: true,
   //     },
   //     {
   //       title: "Chat",
   //       url: "/dashboard/coming-soon",
-  //       icon: MessageSquare,
+  //       icon: Car,
   //       comingSoon: true,
   //     },
   //     {
   //       title: "Calendar",
   //       url: "/dashboard/coming-soon",
-  //       icon: Calendar,
+  //       icon: Car,
   //       comingSoon: true,
   //     },
   //     {
   //       title: "Kanban",
   //       url: "/dashboard/coming-soon",
-  //       icon: Kanban,
+  //       icon: Car,
   //       comingSoon: true,
   //     },
   //     {
   //       title: "Invoice",
   //       url: "/dashboard/coming-soon",
-  //       icon: ReceiptText,
+  //       icon: Car,
   //       comingSoon: true,
   //     },
   //     {
   //       title: "Users",
   //       url: "/dashboard/coming-soon",
-  //       icon: Users,
+  //       icon: Car,
   //       comingSoon: true,
   //     },
   //     {
   //       title: "Roles",
   //       url: "/dashboard/coming-soon",
-  //       icon: Lock,
+  //       icon: Car,
   //       comingSoon: true,
   //     },
   //     {
-  //       title: "Authentication",
+  //       title: "SSHE",
   //       url: "/auth",
-  //       icon: Fingerprint,
+  //       icon: Car,
   //       subItems: [
-  //         { title: "Login v1", url: "/auth/v1/login", newTab: true },
-  //         { title: "Login v2", url: "/auth/v2/login", newTab: true },
-  //         { title: "Register v1", url: "/auth/v1/register", newTab: true },
-  //         { title: "Register v2", url: "/auth/v2/register", newTab: true },
+  //         { title: "E-SOC", url: "/auth/v1/login", newTab: true },
+  //         { title: "ISO Center", url: "/auth/v2/login", newTab: true },
+  //         { title: "Inspection", url: "/auth/v1/register", newTab: true },
+  //         { title: "E-Permit", url: "/auth/v2/register", newTab: true },
+  //         { title: "E-Audit", url: "/auth/v2/register", newTab: true },
+  //         { title: "E-Mom", url: "/auth/v2/register", newTab: true },
   //       ],
   //     },
   //   ],
@@ -179,7 +200,7 @@ export const sidebarItems: NavGroup[] = [
   //     {
   //       title: "Others",
   //       url: "/dashboard/coming-soon",
-  //       icon: SquareArrowUpRight,
+  //       icon: Car,
   //       comingSoon: true,
   //     },
   //   ],
