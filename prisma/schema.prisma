@@ -86,6 +86,35 @@ model Budget {
   @@index([ createdAt])
 }
 
+model BudgetDetail {
+  id              String    @id @default(cuid())
+  projectType     String
+  projectCode     String
+  budgetCategory  String
+  budgetItemName  String
+  system          String
+  type            String
+  no              String
+  acctCode        String
+  accountName     String
+  date            DateTime? @db.Date
+  vendor          String
+  remark          String
+  reservedTHB     Decimal   @db.Decimal(20, 2)
+  actualTHB       Decimal   @db.Decimal(20, 2)
+  totalSpentTHB   Decimal   @db.Decimal(20, 2)
+  rate            Decimal   @db.Decimal(20, 6)
+  reservedUSD     Decimal   @db.Decimal(20, 2)
+  actualUSD       Decimal   @db.Decimal(20, 2)
+  totalSpentUSD   Decimal   @db.Decimal(20, 2)
+  creator         String
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([projectType, budgetItemName])
+  @@index([createdAt])
+}
+
 enum PurchaseRequestStatus {
   DRAFT
   SUBMITTED

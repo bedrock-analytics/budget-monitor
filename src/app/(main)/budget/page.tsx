@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 
 import { BudgetDetailTable } from "./_components/budget-detail-table";
+import { BudgetDetailUploadButton } from "./_components/budget-detail-upload-button";
 import { BudgetItemsBreakdown } from "./_components/budget-items-breakdown";
 import { BudgetKpiCards } from "./_components/budget-kpi-cards";
 import { BudgetProjectChart } from "./_components/budget-project-chart";
@@ -194,13 +195,20 @@ export default function BudgetPage() {
             </p>
           )}
         </div>
-        <div>
-          {session?.user?.email?.toLocaleLowerCase() ===
-            "thanabutc@rovula.com" ||
-            (session?.user?.email?.toLocaleLowerCase() ===
-              "nuttapongsa@rovula.com" && (
-              <BudgetUploadButton onSuccess={fetchBudget} />
-            ))}
+        <div className="flex items-center gap-3">
+          {(() => {
+            const email = session?.user?.email?.toLocaleLowerCase();
+            const canUpload =
+              email === "thanabutc@rovula.com" ||
+              email === "nuttapongsa@rovula.com";
+            if (!canUpload) return null;
+            return (
+              <>
+                <BudgetUploadButton onSuccess={fetchBudget} />
+                <BudgetDetailUploadButton />
+              </>
+            );
+          })()}
         </div>
       </div>
 

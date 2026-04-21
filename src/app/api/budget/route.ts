@@ -22,8 +22,18 @@ export async function GET() {
         ? undefined
         : {
             NOT: [
-              { budgetItemName: { contains: "staff benefit", mode: "insensitive" } },
-              { budgetItemName: { contains: "staff expense", mode: "insensitive" } },
+              {
+                budgetItemName: {
+                  contains: "staff benefit",
+                  mode: "insensitive",
+                },
+              },
+              {
+                budgetItemName: {
+                  contains: "staff expense",
+                  mode: "insensitive",
+                },
+              },
             ],
           },
       orderBy: { updatedAt: "desc" },
@@ -76,6 +86,7 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
+    await db.budget.deleteMany();
 
     await db.budget.createMany({
       data: rows.map((r) => ({

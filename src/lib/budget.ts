@@ -91,18 +91,18 @@ export function parseCSVContent(content: string): BudgetRow[] {
   return lines.slice(1).map((line) => {
     const cols = parseCSVLine(line);
     return {
-      projectType: cols[0]?.trim() ?? "",
-      projectTypeName: cols[1]?.trim() ?? "",
-      budgetItemName: cols[2]?.trim() ?? "",
-      year: Number.parseInt(cols[3] ?? "0", 10),
-      budgetTHB: parseNum(cols[4] ?? "0"),
-      reservedTHB: parseNum(cols[5] ?? "0"),
-      actualTHB: parseNum(cols[6] ?? "0"),
-      availableTHB: parseNum(cols[7] ?? "0"),
-      budgetUSD: parseNum(cols[8] ?? "0"),
-      reservedUSD: parseNum(cols[9] ?? "0"),
-      actualUSD: parseNum(cols[10] ?? "0"),
-      availableUSD: parseNum(cols[11] ?? "0"),
+      projectType: cols[1]?.trim() ?? "",
+      projectTypeName: cols[2]?.trim() ?? "",
+      budgetItemName: cols[4]?.trim() ?? "",
+      year: Number.parseInt(cols[5] ?? "0", 10),
+      budgetTHB: parseNum(cols[6] ?? "0"),
+      reservedTHB: parseNum(cols[7] ?? "0"),
+      actualTHB: parseNum(cols[8] ?? "0"),
+      availableTHB: parseNum(cols[9] ?? "0"),
+      budgetUSD: parseNum(cols[10] ?? "0"),
+      reservedUSD: parseNum(cols[11] ?? "0"),
+      actualUSD: parseNum(cols[12] ?? "0"),
+      availableUSD: parseNum(cols[13] ?? "0"),
       createdAt: new Date(),
     };
   });
