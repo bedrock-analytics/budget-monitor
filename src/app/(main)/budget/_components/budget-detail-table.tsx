@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 
 import {
   Card,
@@ -16,6 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 import { formatTHB, formatUSD } from "@/lib/utils";
 import type { BudgetRow } from "@/lib/budget";
@@ -57,6 +59,17 @@ export function BudgetDetailTable({ rows }: Props) {
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [detailsError, setDetailsError] = useState<string | null>(null);
   const [selected, setSelected] = useState<BudgetRow | null>(null);
+  const [detailSearch, setDetailSearch] = useState("");
+  const [expandedNos, setExpandedNos] = useState<Set<string>>(new Set());
+
+  const toggleNo = (no: string) => {
+    setExpandedNos((prev) => {
+      const next = new Set(prev);
+      if (next.has(no)) next.delete(no);
+      else next.add(no);
+      return next;
+    });
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -97,6 +110,70 @@ export function BudgetDetailTable({ rows }: Props) {
         rowKey(selected.projectType, selected.budgetItemName),
       ) ?? [])
     : [];
+
+  const groupedMatches = useMemo(() => {
+    const q = detailSearch.trim().toLowerCase();
+    const filtered = q
+      ? selectedMatches.filter(
+          (d) =>
+            d.vendor.toLowerCase().includes(q) ||
+            d.remark.toLowerCase().includes(q) ||
+            d.no.toLowerCase().includes(q) ||
+            d.type.toLowerCase().includes(q) ||
+            d.budgetCategory.toLowerCase().includes(q) ||
+            d.accountName.toLowerCase().includes(q) ||
+            d.acctCode.toLowerCase().includes(q) ||
+            d.creator.toLowerCase().includes(q) ||
+            d.system.toLowerCase().includes(q),
+        )
+      : selectedMatches;
+
+    const groups = new Map<string, BudgetDetailRecord[]>();
+    for (const d of filtered) {
+      const k = d.no || "—";
+      const bucket = groups.get(k);
+      if (bucket) bucket.push(d);
+      else groups.set(k, [d]);
+    }
+
+    return Array.from(groups.entries()).map(([no, entries]) => {
+      const sum = entries.reduce(
+        (acc, e) => ({
+          reservedTHB: acc.reservedTHB + Number(e.reservedTHB),
+          actualTHB: acc.actualTHB + Number(e.actualTHB),
+          totalSpentTHB: acc.totalSpentTHB + Number(e.totalSpentTHB),
+          reservedUSD: acc.reservedUSD + Number(e.reservedUSD),
+          actualUSD: acc.actualUSD + Number(e.actualUSD),
+          totalSpentUSD: acc.totalSpentUSD + Number(e.totalSpentUSD),
+        }),
+        {
+          reservedTHB: 0,
+          actualTHB: 0,
+          totalSpentTHB: 0,
+          reservedUSD: 0,
+          actualUSD: 0,
+          totalSpentUSD: 0,
+        },
+      );
+      const first = entries[0];
+      return {
+        no,
+        entries,
+        sum,
+        type: first?.type ?? "",
+        date: first?.date ?? null,
+        budgetCategory: first?.budgetCategory ?? null,
+        remark: first?.remark ?? null,
+        vendor: first?.vendor ?? "",
+        creator: first?.creator ?? "",
+      };
+    });
+  }, [selectedMatches, detailSearch]);
+
+  const filteredCount = useMemo(
+    () => groupedMatches.reduce((s, g) => s + g.entries.length, 0),
+    [groupedMatches],
+  );
 
   return (
     <Card>
@@ -280,7 +357,12 @@ export function BudgetDetailTable({ rows }: Props) {
 
       <Dialog
         open={selected !== null}
-        onOpenChange={(o) => !o && setSelected(null)}
+        onOpenChange={(o) => {
+          if (!o) {
+            setSelected(null);
+            setDetailSearch("");
+          }
+        }}
       >
         <DialogContent className="w-[96vw] max-w-[96vw] sm:max-w-[96vw]">
           <DialogHeader>
@@ -291,14 +373,29 @@ export function BudgetDetailTable({ rows }: Props) {
               </span>
             </DialogTitle>
             <DialogDescription>
-              {selected?.budgetItemName} · {selectedMatches.length}{" "}
-              {selectedMatches.length === 1 ? "entry" : "entries"}
+              {selected?.budgetItemName} ·{" "}
+              {detailSearch
+                ? `${filteredCount} of ${selectedMatches.length}`
+                : selectedMatches.length}{" "}
+              {selectedMatches.length === 1 ? "entry" : "entries"} ·{" "}
+              {groupedMatches.length}{" "}
+              {groupedMatches.length === 1 ? "document" : "documents"}
             </DialogDescription>
           </DialogHeader>
+          <Input
+            placeholder="Search vendor, remark, no., type, account, creator..."
+            value={detailSearch}
+            onChange={(e) => setDetailSearch(e.target.value)}
+            className="max-w-md"
+          />
           <div className="max-h-[80vh] overflow-auto rounded-md border">
             <table className="w-full text-xs">
               <thead className="sticky top-0 bg-muted/60">
                 <tr className="border-b">
+                  {/* <th className="w-8 px-2 py-2" /> */}
+                  <th className="px-3 py-2 text-left font-medium text-muted-foreground">
+                    PO No.
+                  </th>
                   <th className="px-3 py-2 text-left font-medium text-muted-foreground">
                     Date
                   </th>
@@ -306,13 +403,7 @@ export function BudgetDetailTable({ rows }: Props) {
                     Type
                   </th>
                   <th className="px-3 py-2 text-left font-medium text-muted-foreground">
-                    No.
-                  </th>
-                  <th className="px-3 py-2 text-left font-medium text-muted-foreground">
                     Category
-                  </th>
-                  <th className="px-3 py-2 text-left font-medium text-muted-foreground">
-                    Account
                   </th>
                   <th className="px-3 py-2 text-left font-medium text-muted-foreground">
                     Vendor
@@ -329,70 +420,137 @@ export function BudgetDetailTable({ rows }: Props) {
                   <th className="px-3 py-2 text-right font-medium text-muted-foreground">
                     Total Spent
                   </th>
-                  <th className="px-3 py-2 text-right font-medium text-muted-foreground">
-                    Rate
-                  </th>
                   <th className="px-3 py-2 text-left font-medium text-muted-foreground">
                     Creator
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {selectedMatches.map((d) => (
-                  <tr
-                    key={d.id}
-                    className="border-b last:border-0 hover:bg-muted/20"
-                  >
-                    <td className="px-3 py-2 whitespace-nowrap">
-                      {d.date ? new Date(d.date).toLocaleDateString() : "—"}
-                    </td>
-                    <td className="px-3 py-2 whitespace-nowrap">
-                      {d.type || "—"}
-                    </td>
-                    <td className="px-3 py-2 whitespace-nowrap">
-                      {d.no || "—"}
-                    </td>
-                    <td className="px-3 py-2">{d.budgetCategory || "—"}</td>
-                    <td className="px-3 py-2">{d.accountName || "—"}</td>
-                    <td className="px-3 py-2">{d.vendor || "—"}</td>
-                    <td className="px-3 py-2 text-muted-foreground max-w-[240px]">
-                      <div className="whitespace-pre-wrap break-words">
-                        {d.remark || "—"}
-                      </div>
-                    </td>
-                    <td className="px-3 py-2 text-right tabular-nums">
-                      <div>{formatTHB(Number(d.reservedTHB))}</div>
-                      <div className="text-muted-foreground">
-                        {formatUSD(Number(d.reservedUSD))}
-                      </div>
-                    </td>
-                    <td className="px-3 py-2 text-right tabular-nums">
-                      <div>{formatTHB(Number(d.actualTHB))}</div>
-                      <div className="text-muted-foreground">
-                        {formatUSD(Number(d.actualUSD))}
-                      </div>
-                    </td>
-                    <td className="px-3 py-2 text-right tabular-nums">
-                      <div>{formatTHB(Number(d.totalSpentTHB))}</div>
-                      <div className="text-muted-foreground">
-                        {formatUSD(Number(d.totalSpentUSD))}
-                      </div>
-                    </td>
-                    <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">
-                      {Number(d.rate) ? Number(d.rate).toFixed(4) : "—"}
-                    </td>
-                    <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">
-                      {d.creator || "—"}
-                    </td>
-                  </tr>
-                ))}
-                {selectedMatches.length === 0 && (
+                {groupedMatches.map((g) => {
+                  const isOpen = expandedNos.has(g.no);
+                  return (
+                    <Fragment key={g.no}>
+                      <tr
+                        className=" border-b bg-muted/30 font-medium hover:bg-muted/40"
+                        // onClick={() => toggleNo(g.no)}
+                      >
+                        {/* <td className="px-2 py-2 text-muted-foreground">
+                          {isOpen ? (
+                            <ChevronDown className="h-4 w-4" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4" />
+                          )}
+                        </td> */}
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          {g.no}
+
+                          {/* <span className="ml-2 text-muted-foreground text-[11px] font-normal">
+                            ({g.entries.length}{" "}
+                            {g.entries.length === 1 ? "entry" : "entries"})
+                          </span> */}
+                        </td>
+                        <td className="px-3 py-2  ">
+                          {g.date ? new Date(g.date).toLocaleDateString() : "—"}
+                        </td>
+                        {/* <td className="px-3 py-2 whitespace-nowrap">
+                          {g.type || "—"}
+                        </td> */}
+                        <td className="px-3 py-2">
+                          <span className="text-muted-foreground">
+                            {g.type}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2">
+                          <span className="text-muted-foreground">
+                            {g.budgetCategory}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2">{g.vendor}</td>
+                        <td className="px-3 py-2 text-muted-foreground max-w-[240px]">
+                          <div className="whitespace-pre-wrap break-words">
+                            {g.remark || "—"}
+                          </div>
+                        </td>
+                        {/* <td className="px-3 py-2 text-muted-foreground">—</td> */}
+                        <td className="px-3 py-2 text-right tabular-nums">
+                          <div>{formatTHB(g.sum.reservedTHB)}</div>
+                          <div className="text-muted-foreground font-normal">
+                            {formatUSD(g.sum.reservedUSD)}
+                          </div>
+                        </td>
+                        <td className="px-3 py-2 text-right tabular-nums">
+                          <div>{formatTHB(g.sum.actualTHB)}</div>
+                          <div className="text-muted-foreground font-normal">
+                            {formatUSD(g.sum.actualUSD)}
+                          </div>
+                        </td>
+                        <td className="px-3 py-2 text-right tabular-nums">
+                          <div>{formatTHB(g.sum.totalSpentTHB)}</div>
+                          <div className="text-muted-foreground font-normal">
+                            {formatUSD(g.sum.totalSpentUSD)}
+                          </div>
+                        </td>
+                        <td className="px-3 py-2 text-muted-foreground whitespace-nowrap font-normal">
+                          {g.creator || "—"}
+                        </td>
+                      </tr>
+                      {isOpen &&
+                        g.entries.map((d) => (
+                          <tr
+                            key={d.id}
+                            className="border-b last:border-0 hover:bg-muted/10"
+                          >
+                            <td />
+                            <td className="px-3 py-2 whitespace-nowrap text-muted-foreground">
+                              <span className="ml-4">
+                                {d.date
+                                  ? new Date(d.date).toLocaleDateString()
+                                  : "—"}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2 whitespace-nowrap text-muted-foreground">
+                              {/* {d.type || "—"} */}
+                            </td>
+                            <td className="px-3 py-2">
+                              {d.budgetCategory || "—"}
+                            </td>
+                            <td className="px-3 py-2"></td>
+                            <td className="px-3 py-2 text-muted-foreground max-w-[240px]"></td>
+                            <td className="px-3 py-2 text-right tabular-nums">
+                              <div>{formatTHB(Number(d.reservedTHB))}</div>
+                              <div className="text-muted-foreground">
+                                {formatUSD(Number(d.reservedUSD))}
+                              </div>
+                            </td>
+                            <td className="px-3 py-2 text-right tabular-nums">
+                              <div>{formatTHB(Number(d.actualTHB))}</div>
+                              <div className="text-muted-foreground">
+                                {formatUSD(Number(d.actualUSD))}
+                              </div>
+                            </td>
+                            <td className="px-3 py-2 text-right tabular-nums">
+                              <div>{formatTHB(Number(d.totalSpentTHB))}</div>
+                              <div className="text-muted-foreground">
+                                {formatUSD(Number(d.totalSpentUSD))}
+                              </div>
+                            </td>
+                            <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">
+                              {/* {d.creator || "—"} */}
+                            </td>
+                          </tr>
+                        ))}
+                    </Fragment>
+                  );
+                })}
+                {groupedMatches.length === 0 && (
                   <tr>
                     <td
-                      colSpan={14}
+                      colSpan={11}
                       className="px-3 py-6 text-center text-muted-foreground"
                     >
-                      No detail entries.
+                      {detailSearch
+                        ? "No entries match your search."
+                        : "No detail entries."}
                     </td>
                   </tr>
                 )}
