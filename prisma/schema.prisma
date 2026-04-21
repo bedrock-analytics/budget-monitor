@@ -23,6 +23,7 @@ model User {
   phone       String?
   dateOfBirth DateTime? @db.Date
   azureOid    String?   @unique
+  canSeeStaffBenefit Boolean @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -80,7 +81,7 @@ model Budget {
   createdAt         DateTime    @default(now())
   updatedAt         DateTime @updatedAt
 
-  purchaseRequestItems PurchaseRequestItem[]
+  purchaseRequests PurchaseRequest[]
 
   @@index([ createdAt])
 }
@@ -93,6 +94,11 @@ enum PurchaseRequestStatus {
   CANCELLED
 }
 
+enum PurchaseStrategy {
+  CALL_FOR_TENDER
+  DIRECT_NEGOTIATION
+}
+
 model PurchaseRequest {
   id            String                @id @default(cuid())
   prNumber      String                @unique
@@ -101,27 +107,48 @@ model PurchaseRequest {
   requesterId   String
   department    String?
   status        PurchaseRequestStatus @default(DRAFT)
+  budgetId      String?
   currency      String                @default("THB")
   totalAmount   Decimal               @db.Decimal(20, 2) @default(0)
   notes         String?
+  dueDate       DateTime?             @db.Date
+  deliveryTo    String?
+  proposedStrategy       PurchaseStrategy?
+  businessJustification  String?
   submittedAt   DateTime?
   approvedAt    DateTime?
   rejectedAt    DateTime?
   createdAt     DateTime              @default(now())
   updatedAt     DateTime              @updatedAt
 
-  requester User                  @relation(fields: [requesterId], references: [id])
-  items     PurchaseRequestItem[]
+  requester   User                        @relation(fields: [requesterId], references: [id])
+  budget      Budget?                     @relation(fields: [budgetId], references: [id])
+  items       PurchaseRequestItem[]
+  attachments PurchaseRequestAttachment[]
 
   @@index([requesterId])
   @@index([status])
+  @@index([budgetId])
   @@index([createdAt])
+}
+
+model PurchaseRequestAttachment {
+  id                String   @id @default(cuid())
+  purchaseRequestId String
+  fileName          String
+  fileKey           String   @unique
+  fileSize          Int
+  contentType       String
+  uploadedAt        DateTime @default(now())
+
+  purchaseRequest PurchaseRequest @relation(fields: [purchaseRequestId], references: [id], onDelete: Cascade)
+
+  @@index([purchaseRequestId])
 }
 
 model PurchaseRequestItem {
   id                  String   @id @default(cuid())
   purchaseRequestId   String
-  budgetId            String
   description         String
   quantity            Int
   unit                String   @default("EA")
@@ -131,10 +158,8 @@ model PurchaseRequestItem {
   updatedAt           DateTime @updatedAt
 
   purchaseRequest PurchaseRequest @relation(fields: [purchaseRequestId], references: [id], onDelete: Cascade)
-  budget          Budget          @relation(fields: [budgetId], references: [id])
 
   @@index([purchaseRequestId])
-  @@index([budgetId])
 }
 
 enum CarBookingStatus {

@@ -10,6 +10,10 @@ export interface PurchaseRequestRow {
   currency: string;
   totalAmount: number;
   notes: string | null;
+  dueDate: string | null;
+  deliveryTo: string | null;
+  proposedStrategy: "CALL_FOR_TENDER" | "DIRECT_NEGOTIATION" | null;
+  businessJustification: string | null;
   createdAt: string;
   updatedAt: string;
   submittedAt: string | null;
@@ -19,7 +23,24 @@ export interface PurchaseRequestRow {
     name: string | null;
     email: string;
   };
+  budget: {
+    id: string;
+    projectTypeName: string;
+    budgetItemName: string;
+    availableTHB: number;
+    availableUSD: number;
+  } | null;
   items: PurchaseRequestItemRow[];
+  attachments: PurchaseRequestAttachmentRow[];
+}
+
+export interface PurchaseRequestAttachmentRow {
+  id: string;
+  fileName: string;
+  fileKey: string;
+  fileSize: number;
+  contentType: string;
+  uploadedAt: string;
 }
 
 export interface PurchaseRequestItemRow {
@@ -29,13 +50,6 @@ export interface PurchaseRequestItemRow {
   unit: string;
   unitPrice: number;
   totalPrice: number;
-  budget: {
-    id: string;
-    projectTypeName: string;
-    budgetItemName: string;
-    availableTHB: number;
-    availableUSD: number;
-  };
 }
 
 export interface BudgetOption {

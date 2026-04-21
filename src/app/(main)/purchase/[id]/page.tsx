@@ -8,26 +8,13 @@ import { useParams, useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { ArrowLeft, Edit, Send } from "lucide-react";
 
-import type { PurchaseRequestRow } from "@/lib/purchase-request";
-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import type { PurchaseRequestRow } from "@/lib/purchase-request";
 
 import { PRStatusBadge } from "../_components/pr-status-badge";
 
@@ -102,11 +89,7 @@ export default function PurchaseRequestDetailPage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.push("/purchase")}
-          >
+          <Button variant="ghost" size="icon" onClick={() => router.push("/purchase")}>
             <ArrowLeft />
           </Button>
           <div>
@@ -134,17 +117,10 @@ export default function PurchaseRequestDetailPage() {
           )}
           {pr.status === "SUBMITTED" && (
             <>
-              <Button
-                size="sm"
-                onClick={() => handleStatusChange("APPROVED")}
-              >
+              <Button size="sm" onClick={() => handleStatusChange("APPROVED")}>
                 Approve
               </Button>
-              <Button
-                size="sm"
-                variant="destructive"
-                onClick={() => handleStatusChange("REJECTED")}
-              >
+              <Button size="sm" variant="destructive" onClick={() => handleStatusChange("REJECTED")}>
                 Reject
               </Button>
             </>
@@ -162,9 +138,7 @@ export default function PurchaseRequestDetailPage() {
             <dl className="grid gap-3 text-sm sm:grid-cols-2">
               <div>
                 <dt className="text-muted-foreground">Requester</dt>
-                <dd className="font-medium">
-                  {pr.requester.name || pr.requester.email}
-                </dd>
+                <dd className="font-medium">{pr.requester.name || pr.requester.email}</dd>
               </div>
               <div>
                 <dt className="text-muted-foreground">Department</dt>
@@ -176,10 +150,52 @@ export default function PurchaseRequestDetailPage() {
               </div>
               <div>
                 <dt className="text-muted-foreground">Created</dt>
-                <dd className="font-medium">
-                  {format(new Date(pr.createdAt), "dd MMM yyyy HH:mm")}
-                </dd>
+                <dd className="font-medium">{format(new Date(pr.createdAt), "dd MMM yyyy HH:mm")}</dd>
               </div>
+              {pr.dueDate && (
+                <div>
+                  <dt className="text-muted-foreground">Due Date</dt>
+                  <dd className="font-medium">{format(new Date(pr.dueDate), "dd MMM yyyy")}</dd>
+                </div>
+              )}
+              {pr.deliveryTo && (
+                <div>
+                  <dt className="text-muted-foreground">Delivery To</dt>
+                  <dd className="font-medium">{pr.deliveryTo}</dd>
+                </div>
+              )}
+              {pr.proposedStrategy && (
+                <div>
+                  <dt className="text-muted-foreground">Proposed Strategy</dt>
+                  <dd className="font-medium">
+                    {pr.proposedStrategy === "DIRECT_NEGOTIATION" ? "Direct Negotiation" : "Call for Tender"}
+                  </dd>
+                </div>
+              )}
+              {pr.budget && (
+                <div className="sm:col-span-2">
+                  <dt className="text-muted-foreground">Budget Line</dt>
+                  <dd className="flex flex-wrap items-center gap-2 font-medium">
+                    <span>
+                      {pr.budget.projectTypeName} - {pr.budget.budgetItemName}
+                    </span>
+                    {(() => {
+                      const available = pr.currency === "USD" ? pr.budget.availableUSD : pr.budget.availableTHB;
+                      return (
+                        <Badge variant={available >= pr.totalAmount ? "outline" : "destructive"}>
+                          {formatCurrency(available)} available
+                        </Badge>
+                      );
+                    })()}
+                  </dd>
+                </div>
+              )}
+              {pr.businessJustification && (
+                <div className="sm:col-span-2">
+                  <dt className="text-muted-foreground">Business Justification</dt>
+                  <dd className="font-medium">{pr.businessJustification}</dd>
+                </div>
+              )}
               {pr.description && (
                 <div className="sm:col-span-2">
                   <dt className="text-muted-foreground">Description</dt>
@@ -208,27 +224,21 @@ export default function PurchaseRequestDetailPage() {
             <Separator />
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground text-sm">Total Amount</span>
-              <span className="font-bold text-lg">
-                {formatCurrency(pr.totalAmount)}
-              </span>
+              <span className="font-bold text-lg">{formatCurrency(pr.totalAmount)}</span>
             </div>
             {pr.submittedAt && (
               <>
                 <Separator />
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground text-sm">Submitted</span>
-                  <span className="text-sm">
-                    {format(new Date(pr.submittedAt), "dd MMM yyyy")}
-                  </span>
+                  <span className="text-sm">{format(new Date(pr.submittedAt), "dd MMM yyyy")}</span>
                 </div>
               </>
             )}
             {pr.approvedAt && (
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground text-sm">Approved</span>
-                <span className="text-sm">
-                  {format(new Date(pr.approvedAt), "dd MMM yyyy")}
-                </span>
+                <span className="text-sm">{format(new Date(pr.approvedAt), "dd MMM yyyy")}</span>
               </div>
             )}
           </CardContent>
@@ -246,56 +256,23 @@ export default function PurchaseRequestDetailPage() {
               <TableRow>
                 <TableHead className="w-12">#</TableHead>
                 <TableHead>Description</TableHead>
-                <TableHead>Budget Line</TableHead>
                 <TableHead className="text-right">Qty</TableHead>
                 <TableHead>Unit</TableHead>
                 <TableHead className="text-right">Unit Price</TableHead>
                 <TableHead className="text-right">Total</TableHead>
-                <TableHead className="text-right">Budget Available</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {pr.items.map((item, idx) => {
-                const available =
-                  pr.currency === "USD"
-                    ? item.budget.availableUSD
-                    : item.budget.availableTHB;
                 return (
                   <TableRow key={item.id}>
                     <TableCell>{idx + 1}</TableCell>
-                    <TableCell className="font-medium">
-                      {item.description}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="text-xs text-muted-foreground">
-                          {item.budget.projectTypeName}
-                        </span>
-                        <span className="text-sm">
-                          {item.budget.budgetItemName}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {item.quantity}
-                    </TableCell>
+                    <TableCell className="font-medium">{item.description}</TableCell>
+                    <TableCell className="text-right tabular-nums">{item.quantity}</TableCell>
                     <TableCell>{item.unit}</TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatCurrency(item.unitPrice)}
-                    </TableCell>
+                    <TableCell className="text-right tabular-nums">{formatCurrency(item.unitPrice)}</TableCell>
                     <TableCell className="text-right font-medium tabular-nums">
                       {formatCurrency(item.totalPrice)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Badge
-                        variant={
-                          available >= item.totalPrice
-                            ? "outline"
-                            : "destructive"
-                        }
-                      >
-                        {formatCurrency(available)}
-                      </Badge>
                     </TableCell>
                   </TableRow>
                 );
@@ -304,9 +281,7 @@ export default function PurchaseRequestDetailPage() {
                 <TableCell colSpan={6} className="text-right font-semibold">
                   Total
                 </TableCell>
-                <TableCell className="text-right font-bold tabular-nums">
-                  {formatCurrency(pr.totalAmount)}
-                </TableCell>
+                <TableCell className="text-right font-bold tabular-nums">{formatCurrency(pr.totalAmount)}</TableCell>
                 <TableCell />
               </TableRow>
             </TableBody>

@@ -34,9 +34,7 @@ export default function CreatePurchaseRequestPage() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="font-bold text-2xl">New Purchase Request</h1>
-        <p className="mt-1 text-muted-foreground text-sm">
-          Create a new purchase request linked to a budget line
-        </p>
+        <p className="mt-1 text-muted-foreground text-sm">Create a new purchase request linked to a budget line</p>
       </div>
       <PRForm requesterId={userId} />
     </div>

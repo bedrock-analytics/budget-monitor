@@ -1,16 +1,31 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
 
-import {
-  aggregateBudgetData,
-  parseBudgetCSV,
-  parseCSVContent,
-} from "@/lib/budget";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { aggregateBudgetData, parseCSVContent } from "@/lib/budget";
 import { db } from "@/lib/db";
 
 export async function GET() {
   try {
+    const session = await getServerSession(authOptions);
+    const email = session?.user?.email;
+
+    const user = email
+      ? await db.user.findUnique({
+          where: { email },
+          select: { canSeeStaffBenefit: true },
+        })
+      : null;
+
     const data = await db.budget.findMany({
-      // where: { userId: user.id },
+      where: user?.canSeeStaffBenefit
+        ? undefined
+        : {
+            NOT: [
+              { budgetItemName: { contains: "staff benefit", mode: "insensitive" } },
+              { budgetItemName: { contains: "staff expense", mode: "insensitive" } },
+            ],
+          },
       orderBy: { updatedAt: "desc" },
       select: {
         id: true,

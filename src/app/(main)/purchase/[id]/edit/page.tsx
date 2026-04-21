@@ -7,10 +7,9 @@ import { useParams } from "next/navigation";
 
 import { useSession } from "next-auth/react";
 
-import type { PurchaseRequestRow } from "@/lib/purchase-request";
-
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { PurchaseRequestRow } from "@/lib/purchase-request";
 
 import { PRForm } from "../../_components/pr-form";
 
@@ -24,9 +23,7 @@ export default function EditPurchaseRequestPage() {
   useEffect(() => {
     Promise.all([
       fetch(`/api/purchase-request/${id}`).then((r) => r.json()),
-      session?.user?.email
-        ? fetch("/api/user").then((r) => r.json())
-        : Promise.resolve(null),
+      session?.user?.email ? fetch("/api/user").then((r) => r.json()) : Promise.resolve(null),
     ])
       .then(([prData, userData]) => {
         setPR(prData.error ? null : prData);
@@ -49,9 +46,7 @@ export default function EditPurchaseRequestPage() {
     return (
       <div className="flex flex-col items-center justify-center gap-4 p-12">
         <p className="text-muted-foreground">
-          {!pr
-            ? "Purchase request not found"
-            : "Only DRAFT requests can be edited"}
+          {!pr ? "Purchase request not found" : "Only DRAFT requests can be edited"}
         </p>
         <Button asChild variant="outline">
           <Link href="/purchase">Back to list</Link>
@@ -73,9 +68,7 @@ export default function EditPurchaseRequestPage() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="font-bold text-2xl">Edit {pr.prNumber}</h1>
-        <p className="mt-1 text-muted-foreground text-sm">
-          Update purchase request details and line items
-        </p>
+        <p className="mt-1 text-muted-foreground text-sm">Update purchase request details and line items</p>
       </div>
       <PRForm requesterId={userId} initialData={pr} />
     </div>

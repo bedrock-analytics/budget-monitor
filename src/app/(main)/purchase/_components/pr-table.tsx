@@ -7,28 +7,20 @@ import Link from "next/link";
 import {
   type ColumnDef,
   type ColumnFiltersState,
-  type PaginationState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  type PaginationState,
   useReactTable,
 } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { EllipsisVertical, Plus, Search } from "lucide-react";
 
-import type { PurchaseRequestRow } from "@/lib/purchase-request";
-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,14 +28,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import type { PurchaseRequestRow } from "@/lib/purchase-request";
 
 import { PRStatusBadge } from "./pr-status-badge";
 
@@ -73,10 +59,7 @@ export function PRTable({ data, onStatusChange, onDelete }: PRTableProps) {
         accessorKey: "prNumber",
         header: "PR Number",
         cell: ({ row }) => (
-          <Link
-            href={`/purchase/${row.original.id}`}
-            className="font-medium text-primary hover:underline"
-          >
+          <Link href={`/purchase/${row.original.id}`} className="font-medium text-primary hover:underline">
             {row.original.prNumber}
           </Link>
         ),
@@ -84,15 +67,12 @@ export function PRTable({ data, onStatusChange, onDelete }: PRTableProps) {
       {
         accessorKey: "title",
         header: "Title",
-        cell: ({ row }) => (
-          <span className="max-w-[200px] truncate block">{row.original.title}</span>
-        ),
+        cell: ({ row }) => <span className="max-w-[200px] truncate block">{row.original.title}</span>,
       },
       {
         accessorKey: "requester.name",
         header: "Requester",
-        cell: ({ row }) =>
-          row.original.requester.name || row.original.requester.email,
+        cell: ({ row }) => row.original.requester.name || row.original.requester.email,
       },
       {
         accessorKey: "department",
@@ -107,21 +87,17 @@ export function PRTable({ data, onStatusChange, onDelete }: PRTableProps) {
       {
         accessorKey: "totalAmount",
         header: "Total Amount",
-        cell: ({ row }) =>
-          formatCurrency(row.original.totalAmount, row.original.currency),
+        cell: ({ row }) => formatCurrency(row.original.totalAmount, row.original.currency),
       },
       {
         accessorKey: "items",
         header: "Items",
-        cell: ({ row }) => (
-          <Badge variant="outline">{row.original.items.length} items</Badge>
-        ),
+        cell: ({ row }) => <Badge variant="outline">{row.original.items.length} items</Badge>,
       },
       {
         accessorKey: "createdAt",
         header: "Created",
-        cell: ({ row }) =>
-          format(new Date(row.original.createdAt), "dd MMM yyyy"),
+        cell: ({ row }) => format(new Date(row.original.createdAt), "dd MMM yyyy"),
       },
       {
         id: "actions",
@@ -143,30 +119,16 @@ export function PRTable({ data, onStatusChange, onDelete }: PRTableProps) {
                     <DropdownMenuItem asChild>
                       <Link href={`/purchase/${pr.id}/edit`}>Edit</Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => onStatusChange(pr.id, "SUBMITTED")}
-                    >
-                      Submit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="text-destructive"
-                      onClick={() => onDelete(pr.id)}
-                    >
+                    <DropdownMenuItem onClick={() => onStatusChange(pr.id, "SUBMITTED")}>Submit</DropdownMenuItem>
+                    <DropdownMenuItem className="text-destructive" onClick={() => onDelete(pr.id)}>
                       Delete
                     </DropdownMenuItem>
                   </>
                 )}
                 {pr.status === "SUBMITTED" && (
                   <>
-                    <DropdownMenuItem
-                      onClick={() => onStatusChange(pr.id, "APPROVED")}
-                    >
-                      Approve
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="text-destructive"
-                      onClick={() => onStatusChange(pr.id, "REJECTED")}
-                    >
+                    <DropdownMenuItem onClick={() => onStatusChange(pr.id, "APPROVED")}>Approve</DropdownMenuItem>
+                    <DropdownMenuItem className="text-destructive" onClick={() => onStatusChange(pr.id, "REJECTED")}>
                       Reject
                     </DropdownMenuItem>
                   </>
@@ -211,12 +173,8 @@ export function PRTable({ data, onStatusChange, onDelete }: PRTableProps) {
             <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search by PR number or title..."
-              value={
-                (table.getColumn("prNumber")?.getFilterValue() as string) ?? ""
-              }
-              onChange={(e) =>
-                table.getColumn("prNumber")?.setFilterValue(e.target.value)
-              }
+              value={(table.getColumn("prNumber")?.getFilterValue() as string) ?? ""}
+              onChange={(e) => table.getColumn("prNumber")?.setFilterValue(e.target.value)}
               className="pl-9"
             />
           </div>
@@ -228,12 +186,7 @@ export function PRTable({ data, onStatusChange, onDelete }: PRTableProps) {
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <TableHead key={header.id} colSpan={header.colSpan}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
+                    {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                   </TableHead>
                 ))}
               </TableRow>
@@ -244,21 +197,13 @@ export function PRTable({ data, onStatusChange, onDelete }: PRTableProps) {
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
+                    <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                   ))}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
+                <TableCell colSpan={columns.length} className="h-24 text-center">
                   No purchase requests found.
                 </TableCell>
               </TableRow>
@@ -267,9 +212,7 @@ export function PRTable({ data, onStatusChange, onDelete }: PRTableProps) {
         </Table>
 
         <div className="flex items-center justify-between">
-          <p className="text-muted-foreground text-sm">
-            {table.getFilteredRowModel().rows.length} total request(s)
-          </p>
+          <p className="text-muted-foreground text-sm">{table.getFilteredRowModel().rows.length} total request(s)</p>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
@@ -279,12 +222,7 @@ export function PRTable({ data, onStatusChange, onDelete }: PRTableProps) {
             >
               Previous
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-            >
+            <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
               Next
             </Button>
           </div>
