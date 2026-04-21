@@ -214,6 +214,7 @@ export function BudgetDetailTable({ rows }: Props) {
               {rows.map((row, i) => {
                 const key = rowKey(row.projectType, row.budgetItemName);
                 const matches = detailsByKey.get(key) ?? [];
+                const groupCount = new Set(matches.map((m) => m.no || "—")).size;
                 const hasDetails = matches.length > 0;
                 return (
                   <tr
@@ -233,8 +234,8 @@ export function BudgetDetailTable({ rows }: Props) {
                       {row.budgetItemName}
                       {hasDetails && (
                         <span className="ml-2 text-xs">
-                          ({matches.length}{" "}
-                          {matches.length === 1 ? "entry" : "entries"})
+                          ({groupCount}{" "}
+                          {groupCount === 1 ? "entry" : "entries"})
                         </span>
                       )}
                     </td>
@@ -374,10 +375,10 @@ export function BudgetDetailTable({ rows }: Props) {
             </DialogTitle>
             <DialogDescription>
               {selected?.budgetItemName} ·{" "}
-              {detailSearch
+              {/* {detailSearch
                 ? `${filteredCount} of ${selectedMatches.length}`
-                : selectedMatches.length}{" "}
-              {selectedMatches.length === 1 ? "entry" : "entries"} ·{" "}
+                : selectedMatches.length}{" "} */}
+              {/* {selectedMatches.length === 1 ? "entry" : "entries"} ·{" "} */}
               {groupedMatches.length}{" "}
               {groupedMatches.length === 1 ? "document" : "documents"}
             </DialogDescription>
@@ -419,9 +420,6 @@ export function BudgetDetailTable({ rows }: Props) {
                   </th>
                   <th className="px-3 py-2 text-right font-medium text-muted-foreground">
                     Total Spent
-                  </th>
-                  <th className="px-3 py-2 text-left font-medium text-muted-foreground">
-                    Creator
                   </th>
                 </tr>
               </thead>
@@ -489,9 +487,6 @@ export function BudgetDetailTable({ rows }: Props) {
                           <div className="text-muted-foreground font-normal">
                             {formatUSD(g.sum.totalSpentUSD)}
                           </div>
-                        </td>
-                        <td className="px-3 py-2 text-muted-foreground whitespace-nowrap font-normal">
-                          {g.creator || "—"}
                         </td>
                       </tr>
                       {isOpen &&

@@ -31,8 +31,6 @@ export default function ChatSection(prop: { chatId: string }) {
       createChat();
     } else {
       getMessages(prop.chatId);
-      // const getMessage = fetchMessages({ chatId: prop.chatId });
-      // console.log("data ", getMessage);
     }
   }, []);
 
@@ -42,13 +40,12 @@ export default function ChatSection(prop: { chatId: string }) {
       const res = await fetch(`/api/chats/${chatId}/messages`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
-        // body: JSON.stringify({ chatId: chatId }),
       });
       const data = await res.json();
       if (data.messages.length) {
         setMessages(data.messages);
-        setIsLoading(false);
       }
+      setIsLoading(false);
     } catch (error) {
       setIsLoading(false);
     }

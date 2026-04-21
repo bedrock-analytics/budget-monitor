@@ -55,6 +55,7 @@ export interface CarBookingRow {
   userId: string;
   projectCode: string | null;
   projectType: string | null;
+  type: string | null;
   carName: string;
   licensePlate: string;
   purpose: string;

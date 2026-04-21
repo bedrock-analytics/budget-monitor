@@ -63,6 +63,7 @@ const formSchema = z
   .object({
     projectCode: z.string().optional(),
     projectType: z.string().optional(),
+    type: z.enum(["offshore", "non-offshore"]).optional(),
     carIndex: z.string().min(1, "Car is required"),
     purpose: z.string().min(1, "Purpose is required"),
     destination: z.string().optional(),
@@ -175,6 +176,10 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
       ? {
           projectCode: booking.projectCode || "",
           projectType: booking.projectType || "",
+          type:
+            booking.type === "offshore" || booking.type === "non-offshore"
+              ? booking.type
+              : undefined,
           carIndex: String(
             CAR_OPTIONS.findIndex(
               (c) => c.licensePlate === booking.licensePlate,
@@ -219,6 +224,7 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
       : {
           projectCode: "",
           projectType: "",
+          type: undefined,
           carIndex: "",
           purpose: "",
           destination: "",
@@ -276,6 +282,7 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
       userId,
       projectCode: values.projectCode || null,
       projectType: values.projectType || null,
+      type: values.type || null,
       carName: car.name,
       licensePlate: car.licensePlate,
       purpose: values.purpose,
@@ -379,6 +386,24 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
             />
             <Controller
               control={form.control}
+              name="type"
+              render={({ field }) => (
+                <Field className="gap-1.5">
+                  <FieldLabel>Type</FieldLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="offshore">Offshore</SelectItem>
+                      <SelectItem value="non-offshore">Non-offshore</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </Field>
+              )}
+            />
+            <Controller
+              control={form.control}
               name="carIndex"
               render={({ field, fieldState }) => (
                 <Field className="gap-1.5" data-invalid={fieldState.invalid}>
@@ -390,7 +415,7 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
                     <SelectContent>
                       {CAR_OPTIONS.map((car, idx) => (
                         <SelectItem key={idx} value={String(idx)}>
-                          {car.name} ({car.licensePlate})
+                          {car.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -435,7 +460,7 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
               name="notes"
               render={({ field }) => (
                 <Field className="gap-1.5">
-                  <FieldLabel>Notes</FieldLabel>
+                  <FieldLabel>Trip description</FieldLabel>
                   <Textarea
                     {...field}
                     placeholder="Additional notes..."
@@ -734,7 +759,7 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
           ))}
         </CardContent>
       </Card>
-
+      {/* 
       <Card>
         <CardHeader className="flex-row items-center justify-between">
           <CardTitle>Daily Car Usage</CardTitle>
@@ -876,7 +901,7 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
             </div>
           ))}
         </CardContent>
-      </Card>
+      </Card> */}
 
       <Card>
         <CardHeader className="flex-row items-center justify-between">

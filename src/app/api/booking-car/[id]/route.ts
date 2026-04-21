@@ -13,6 +13,7 @@ export async function PATCH(
       status,
       projectCode,
       projectType,
+      type,
       carName,
       licensePlate,
       purpose,
@@ -38,6 +39,7 @@ export async function PATCH(
     const bookingUpdate: Record<string, unknown> = {};
     if (projectCode !== undefined) bookingUpdate.projectCode = projectCode || null;
     if (projectType !== undefined) bookingUpdate.projectType = projectType || null;
+    if (type !== undefined) bookingUpdate.type = type || null;
     if (carName !== undefined) bookingUpdate.carName = carName;
     if (licensePlate !== undefined) bookingUpdate.licensePlate = licensePlate;
     if (purpose !== undefined) bookingUpdate.purpose = purpose;
