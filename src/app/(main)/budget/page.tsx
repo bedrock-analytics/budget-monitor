@@ -128,26 +128,6 @@ export default function BudgetPage() {
     }
   }, []);
 
-  const ChatWidget = () => {
-    const chatRef = useRef(null);
-
-    useEffect(() => {
-      const el = chatRef.current;
-
-      const handler = (e: any) => {
-        console.log(e.detail.text);
-      };
-
-      el.addEventListener("send", handler);
-
-      return () => {
-        el.removeEventListener("send", handler);
-      };
-    }, []);
-
-    return <ai-chat-popup ref={chatRef}></ai-chat-popup>;
-  };
-
   useEffect(() => {
     fetchBudget();
   }, [fetchBudget]);
