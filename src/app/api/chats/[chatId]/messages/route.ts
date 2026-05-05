@@ -1,36 +1,24 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { z } from "zod";
-
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { db } from "@/lib/db";
 
 import { v4 as uuidv4 } from "uuid";
+import { z } from "zod";
 
-async function requireChatForUser(chatId: string, email: string) {
-  const user = await db.user.findUnique({
-    where: { email },
-    select: { id: true },
-  });
-  if (!user) return null;
+import { requireUser } from "@/lib/auth";
+import { db } from "@/lib/db";
 
+async function getChatForUser(chatId: string, userId: string) {
   return db.chat.findFirst({
-    where: { id: chatId, userId: user.id },
+    where: { id: chatId, userId },
     select: { id: true, title: true },
   });
 }
 
-export async function GET(
-  _: Request,
-  { params }: { params: Promise<{ chatId: string }> },
-) {
-  const session = await getServerSession(authOptions);
-  const email = session?.user?.email;
-  if (!email)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export async function GET(_: Request, { params }: { params: Promise<{ chatId: string }> }) {
+  const user = await requireUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { chatId } = await params;
-  const chat = await requireChatForUser(chatId, email);
+  const chat = await getChatForUser(chatId, user.id);
   if (!chat) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const messages = await db.message.findMany({
@@ -54,25 +42,17 @@ const CreateMessageSchema = z.object({
   metadata: z.unknown().optional(),
 });
 
-export async function POST(
-  req: Request,
-  { params }: { params: Promise<{ chatId: string }> },
-) {
-  const session = await getServerSession(authOptions);
-  const email = session?.user?.email;
-  if (!email)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export async function POST(req: Request, { params }: { params: Promise<{ chatId: string }> }) {
+  const user = await requireUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { chatId } = await params;
 
-  const chat = await requireChatForUser(chatId, email);
+  const chat = await getChatForUser(chatId, user.id);
   if (!chat) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const body = CreateMessageSchema.safeParse(
-    await req.json().catch(() => ({})),
-  );
-  if (!body.success)
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  const body = CreateMessageSchema.safeParse(await req.json().catch(() => ({})));
+  if (!body.success) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
 
   const message = await db.message.create({
     data: {

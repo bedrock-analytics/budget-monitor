@@ -1,45 +1,16 @@
-import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
+import { type NextRequest, NextResponse } from "next/server";
+
 import { z } from "zod";
 
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
-
-import { NextRequest } from "next/server";
-
-async function getOrCreateUserByEmail(
-  email: string,
-  name?: string | null,
-  image?: string | null,
-) {
-  return db.user.upsert({
-    where: { email },
-    update: {
-      name: name ?? undefined,
-      image: image ?? undefined,
-    },
-    create: {
-      email,
-      name: name ?? undefined,
-      image: image ?? undefined,
-    },
-  });
-}
 
 export async function GET(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams;
   const limit = searchParams.get("limit");
 
-  const session = await getServerSession(authOptions);
-  const email = session?.user?.email;
-  if (!email)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const user = await getOrCreateUserByEmail(
-    email,
-    session.user?.name,
-    session.user?.image,
-  );
+  const user = await requireUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const chats = await db.chat.findMany({
     where: { userId: user.id },
@@ -62,24 +33,14 @@ const CreateChatSchema = z.object({
 });
 
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions);
-  const email = session?.user?.email;
-  if (!email)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const user = await requireUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = CreateChatSchema.safeParse(await req.json().catch(() => ({})));
-  if (!body.success)
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
-
-  const user = await getOrCreateUserByEmail(
-    email,
-    session.user?.name,
-    session.user?.image,
-  );
+  if (!body.success) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
 
   const chat = await db.chat.create({
     data: {
-      // id: uuidv4(),
       userId: user.id,
       title: body.data.title,
     },

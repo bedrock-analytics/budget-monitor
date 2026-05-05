@@ -1,21 +1,12 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
 
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { requireUser } from "@/lib/auth";
 import { aggregateBudgetData, parseCSVContent } from "@/lib/budget";
 import { db } from "@/lib/db";
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    const email = session?.user?.email;
-
-    const user = email
-      ? await db.user.findUnique({
-          where: { email },
-          select: { canSeeStaffBenefit: true },
-        })
-      : null;
+    const user = await requireUser();
 
     const data = await db.budget.findMany({
       where: user?.canSeeStaffBenefit
@@ -61,10 +52,7 @@ export async function GET() {
     return NextResponse.json(transform);
   } catch (error) {
     console.error("Failed to read budget CSV:", error);
-    return NextResponse.json(
-      { error: "Failed to load budget data" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to load budget data" }, { status: 500 });
   }
 }
 
@@ -81,10 +69,7 @@ export async function POST(request: Request) {
     const rows = parseCSVContent(content);
 
     if (rows.length === 0) {
-      return NextResponse.json(
-        { error: "No data rows found in CSV" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "No data rows found in CSV" }, { status: 400 });
     }
     await db.budget.deleteMany();
 
@@ -108,9 +93,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ imported: rows.length });
   } catch (error) {
     console.error("Failed to import budget CSV:", error);
-    return NextResponse.json(
-      { error: "Failed to import budget data" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to import budget data" }, { status: 500 });
   }
 }

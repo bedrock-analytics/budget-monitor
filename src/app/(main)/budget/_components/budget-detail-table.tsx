@@ -136,38 +136,40 @@ export function BudgetDetailTable({ rows }: Props) {
       else groups.set(k, [d]);
     }
 
-    return Array.from(groups.entries()).map(([no, entries]) => {
-      const sum = entries.reduce(
-        (acc, e) => ({
-          reservedTHB: acc.reservedTHB + Number(e.reservedTHB),
-          actualTHB: acc.actualTHB + Number(e.actualTHB),
-          totalSpentTHB: acc.totalSpentTHB + Number(e.totalSpentTHB),
-          reservedUSD: acc.reservedUSD + Number(e.reservedUSD),
-          actualUSD: acc.actualUSD + Number(e.actualUSD),
-          totalSpentUSD: acc.totalSpentUSD + Number(e.totalSpentUSD),
-        }),
-        {
-          reservedTHB: 0,
-          actualTHB: 0,
-          totalSpentTHB: 0,
-          reservedUSD: 0,
-          actualUSD: 0,
-          totalSpentUSD: 0,
-        },
-      );
-      const first = entries[0];
-      return {
-        no,
-        entries,
-        sum,
-        type: first?.type ?? "",
-        date: first?.date ?? null,
-        budgetCategory: first?.budgetCategory ?? null,
-        remark: first?.remark ?? null,
-        vendor: first?.vendor ?? "",
-        creator: first?.creator ?? "",
-      };
-    });
+    return Array.from(groups.entries())
+      .map(([no, entries]) => {
+        const sum = entries.reduce(
+          (acc, e) => ({
+            reservedTHB: acc.reservedTHB + Number(e.reservedTHB),
+            actualTHB: acc.actualTHB + Number(e.actualTHB),
+            totalSpentTHB: acc.totalSpentTHB + Number(e.totalSpentTHB),
+            reservedUSD: acc.reservedUSD + Number(e.reservedUSD),
+            actualUSD: acc.actualUSD + Number(e.actualUSD),
+            totalSpentUSD: acc.totalSpentUSD + Number(e.totalSpentUSD),
+          }),
+          {
+            reservedTHB: 0,
+            actualTHB: 0,
+            totalSpentTHB: 0,
+            reservedUSD: 0,
+            actualUSD: 0,
+            totalSpentUSD: 0,
+          },
+        );
+        const first = entries[0];
+        return {
+          no,
+          entries,
+          sum,
+          type: first?.type ?? "",
+          date: first?.date ?? null,
+          budgetCategory: first?.budgetCategory ?? null,
+          remark: first?.remark ?? null,
+          vendor: first?.vendor ?? "",
+          creator: first?.creator ?? "",
+        };
+      })
+      .sort((a, b) => b.sum.totalSpentTHB - a.sum.totalSpentTHB);
   }, [selectedMatches, detailSearch]);
 
   const filteredCount = useMemo(

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type {
   BudgetData,
@@ -127,6 +127,26 @@ export default function BudgetPage() {
       setLoading(false);
     }
   }, []);
+
+  const ChatWidget = () => {
+    const chatRef = useRef(null);
+
+    useEffect(() => {
+      const el = chatRef.current;
+
+      const handler = (e: any) => {
+        console.log(e.detail.text);
+      };
+
+      el.addEventListener("send", handler);
+
+      return () => {
+        el.removeEventListener("send", handler);
+      };
+    }, []);
+
+    return <ai-chat-popup ref={chatRef}></ai-chat-popup>;
+  };
 
   useEffect(() => {
     fetchBudget();

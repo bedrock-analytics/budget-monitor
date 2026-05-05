@@ -1,40 +1,12 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
+
 import { z } from "zod";
 
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { db } from "@/lib/db";
-
-async function getOrCreateUserByEmail(
-  email: string,
-  name?: string | null,
-  image?: string | null,
-) {
-  return db.user.upsert({
-    where: { email },
-    update: {
-      name: name ?? undefined,
-      image: image ?? undefined,
-    },
-    create: {
-      email,
-      name: name ?? undefined,
-      image: image ?? undefined,
-    },
-  });
-}
+import { requireUser } from "@/lib/auth";
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  const email = session?.user?.email;
-  if (!email)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const user = await getOrCreateUserByEmail(
-    email,
-    session.user?.name,
-    session.user?.image,
-  );
+  const user = await requireUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   return NextResponse.json({ user });
 }
@@ -44,20 +16,11 @@ const CreateChatSchema = z.object({
 });
 
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions);
-  const email = session?.user?.email;
-  if (!email)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const user = await requireUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = CreateChatSchema.safeParse(await req.json().catch(() => ({})));
-  if (!body.success)
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
-
-  const user = await getOrCreateUserByEmail(
-    email,
-    session.user?.name,
-    session.user?.image,
-  );
+  if (!body.success) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
 
   return NextResponse.json({ user }, { status: 201 });
 }

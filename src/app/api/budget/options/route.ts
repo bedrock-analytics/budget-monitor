@@ -27,9 +27,6 @@ export async function GET() {
     return NextResponse.json(options);
   } catch (error) {
     console.error("Failed to fetch budget options:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch budget options" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to fetch budget options" }, { status: 500 });
   }
 }

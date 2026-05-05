@@ -23,6 +23,7 @@ model User {
   phone       String?
   dateOfBirth DateTime? @db.Date
   azureOid    String?   @unique
+  department  String?
   canSeeStaffBenefit Boolean @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -32,8 +33,21 @@ model User {
   carBookings      CarBooking[]
   carBookingPassengers CarBookingPassenger[]
   facilityInspections  FacilityQualityInspection[]
+  activities           UserActivity[]
 
   @@index([createdAt])
+}
+
+model UserActivity {
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime @db.Date
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([date])
 }
 
 model Chat {
