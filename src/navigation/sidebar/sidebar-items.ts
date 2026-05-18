@@ -90,6 +90,12 @@ export const sidebarItems: NavGroup[] = [
         comingSoon: false,
       },
       {
+        title: "Project",
+        url: "/project",
+        icon: Banknote,
+        comingSoon: false,
+      },
+      {
         title: "Chat",
         url: "/chat",
         icon: Forklift,
