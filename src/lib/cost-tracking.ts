@@ -171,16 +171,12 @@ export function parseCostTrackingCSV(content: string): ParsedCostTracking {
   const activities: CostTrackingActivityRow[] = [];
   let currentGroup = "";
   let position = 0;
-  let actualChargeUSD = 0;
-  let estimateUSD = 0;
   const exchangeRates: Record<string, number> = {};
 
   for (let r = headerRowIdx + 1; r < records.length; r++) {
     const row = records[r];
 
     if (row[4]?.trim() === "Actual Charge") {
-      actualChargeUSD = parseNum(row[5]);
-      estimateUSD = parseNum(row[8]);
       continue;
     }
 
@@ -231,11 +227,14 @@ export function parseCostTrackingCSV(content: string): ParsedCostTracking {
   const startDate = validDates[0] ?? null;
   const endDate = validDates[validDates.length - 1] ?? null;
 
+  const sumInvoiceUSD = activities.reduce((acc, a) => acc + a.invoiceUSD, 0);
+  const sumPOUSDTotal = activities.reduce((acc, a) => acc + a.sumPOUSD, 0);
+
   return {
     projectCode,
     projectName,
-    actualChargeUSD,
-    estimateUSD,
+    actualChargeUSD: sumInvoiceUSD,
+    estimateUSD: sumPOUSDTotal,
     exchangeRates,
     startDate,
     endDate,

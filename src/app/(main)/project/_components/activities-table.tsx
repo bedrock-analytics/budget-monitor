@@ -4,7 +4,13 @@ import { Fragment, useMemo, useState } from "react";
 
 import { ChevronDown, ChevronRight } from "lucide-react";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { formatUSD } from "@/lib/utils";
 
@@ -89,13 +95,21 @@ export function ActivitiesTable({ activities }: Props) {
             <thead>
               <tr className="border-b bg-muted/50">
                 <th className="w-8 px-2 py-3" />
-                <th className="px-3 py-3 text-left font-medium text-muted-foreground">Activity / Group</th>
-                <th className="px-3 py-3 text-left font-medium text-muted-foreground">Item Code</th>
-                <th className="px-3 py-3 text-right font-medium text-muted-foreground">Rate</th>
-                <th className="px-3 py-3 text-right font-medium text-muted-foreground">Qty</th>
-                <th className="px-3 py-3 text-right font-medium text-muted-foreground">Estimate (USD)</th>
-                <th className="px-3 py-3 text-right font-medium text-muted-foreground">Actual (USD)</th>
-                <th className="px-3 py-3 text-right font-medium text-muted-foreground">Variance</th>
+                <th className="px-3 py-3 text-left font-medium text-muted-foreground">
+                  Activity / Group
+                </th>
+                <th className="px-3 py-3 text-left font-medium text-muted-foreground">
+                  Item Code
+                </th>
+                <th className="px-3 py-3 text-right font-medium text-muted-foreground">
+                  Estimate (USD)
+                </th>
+                <th className="px-3 py-3 text-right font-medium text-muted-foreground">
+                  Actual (USD)
+                </th>
+                <th className="px-3 py-3 text-right font-medium text-muted-foreground">
+                  Available
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -109,16 +123,25 @@ export function ActivitiesTable({ activities }: Props) {
                       onClick={() => toggle(g.groupName)}
                     >
                       <td className="px-2 py-2.5 text-muted-foreground">
-                        {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                        {isOpen ? (
+                          <ChevronDown className="h-4 w-4" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4" />
+                        )}
                       </td>
-                      <td className="px-3 py-2.5" colSpan={4}>
+                      <td className="px-3 py-2.5" colSpan={2}>
                         {g.groupName}
                         <span className="ml-2 font-normal text-muted-foreground text-xs">
-                          ({g.rows.length} {g.rows.length === 1 ? "item" : "items"})
+                          ({g.rows.length}{" "}
+                          {g.rows.length === 1 ? "item" : "items"})
                         </span>
                       </td>
-                      <td className="px-3 py-2.5 text-right tabular-nums">{formatUSD(g.estimateUSD)}</td>
-                      <td className="px-3 py-2.5 text-right tabular-nums">{formatUSD(g.actualUSD)}</td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">
+                        {formatUSD(g.estimateUSD)}
+                      </td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">
+                        {formatUSD(g.actualUSD)}
+                      </td>
                       <td
                         className={`px-3 py-2.5 text-right tabular-nums ${variance < 0 ? "text-destructive" : "text-green-600"}`}
                       >
@@ -127,20 +150,36 @@ export function ActivitiesTable({ activities }: Props) {
                     </tr>
                     {isOpen &&
                       g.rows.map((a) => {
-                        const rowVariance = Number(a.sumPOUSD) - Number(a.invoiceUSD);
+                        const rowVariance =
+                          Number(a.sumPOUSD) - Number(a.invoiceUSD);
                         return (
-                          <tr key={a.id} className="border-b last:border-0 hover:bg-muted/10">
+                          <tr
+                            key={a.id}
+                            className="border-b last:border-0 hover:bg-muted/10"
+                          >
                             <td />
-                            <td className="px-3 py-2 pl-6 text-muted-foreground">{a.description}</td>
-                            <td className="px-3 py-2 text-muted-foreground text-xs">{a.itemCode}</td>
-                            <td className="px-3 py-2 text-right text-muted-foreground tabular-nums">
-                              {Number(a.rate) > 0 ? Number(a.rate).toLocaleString() : "—"}
+                            <td className="px-3 py-2 pl-6 text-muted-foreground">
+                              {a.description}
+                            </td>
+                            <td className="px-3 py-2 text-muted-foreground text-xs">
+                              {a.itemCode}
+                            </td>
+                            {/* <td className="px-3 py-2 text-right text-muted-foreground tabular-nums">
+                              {Number(a.rate) > 0
+                                ? Number(a.rate).toLocaleString()
+                                : "—"}
                             </td>
                             <td className="px-3 py-2 text-right text-muted-foreground tabular-nums">
-                              {Number(a.trackingAmount) > 0 ? Number(a.trackingAmount).toLocaleString() : "—"}
+                              {Number(a.trackingAmount) > 0
+                                ? Number(a.trackingAmount).toLocaleString()
+                                : "—"}
+                            </td> */}
+                            <td className="px-3 py-2 text-right tabular-nums">
+                              {formatUSD(Number(a.sumPOUSD))}
                             </td>
-                            <td className="px-3 py-2 text-right tabular-nums">{formatUSD(Number(a.sumPOUSD))}</td>
-                            <td className="px-3 py-2 text-right tabular-nums">{formatUSD(Number(a.invoiceUSD))}</td>
+                            <td className="px-3 py-2 text-right tabular-nums">
+                              {formatUSD(Number(a.invoiceUSD))}
+                            </td>
                             <td
                               className={`px-3 py-2 text-right tabular-nums ${rowVariance < 0 ? "text-destructive" : "text-muted-foreground"}`}
                             >
@@ -154,7 +193,10 @@ export function ActivitiesTable({ activities }: Props) {
               })}
               {groups.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-3 py-8 text-center text-muted-foreground">
+                  <td
+                    colSpan={8}
+                    className="px-3 py-8 text-center text-muted-foreground"
+                  >
                     No activities match your search.
                   </td>
                 </tr>
@@ -163,14 +205,20 @@ export function ActivitiesTable({ activities }: Props) {
             {groups.length > 0 && (
               <tfoot>
                 <tr className="border-t-2 bg-muted/50 font-semibold">
-                  <td className="px-2 py-2.5" colSpan={5}>
+                  <td className="px-2 py-2.5" colSpan={3}>
                     Total ({filtered.length} activities)
                   </td>
-                  <td className="px-3 py-2.5 text-right tabular-nums">{formatUSD(totals.estimateUSD)}</td>
-                  <td className="px-3 py-2.5 text-right tabular-nums">{formatUSD(totals.actualUSD)}</td>
+                  <td className="px-3 py-2.5 text-right tabular-nums">
+                    {formatUSD(totals.estimateUSD)}
+                  </td>
+                  <td className="px-3 py-2.5 text-right tabular-nums">
+                    {formatUSD(totals.actualUSD)}
+                  </td>
                   <td
                     className={`px-3 py-2.5 text-right tabular-nums ${
-                      totals.estimateUSD - totals.actualUSD < 0 ? "text-destructive" : "text-green-600"
+                      totals.estimateUSD - totals.actualUSD < 0
+                        ? "text-destructive"
+                        : "text-green-600"
                     }`}
                   >
                     {formatUSD(totals.estimateUSD - totals.actualUSD)}

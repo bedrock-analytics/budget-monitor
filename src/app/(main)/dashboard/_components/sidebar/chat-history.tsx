@@ -1,6 +1,6 @@
 "use client";
 
-import { redirect, usePathname } from "next/navigation";
+import { redirect } from "next/navigation";
 
 import { DropdownMenu } from "@/components/ui/dropdown-menu";
 import {
@@ -22,12 +22,12 @@ export function ChatHistory({ items }: any) {
 
   const params = useParams();
 
-  useEffect(() => {
-    const id = params.chatId;
-    if (id) {
-      setChatId(id);
-    }
-  }, [params]);
+  // useEffect(() => {
+  //   const id = params.chatId;
+  //   if (id) {
+  //     setChatId(id);
+  //   }
+  // }, [params]);
 
   return (
     <>

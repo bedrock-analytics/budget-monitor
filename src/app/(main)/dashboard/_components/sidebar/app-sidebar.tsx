@@ -90,26 +90,26 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     })),
   );
 
-  useEffect(() => {
-    const id = params.chatId;
-    if (id) {
-      setChatId(id);
-    }
-    getHistoryChat();
-  }, [params]);
+  // useEffect(() => {
+  //   const id = params.chatId;
+  //   if (id) {
+  //     setChatId(id);
+  //   }
+  //   getHistoryChat();
+  // }, [params]);
 
   const variant = isSynced ? sidebarVariant : props.variant;
   const collapsible = isSynced ? sidebarCollapsible : props.collapsible;
 
-  const getHistoryChat = async () => {
-    console.log("getHistoryChat");
-    const res = await fetch("/api/chats?limit=10", {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
-    const { chats } = await res.json();
-    setChats(chats);
-  };
+  // const getHistoryChat = async () => {
+  //   console.log("getHistoryChat");
+  //   const res = await fetch("/api/chats?limit=10", {
+  //     method: "GET",
+  //     headers: { "Content-Type": "application/json" },
+  //   });
+  //   const { chats } = await res.json();
+  //   setChats(chats);
+  // };
 
   return (
     <Sidebar {...props} variant={variant} collapsible={collapsible}>
@@ -129,7 +129,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={sidebarItems} />
-        <ChatHistory items={chats} />
+        {/* <ChatHistory items={chats} /> */}
         {/* <NavDocuments items={data.documents} /> */}
         {/* <NavSecondary items={data.navSecondary} className="mt-auto" /> */}
       </SidebarContent>

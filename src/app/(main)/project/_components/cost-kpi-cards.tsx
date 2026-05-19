@@ -21,13 +21,13 @@ export function CostKpiCards({ estimateUSD, actualUSD }: Props) {
       tone: "default" as const,
     },
     {
-      title: "Actual Charged",
+      title: "Actual",
       value: formatUSD(actualUSD),
       sub: `${utilizationPct.toFixed(1)}% of estimate`,
       tone: "default" as const,
     },
     {
-      title: "Variance",
+      title: "Available",
       value: formatUSD(variance),
       sub: variance >= 0 ? "Under budget" : "Over budget",
       tone: isOverBudget ? "danger" : ("good" as const),
@@ -45,12 +45,18 @@ export function CostKpiCards({ estimateUSD, actualUSD }: Props) {
       {cards.map((card) => (
         <Card key={card.title} data-slot="card">
           <CardHeader className="pb-2">
-            <CardTitle className="font-medium text-muted-foreground text-sm">{card.title}</CardTitle>
+            <CardTitle className="font-medium text-muted-foreground text-sm">
+              {card.title}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div
               className={`font-bold text-2xl tabular-nums ${
-                card.tone === "danger" ? "text-destructive" : card.tone === "good" ? "text-green-600" : ""
+                card.tone === "danger"
+                  ? "text-destructive"
+                  : card.tone === "good"
+                    ? "text-green-600"
+                    : ""
               }`}
             >
               {card.value}

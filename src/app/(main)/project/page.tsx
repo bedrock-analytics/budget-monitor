@@ -4,7 +4,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useSession } from "next-auth/react";
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import { ActivitiesTable } from "./_components/activities-table";
 import { CostCategoryChart } from "./_components/cost-category-chart";
@@ -31,7 +37,11 @@ export default function ProjectPage() {
       const data: ProjectListItem[] = await res.json();
       setProjects(data);
       if (data.length > 0) {
-        setSelectedCode((prev) => (prev && data.some((p) => p.projectCode === prev) ? prev : data[0].projectCode));
+        setSelectedCode((prev) =>
+          prev && data.some((p) => p.projectCode === prev)
+            ? prev
+            : data[0].projectCode,
+        );
       } else {
         setSelectedCode("");
         setDetail(null);
@@ -57,10 +67,13 @@ export default function ProjectPage() {
       setDetailLoading(true);
       setError(null);
       try {
-        const res = await fetch(`/api/cost-tracking/${encodeURIComponent(selectedCode)}`);
+        const res = await fetch(
+          `/api/cost-tracking/${encodeURIComponent(selectedCode)}`,
+        );
         if (!res.ok) throw new Error("Failed to load project detail");
         const data: ProjectDetail = await res.json();
         if (!cancelled) setDetail(data);
+        console.log("Detail ", data);
       } catch (e) {
         if (!cancelled) {
           setError(e instanceof Error ? e.message : "Unknown error");
@@ -76,7 +89,9 @@ export default function ProjectPage() {
 
   const canUpload = useMemo(() => {
     const email = session?.user?.email?.toLowerCase();
-    return email === "thanabutc@rovula.com" || email === "nuttapongsa@rovula.com";
+    return (
+      email === "thanabutc@rovula.com" || email === "nuttapongsa@rovula.com"
+    );
   }, [session]);
 
   const estimateUSD = detail ? Number(detail.estimateUSD) : 0;
@@ -93,7 +108,8 @@ export default function ProjectPage() {
               {detail.startDate && detail.endDate && (
                 <>
                   {" · "}
-                  {new Date(detail.startDate).toLocaleDateString()} – {new Date(detail.endDate).toLocaleDateString()}
+                  {new Date(detail.startDate).toLocaleDateString()} –{" "}
+                  {new Date(detail.endDate).toLocaleDateString()}
                 </>
               )}
             </p>
@@ -103,19 +119,32 @@ export default function ProjectPage() {
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <Select value={selectedCode} onValueChange={setSelectedCode} disabled={listLoading || projects.length === 0}>
+        <Select
+          value={selectedCode}
+          onValueChange={setSelectedCode}
+          disabled={listLoading || projects.length === 0}
+        >
           <SelectTrigger className="w-[360px]">
-            <SelectValue placeholder={listLoading ? "Loading projects..." : "Select a project"} />
+            <SelectValue
+              placeholder={
+                listLoading ? "Loading projects..." : "Select a project"
+              }
+            />
           </SelectTrigger>
           <SelectContent>
             {projects.map((p) => (
               <SelectItem key={p.id} value={p.projectCode}>
-                {p.projectName} <span className="text-muted-foreground">({p.projectCode})</span>
+                {p.projectName}{" "}
+                <span className="text-muted-foreground">({p.projectCode})</span>
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
-        {detailLoading && <span className="text-muted-foreground text-sm">Loading project...</span>}
+        {detailLoading && (
+          <span className="text-muted-foreground text-sm">
+            Loading project...
+          </span>
+        )}
       </div>
 
       {error && <p className="text-destructive text-sm">{error}</p>}
@@ -137,7 +166,11 @@ export default function ProjectPage() {
           <ActivitiesTable activities={detail.activities} />
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <CostCategoryChart activities={detail.activities} />
-            <SCurveChart activities={detail.activities} />
+            <SCurveChart
+              activities={detail.activities}
+              startDate={detail.startDate}
+              endDate={detail.endDate}
+            />
           </div>
         </>
       )}
