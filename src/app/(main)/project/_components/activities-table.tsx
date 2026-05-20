@@ -91,7 +91,7 @@ export function ActivitiesTable({ activities }: Props) {
                 <th className="w-8 px-2 py-3" />
                 <th className="px-3 py-3 text-left font-medium text-muted-foreground">Activity / Group</th>
                 <th className="px-3 py-3 text-left font-medium text-muted-foreground">Item Code</th>
-                <th className="px-3 py-3 text-right font-medium text-muted-foreground">Estimate (USD)</th>
+                <th className="px-3 py-3 text-right font-medium text-muted-foreground">Reserved (USD)</th>
                 <th className="px-3 py-3 text-right font-medium text-muted-foreground">Actual (USD)</th>
                 <th className="px-3 py-3 text-right font-medium text-muted-foreground">Available</th>
               </tr>

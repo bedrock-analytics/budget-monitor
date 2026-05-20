@@ -10,6 +10,7 @@ import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 
 import { ActivitiesTable } from "../_components/activities-table";
+import { BudgetSpendChart } from "../_components/budget-spend-chart";
 import { CostCategoryChart } from "../_components/cost-category-chart";
 import { CostKpiCards } from "../_components/cost-kpi-cards";
 import { CostTrackingUploadButton } from "../_components/cost-tracking-upload-button";
@@ -88,6 +89,7 @@ export default function ProjectDetailPage({ params }: PageProps) {
           <CostKpiCards budgetUSD={budgetUSD} estimateUSD={estimateUSD} actualUSD={actualUSD} />
           <ActivitiesTable activities={detail.activities} />
           <ProjectBudgetDetailTable projectCode={detail.projectCode} />
+          <BudgetSpendChart projectCode={detail.projectCode} />
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <CostCategoryChart activities={detail.activities} />
             <SCurveChart activities={detail.activities} startDate={detail.startDate} endDate={detail.endDate} />

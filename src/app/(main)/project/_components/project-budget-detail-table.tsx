@@ -155,7 +155,7 @@ export function ProjectBudgetDetailTable({ projectCode }: Props) {
                 <TableHead>Remark</TableHead>
                 <TableHead className="text-right">Reserved</TableHead>
                 <TableHead className="text-right">Actual</TableHead>
-                <TableHead className="text-right">Total Spent</TableHead>
+                <TableHead className="text-right">Available</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
