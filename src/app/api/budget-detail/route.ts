@@ -3,18 +3,18 @@ import { NextResponse } from "next/server";
 import { parseBudgetDetailCSV } from "@/lib/budget-detail";
 import { db } from "@/lib/db";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const projectCode = searchParams.get("projectCode");
     const data = await db.budgetDetail.findMany({
+      where: projectCode ? { projectCode: { contains: projectCode } } : undefined,
       orderBy: [{ projectType: "asc" }, { date: "desc" }],
     });
     return NextResponse.json(data);
   } catch (error) {
     console.error("Failed to load budget detail:", error);
-    return NextResponse.json(
-      { error: "Failed to load budget detail" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to load budget detail" }, { status: 500 });
   }
 }
 
@@ -31,10 +31,7 @@ export async function POST(request: Request) {
     const rows = parseBudgetDetailCSV(content);
 
     if (rows.length === 0) {
-      return NextResponse.json(
-        { error: "No data rows found in CSV" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "No data rows found in CSV" }, { status: 400 });
     }
 
     await db.budgetDetail.deleteMany();
@@ -67,9 +64,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ imported: rows.length });
   } catch (error) {
     console.error("Failed to import budget detail CSV:", error);
-    return NextResponse.json(
-      { error: "Failed to import budget detail data" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to import budget detail data" }, { status: 500 });
   }
 }

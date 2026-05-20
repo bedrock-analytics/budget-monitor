@@ -29,6 +29,7 @@ export interface ProjectDetail {
   endDate: string | null;
   actualChargeUSD: string | number;
   estimateUSD: string | number;
+  budgetUSD: string | number;
   exchangeRates: Record<string, number> | null;
   activities: ActivityRecord[];
 }
@@ -41,5 +42,6 @@ export interface ProjectListItem {
   endDate: string | null;
   actualChargeUSD: string | number;
   estimateUSD: string | number;
+  budgetUSD: string | number;
   updatedAt: string;
 }

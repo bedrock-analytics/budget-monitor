@@ -17,6 +17,7 @@ export async function GET() {
         endDate: true,
         actualChargeUSD: true,
         estimateUSD: true,
+        budgetUSD: true,
         updatedAt: true,
       },
     });

@@ -2,28 +2,10 @@
 
 import { useMemo } from "react";
 
-import {
-  Bar,
-  CartesianGrid,
-  ComposedChart,
-  Line,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Bar, CartesianGrid, ComposedChart, Line, XAxis, YAxis } from "recharts";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  type ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { formatUSD } from "@/lib/utils";
 
 import type { ActivityRecord } from "./types";
@@ -47,9 +29,7 @@ const chartConfig = {
 
 export function SCurveChart({ activities, startDate, endDate }: Props) {
   const data = useMemo(() => {
-    const start = startDate
-      ? new Date(startDate).toISOString().slice(0, 10)
-      : null;
+    const start = startDate ? new Date(startDate).toISOString().slice(0, 10) : null;
     const end = endDate ? new Date(endDate).toISOString().slice(0, 10) : null;
     console.log("start ", start);
     console.log("end ", end);
@@ -66,9 +46,7 @@ export function SCurveChart({ activities, startDate, endDate }: Props) {
         dayTotals.set(dv.date, (dayTotals.get(dv.date) ?? 0) + usd);
       }
     }
-    const sorted = Array.from(dayTotals.entries()).sort(([a], [b]) =>
-      a.localeCompare(b),
-    );
+    const sorted = Array.from(dayTotals.entries()).sort(([a], [b]) => a.localeCompare(b));
     let cumulative = 0;
     console.log("activities ", activities);
     return sorted.map(([date, daily]) => {
@@ -81,21 +59,14 @@ export function SCurveChart({ activities, startDate, endDate }: Props) {
     <Card>
       <CardHeader>
         <CardTitle>Planned Spend (S-Curve)</CardTitle>
-        <CardDescription>
-          Daily planned cost (bars) and cumulative planned cost (line) in USD
-        </CardDescription>
+        <CardDescription>Daily planned cost (bars) and cumulative planned cost (line) in USD</CardDescription>
       </CardHeader>
       <CardContent>
         {data.length === 0 ? (
-          <p className="py-8 text-center text-muted-foreground text-sm">
-            No daily allocation data available.
-          </p>
+          <p className="py-8 text-center text-muted-foreground text-sm">No daily allocation data available.</p>
         ) : (
           <ChartContainer config={chartConfig} className="h-72 w-full">
-            <ComposedChart
-              data={data}
-              margin={{ top: 4, right: 16, bottom: 4, left: 8 }}
-            >
+            <ComposedChart data={data} margin={{ top: 4, right: 16, bottom: 4, left: 8 }}>
               <CartesianGrid vertical={false} />
               <XAxis
                 dataKey="date"
@@ -133,23 +104,15 @@ export function SCurveChart({ activities, startDate, endDate }: Props) {
               <ChartTooltip
                 content={
                   <ChartTooltipContent
-                    labelFormatter={(label) =>
-                      new Date(label as string).toLocaleDateString()
-                    }
+                    labelFormatter={(label) => new Date(label as string).toLocaleDateString()}
                     formatter={(value, name) => [
                       formatUSD(value as number),
-                      chartConfig[name as keyof typeof chartConfig]?.label ??
-                        name,
+                      chartConfig[name as keyof typeof chartConfig]?.label ?? name,
                     ]}
                   />
                 }
               />
-              <Bar
-                yAxisId="daily"
-                dataKey="daily"
-                fill="var(--color-daily)"
-                radius={[2, 2, 0, 0]}
-              />
+              <Bar yAxisId="daily" dataKey="daily" fill="var(--color-daily)" radius={[2, 2, 0, 0]} />
               <Line
                 yAxisId="cumulative"
                 dataKey="estimate"

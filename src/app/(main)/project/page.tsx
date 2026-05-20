@@ -2,54 +2,64 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import Link from "next/link";
+
+import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import { useSession } from "next-auth/react";
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { formatUSD } from "@/lib/utils";
 
-import { ActivitiesTable } from "./_components/activities-table";
-import { CostCategoryChart } from "./_components/cost-category-chart";
-import { CostKpiCards } from "./_components/cost-kpi-cards";
 import { CostTrackingUploadButton } from "./_components/cost-tracking-upload-button";
-import { SCurveChart } from "./_components/s-curve-chart";
-import type { ProjectDetail, ProjectListItem } from "./_components/types";
+import type { ProjectListItem } from "./_components/types";
 
-export default function ProjectPage() {
+type SortKey =
+  | "projectCode"
+  | "projectName"
+  | "startDate"
+  | "endDate"
+  | "budgetUSD"
+  | "estimateUSD"
+  | "actualChargeUSD"
+  | "marginUSD"
+  | "spentPct";
+
+type SortDir = "asc" | "desc";
+
+interface Row extends ProjectListItem {
+  budget: number;
+  estimate: number;
+  actual: number;
+  margin: number;
+  available: number;
+  spentPct: number;
+}
+
+const formatDate = (d: string | null) => (d ? new Date(d).toLocaleDateString() : "—");
+
+export default function ProjectOverviewPage() {
   const { data: session } = useSession();
   const [projects, setProjects] = useState<ProjectListItem[]>([]);
-  const [selectedCode, setSelectedCode] = useState<string>("");
-  const [detail, setDetail] = useState<ProjectDetail | null>(null);
-  const [listLoading, setListLoading] = useState(true);
-  const [detailLoading, setDetailLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [sortKey, setSortKey] = useState<SortKey>("projectCode");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
 
   const fetchProjects = useCallback(async () => {
-    setListLoading(true);
+    setLoading(true);
     setError(null);
     try {
       const res = await fetch("/api/cost-tracking");
       if (!res.ok) throw new Error("Failed to load projects");
       const data: ProjectListItem[] = await res.json();
       setProjects(data);
-      if (data.length > 0) {
-        setSelectedCode((prev) =>
-          prev && data.some((p) => p.projectCode === prev)
-            ? prev
-            : data[0].projectCode,
-        );
-      } else {
-        setSelectedCode("");
-        setDetail(null);
-      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unknown error");
     } finally {
-      setListLoading(false);
+      setLoading(false);
     }
   }, []);
 
@@ -57,99 +67,167 @@ export default function ProjectPage() {
     fetchProjects();
   }, [fetchProjects]);
 
-  useEffect(() => {
-    if (!selectedCode) {
-      setDetail(null);
-      return;
-    }
-    let cancelled = false;
-    (async () => {
-      setDetailLoading(true);
-      setError(null);
-      try {
-        const res = await fetch(
-          `/api/cost-tracking/${encodeURIComponent(selectedCode)}`,
-        );
-        if (!res.ok) throw new Error("Failed to load project detail");
-        const data: ProjectDetail = await res.json();
-        if (!cancelled) setDetail(data);
-        console.log("Detail ", data);
-      } catch (e) {
-        if (!cancelled) {
-          setError(e instanceof Error ? e.message : "Unknown error");
-        }
-      } finally {
-        if (!cancelled) setDetailLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedCode]);
-
   const canUpload = useMemo(() => {
     const email = session?.user?.email?.toLowerCase();
-    return (
-      email === "thanabutc@rovula.com" || email === "nuttapongsa@rovula.com"
-    );
+    return email === "thanabutc@rovula.com" || email === "nuttapongsa@rovula.com";
   }, [session]);
 
-  const estimateUSD = detail ? Number(detail.estimateUSD) : 0;
-  const actualUSD = detail ? Number(detail.actualChargeUSD) : 0;
+  const rows = useMemo<Row[]>(() => {
+    return projects.map((p) => {
+      const budget = Number(p.budgetUSD);
+      const estimate = Number(p.estimateUSD);
+      const actual = Number(p.actualChargeUSD);
+      const margin = budget - estimate;
+      const available = estimate - actual;
+      const spentPct = estimate > 0 ? (actual / estimate) * 100 : 0;
+      return { ...p, budget, estimate, actual, margin, available, spentPct };
+    });
+  }, [projects]);
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return rows;
+    return rows.filter((r) => r.projectCode.toLowerCase().includes(q) || r.projectName.toLowerCase().includes(q));
+  }, [rows, search]);
+
+  const sorted = useMemo(() => {
+    const arr = [...filtered];
+    arr.sort((a, b) => {
+      let av: number | string;
+      let bv: number | string;
+      switch (sortKey) {
+        case "projectCode":
+        case "projectName":
+          av = a[sortKey].toLowerCase();
+          bv = b[sortKey].toLowerCase();
+          break;
+        case "startDate":
+        case "endDate":
+          av = a[sortKey] ? new Date(a[sortKey] as string).getTime() : 0;
+          bv = b[sortKey] ? new Date(b[sortKey] as string).getTime() : 0;
+          break;
+        case "budgetUSD":
+          av = a.budget;
+          bv = b.budget;
+          break;
+        case "estimateUSD":
+          av = a.estimate;
+          bv = b.estimate;
+          break;
+        case "actualChargeUSD":
+          av = a.actual;
+          bv = b.actual;
+          break;
+        case "marginUSD":
+          av = a.margin;
+          bv = b.margin;
+          break;
+        case "spentPct":
+          av = a.spentPct;
+          bv = b.spentPct;
+          break;
+      }
+      if (av < bv) return sortDir === "asc" ? -1 : 1;
+      if (av > bv) return sortDir === "asc" ? 1 : -1;
+      return 0;
+    });
+    return arr;
+  }, [filtered, sortKey, sortDir]);
+
+  const totals = useMemo(() => {
+    return filtered.reduce(
+      (acc, r) => {
+        acc.budget += r.budget;
+        acc.estimate += r.estimate;
+        acc.actual += r.actual;
+        acc.margin += r.margin;
+        acc.available += r.available;
+        return acc;
+      },
+      { budget: 0, estimate: 0, actual: 0, margin: 0, available: 0 },
+    );
+  }, [filtered]);
+
+  const totalSpentPct = totals.estimate > 0 ? (totals.actual / totals.estimate) * 100 : 0;
+
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  };
+
+  const sortIcon = (key: SortKey) => {
+    if (sortKey !== key) return <ArrowUpDown className="ml-1 inline h-3 w-3 text-muted-foreground" />;
+    return sortDir === "asc" ? (
+      <ArrowUp className="ml-1 inline h-3 w-3" />
+    ) : (
+      <ArrowDown className="ml-1 inline h-3 w-3" />
+    );
+  };
+
+  const kpis = [
+    { title: "Total Budget", value: formatUSD(totals.budget), tone: "default" as const },
+    { title: "Total Estimate", value: formatUSD(totals.estimate), tone: "default" as const },
+    { title: "Total Actual", value: formatUSD(totals.actual), tone: "default" as const },
+    {
+      title: "Total Margin",
+      value: formatUSD(totals.margin),
+      tone: totals.margin < 0 ? ("danger" as const) : ("good" as const),
+    },
+    {
+      title: "Total Available",
+      value: formatUSD(totals.available),
+      tone: totals.available < 0 ? ("danger" as const) : ("good" as const),
+    },
+  ];
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="font-bold text-2xl">Project Cost Monitor</h1>
-          {detail && (
-            <p className="mt-1 text-muted-foreground text-sm">
-              {detail.projectName} · {detail.projectCode}
-              {detail.startDate && detail.endDate && (
-                <>
-                  {" · "}
-                  {new Date(detail.startDate).toLocaleDateString()} –{" "}
-                  {new Date(detail.endDate).toLocaleDateString()}
-                </>
-              )}
-            </p>
-          )}
+          <h1 className="font-bold text-2xl">Projects</h1>
+          <p className="mt-1 text-muted-foreground text-sm">
+            {filtered.length} of {projects.length} projects
+          </p>
         </div>
         {canUpload && <CostTrackingUploadButton onSuccess={fetchProjects} />}
       </div>
 
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        {kpis.map((k) => (
+          <Card key={k.title} data-slot="card">
+            <CardHeader className="pb-2">
+              <CardTitle className="font-medium text-muted-foreground text-sm">{k.title}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div
+                className={`font-bold text-2xl tabular-nums ${
+                  k.tone === "danger" ? "text-destructive" : k.tone === "good" ? "text-green-600" : ""
+                }`}
+              >
+                {k.value}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
       <div className="flex flex-wrap items-center gap-3">
-        <Select
-          value={selectedCode}
-          onValueChange={setSelectedCode}
-          disabled={listLoading || projects.length === 0}
-        >
-          <SelectTrigger className="w-[360px]">
-            <SelectValue
-              placeholder={
-                listLoading ? "Loading projects..." : "Select a project"
-              }
-            />
-          </SelectTrigger>
-          <SelectContent>
-            {projects.map((p) => (
-              <SelectItem key={p.id} value={p.projectCode}>
-                {p.projectName}{" "}
-                <span className="text-muted-foreground">({p.projectCode})</span>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {detailLoading && (
-          <span className="text-muted-foreground text-sm">
-            Loading project...
-          </span>
-        )}
+        <Input
+          placeholder="Search code or name..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="max-w-md"
+        />
+        {loading && <span className="text-muted-foreground text-sm">Loading projects...</span>}
       </div>
 
       {error && <p className="text-destructive text-sm">{error}</p>}
 
-      {!listLoading && projects.length === 0 && (
+      {!loading && projects.length === 0 ? (
         <div className="rounded-md border border-dashed p-8 text-center">
           <p className="font-medium">No projects yet</p>
           <p className="mt-1 text-muted-foreground text-sm">
@@ -158,21 +236,99 @@ export default function ProjectPage() {
               : "Ask an administrator to upload a cost-tracking CSV."}
           </p>
         </div>
-      )}
-
-      {detail && (
-        <>
-          <CostKpiCards estimateUSD={estimateUSD} actualUSD={actualUSD} />
-          <ActivitiesTable activities={detail.activities} />
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <CostCategoryChart activities={detail.activities} />
-            <SCurveChart
-              activities={detail.activities}
-              startDate={detail.startDate}
-              endDate={detail.endDate}
-            />
-          </div>
-        </>
+      ) : (
+        <div className="overflow-x-auto rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("projectCode")}>
+                  Code{sortIcon("projectCode")}
+                </TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("projectName")}>
+                  Name{sortIcon("projectName")}
+                </TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("startDate")}>
+                  Start{sortIcon("startDate")}
+                </TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("endDate")}>
+                  End{sortIcon("endDate")}
+                </TableHead>
+                <TableHead className="cursor-pointer select-none text-right" onClick={() => toggleSort("budgetUSD")}>
+                  Budget{sortIcon("budgetUSD")}
+                </TableHead>
+                <TableHead className="cursor-pointer select-none text-right" onClick={() => toggleSort("estimateUSD")}>
+                  Estimate{sortIcon("estimateUSD")}
+                </TableHead>
+                <TableHead
+                  className="cursor-pointer select-none text-right"
+                  onClick={() => toggleSort("actualChargeUSD")}
+                >
+                  Actual{sortIcon("actualChargeUSD")}
+                </TableHead>
+                <TableHead className="cursor-pointer select-none text-right" onClick={() => toggleSort("marginUSD")}>
+                  Margin{sortIcon("marginUSD")}
+                </TableHead>
+                <TableHead className="cursor-pointer select-none text-right" onClick={() => toggleSort("spentPct")}>
+                  % Spent{sortIcon("spentPct")}
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {sorted.map((r) => (
+                <TableRow key={r.id} className="cursor-pointer">
+                  <TableCell className="font-medium">
+                    <Link href={`/project/${encodeURIComponent(r.projectCode)}`} className="hover:underline">
+                      {r.projectCode}
+                    </Link>
+                  </TableCell>
+                  <TableCell>
+                    <Link href={`/project/${encodeURIComponent(r.projectCode)}`} className="hover:underline">
+                      {r.projectName}
+                    </Link>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">{formatDate(r.startDate)}</TableCell>
+                  <TableCell className="text-muted-foreground">{formatDate(r.endDate)}</TableCell>
+                  <TableCell className="text-right tabular-nums">{formatUSD(r.budget)}</TableCell>
+                  <TableCell className="text-right tabular-nums">{formatUSD(r.estimate)}</TableCell>
+                  <TableCell className="text-right tabular-nums">{formatUSD(r.actual)}</TableCell>
+                  <TableCell
+                    className={`text-right tabular-nums ${r.margin < 0 ? "text-destructive" : "text-green-600"}`}
+                  >
+                    {formatUSD(r.margin)}
+                  </TableCell>
+                  <TableCell className={`text-right tabular-nums ${r.spentPct > 100 ? "text-destructive" : ""}`}>
+                    {r.spentPct.toFixed(1)}%
+                  </TableCell>
+                </TableRow>
+              ))}
+              {sorted.length === 0 && !loading && (
+                <TableRow>
+                  <TableCell colSpan={9} className="py-8 text-center text-muted-foreground">
+                    No projects match your search.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+            {sorted.length > 0 && (
+              <TableFooter>
+                <TableRow className="bg-muted/50 font-semibold">
+                  <TableCell colSpan={4}>Total ({filtered.length})</TableCell>
+                  <TableCell className="text-right tabular-nums">{formatUSD(totals.budget)}</TableCell>
+                  <TableCell className="text-right tabular-nums">{formatUSD(totals.estimate)}</TableCell>
+                  <TableCell className="text-right tabular-nums">{formatUSD(totals.actual)}</TableCell>
+                  <TableCell
+                    className={`text-right tabular-nums ${totals.margin < 0 ? "text-destructive" : "text-green-600"}`}
+                  >
+                    {formatUSD(totals.margin)}
+                  </TableCell>
+                  <TableCell className={`text-right tabular-nums ${totalSpentPct > 100 ? "text-destructive" : ""}`}>
+                    {totalSpentPct.toFixed(1)}%
+                  </TableCell>
+                </TableRow>
+              </TableFooter>
+            )}
+          </Table>
+        </div>
       )}
     </div>
   );
