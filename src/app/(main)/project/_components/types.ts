@@ -31,6 +31,7 @@ export interface ProjectDetail {
   estimateUSD: string | number;
   budgetUSD: string | number;
   exchangeRates: Record<string, number> | null;
+  budgetByItemCode: Record<string, number> | null;
   activities: ActivityRecord[];
 }
 

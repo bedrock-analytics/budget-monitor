@@ -19,13 +19,13 @@ export function CostKpiCards({ budgetUSD, estimateUSD, actualUSD }: Props) {
 
   const cards = [
     {
-      title: "Budget",
+      title: "Revenue",
       value: formatUSD(budgetUSD),
       sub: "Total project budget (USD)",
       tone: "default" as const,
     },
     {
-      title: "Estimate",
+      title: "Estimate Cost",
       value: formatUSD(estimateUSD),
       sub: "Total project estimate (USD)",
       tone: "default" as const,
@@ -33,11 +33,12 @@ export function CostKpiCards({ budgetUSD, estimateUSD, actualUSD }: Props) {
     {
       title: "Margin",
       value: formatUSD(margin),
-      sub: budgetUSD > 0 ? `${marginPct.toFixed(1)}% of budget` : "No budget set",
+      sub:
+        budgetUSD > 0 ? `${marginPct.toFixed(1)}% of budget` : "No budget set",
       tone: isNegativeMargin ? "danger" : ("good" as const),
     },
     {
-      title: "Actual",
+      title: "Actual Cost",
       value: formatUSD(actualUSD),
       sub: `${utilizationPct.toFixed(1)}% of estimate`,
       tone: "default" as const,
@@ -61,12 +62,18 @@ export function CostKpiCards({ budgetUSD, estimateUSD, actualUSD }: Props) {
       {cards.map((card) => (
         <Card key={card.title} data-slot="card">
           <CardHeader className="pb-2">
-            <CardTitle className="font-medium text-muted-foreground text-sm">{card.title}</CardTitle>
+            <CardTitle className="font-medium text-muted-foreground text-sm">
+              {card.title}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div
               className={`font-bold text-2xl tabular-nums ${
-                card.tone === "danger" ? "text-destructive" : card.tone === "good" ? "text-green-600" : ""
+                card.tone === "danger"
+                  ? "text-destructive"
+                  : card.tone === "good"
+                    ? "text-green-600"
+                    : ""
               }`}
             >
               {card.value}

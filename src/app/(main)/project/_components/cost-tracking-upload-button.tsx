@@ -45,9 +45,9 @@ export function CostTrackingUploadButton({ onSuccess }: Props) {
 
   return (
     <div className="flex items-center gap-3">
-      <input ref={inputRef} type="file" accept=".csv" className="hidden" onChange={handleFileChange} />
+      <input ref={inputRef} type="file" accept=".csv,.xlsx,.xls" className="hidden" onChange={handleFileChange} />
       <Button variant="outline" disabled={status === "loading"} onClick={() => inputRef.current?.click()}>
-        {status === "loading" ? "Importing..." : "Import Project CSV"}
+        {status === "loading" ? "Importing..." : "Import Project CSV/Excel"}
       </Button>
       {message && (
         <span className={`text-sm ${status === "success" ? "text-green-600" : "text-destructive"}`}>{message}</span>

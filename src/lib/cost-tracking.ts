@@ -149,14 +149,24 @@ export function parseCostTrackingCSV(content: string): ParsedCostTracking {
   const { projectCode, projectName } = extractProjectMeta(projectHeader);
 
   let headerRowIdx = -1;
-  for (let i = 0; i < Math.min(records.length, 10); i++) {
+  for (let i = 0; i < Math.min(records.length, 30); i++) {
     if (records[i]?.[1]?.trim().toLowerCase() === "activities") {
       headerRowIdx = i;
       break;
     }
   }
   if (headerRowIdx < 0) {
-    throw new Error("Could not locate Activities header row");
+    const preview = records
+      .slice(0, 5)
+      .map(
+        (row, i) =>
+          `row ${i}: ${row
+            .slice(0, 4)
+            .map((c) => `"${c?.trim() ?? ""}"`)
+            .join(", ")}`,
+      )
+      .join(" | ");
+    throw new Error(`Could not locate Activities header row. First rows seen: ${preview}`);
   }
 
   const headerRow = records[headerRowIdx];
@@ -241,6 +251,55 @@ export function parseCostTrackingCSV(content: string): ParsedCostTracking {
     dateColumns: dateColumns.filter(Boolean),
     activities,
   };
+}
+
+export interface ParsedBudgetSummary {
+  projectCode: string;
+  projectRevenue: number;
+  budgetByItemCode: Record<string, number>;
+}
+
+export function parseBudgetSummaryCSV(content: string): ParsedBudgetSummary {
+  const records = parseRecords(content);
+
+  let projectCode = "";
+  let projectRevenue = 0;
+  let headerRowIdx = -1;
+
+  for (let i = 0; i < Math.min(records.length, 20); i++) {
+    const row = records[i];
+    const label = row[0]?.trim().toLowerCase() ?? "";
+    if (label.startsWith("project revenue")) {
+      projectRevenue = parseNum(row[1]?.replace(/\$/g, ""));
+    } else if (label.startsWith("project code")) {
+      projectCode = row[1]?.trim() ?? "";
+    } else if (label === "detail" && row[1]?.trim().toLowerCase() === "total cost") {
+      headerRowIdx = i;
+    }
+  }
+
+  const budgetByItemCode: Record<string, number> = {};
+  if (headerRowIdx >= 0) {
+    for (let r = headerRowIdx + 1; r < records.length; r++) {
+      const row = records[r];
+      const itemCode = row[2]?.trim() ?? "";
+      if (!itemCode) continue;
+      const cost = parseNum(row[1]);
+      if (cost === 0) continue;
+      budgetByItemCode[itemCode] = (budgetByItemCode[itemCode] ?? 0) + cost;
+    }
+  }
+
+  return { projectCode, projectRevenue, budgetByItemCode };
+}
+
+export function isBudgetSummaryCSV(content: string): boolean {
+  const records = parseRecords(content);
+  for (let i = 0; i < Math.min(records.length, 10); i++) {
+    const label = records[i]?.[0]?.trim().toLowerCase() ?? "";
+    if (label.startsWith("project revenue") || label.startsWith("project name")) return true;
+  }
+  return false;
 }
 
 export function formatUSDCompact(value: number): string {

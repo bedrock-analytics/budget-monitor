@@ -87,7 +87,7 @@ export default function ProjectDetailPage({ params }: PageProps) {
       {detail && (
         <>
           <CostKpiCards budgetUSD={budgetUSD} estimateUSD={estimateUSD} actualUSD={actualUSD} />
-          <ActivitiesTable activities={detail.activities} />
+          <ActivitiesTable activities={detail.activities} budgetByItemCode={detail.budgetByItemCode} />
           <ProjectBudgetDetailTable projectCode={detail.projectCode} />
           <BudgetSpendChart projectCode={detail.projectCode} />
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">

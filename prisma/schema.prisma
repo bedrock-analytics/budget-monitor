@@ -111,6 +111,7 @@ model CostTrackingProject {
   estimateUSD     Decimal   @default(0) @db.Decimal(20, 2)
   budgetUSD       Decimal   @default(0) @db.Decimal(20, 2)
   exchangeRates   Json?
+  budgetByItemCode Json?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
