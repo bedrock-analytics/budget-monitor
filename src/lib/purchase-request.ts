@@ -3,6 +3,7 @@ import type { Decimal } from "@prisma/client/runtime/library";
 export interface PurchaseRequestRow {
   id: string;
   prNumber: string;
+  orderType: "PURCHASE_ORDER" | "SERVICE_ORDER";
   title: string;
   description: string | null;
   department: string | null;

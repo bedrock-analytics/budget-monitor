@@ -17,6 +17,7 @@ export async function PATCH(
       carName,
       licensePlate,
       purpose,
+      pickupLocation,
       destination,
       startDate,
       endDate,
@@ -43,6 +44,7 @@ export async function PATCH(
     if (carName !== undefined) bookingUpdate.carName = carName;
     if (licensePlate !== undefined) bookingUpdate.licensePlate = licensePlate;
     if (purpose !== undefined) bookingUpdate.purpose = purpose;
+    if (pickupLocation !== undefined) bookingUpdate.pickupLocation = pickupLocation;
     if (destination !== undefined) bookingUpdate.destination = destination || null;
     if (startDate !== undefined) bookingUpdate.startDate = new Date(startDate);
     if (endDate !== undefined) bookingUpdate.endDate = new Date(endDate);

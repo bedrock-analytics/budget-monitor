@@ -58,6 +58,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const { id } = await params;
     const body = await request.json();
     const {
+      orderType,
       title,
       description,
       department,
@@ -91,6 +92,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const pr = await db.purchaseRequest.update({
       where: { id },
       data: {
+        ...(orderType && { orderType }),
         ...(title && { title }),
         ...(description !== undefined && { description }),
         ...(department !== undefined && { department }),

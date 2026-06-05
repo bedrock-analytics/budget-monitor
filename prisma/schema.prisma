@@ -25,6 +25,7 @@ model User {
   azureOid    String?   @unique
   department  String?
   canSeeStaffBenefit Boolean @default(false)
+  allowedMenus String[] @default([])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -186,9 +187,15 @@ enum PurchaseStrategy {
   DIRECT_NEGOTIATION
 }
 
+enum PurchaseOrderType {
+  PURCHASE_ORDER
+  SERVICE_ORDER
+}
+
 model PurchaseRequest {
   id            String                @id @default(cuid())
   prNumber      String                @unique
+  orderType     PurchaseOrderType     @default(PURCHASE_ORDER)
   title         String
   description   String?
   requesterId   String
@@ -268,6 +275,7 @@ model CarBooking {
   carName         String
   licensePlate    String
   purpose         String
+  pickupLocation  String?
   destination     String?
   startDate     DateTime
   endDate       DateTime

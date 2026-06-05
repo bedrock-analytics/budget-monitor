@@ -51,6 +51,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const {
+      orderType,
       title,
       description,
       requesterId,
@@ -78,6 +79,7 @@ export async function POST(request: Request) {
     const pr = await db.purchaseRequest.create({
       data: {
         prNumber: generatePRNumber(),
+        orderType: orderType || "PURCHASE_ORDER",
         title,
         description: description || null,
         requesterId,

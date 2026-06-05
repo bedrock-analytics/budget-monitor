@@ -4,22 +4,26 @@ import {
   ClipboardCheck,
   ClipboardList,
   Forklift,
+  type LucideIcon,
   ProjectorIcon,
   RainbowIcon,
+  ShieldUserIcon,
   UserIcon,
-  type LucideIcon,
 } from "lucide-react";
 
 export interface NavSubItem {
+  key?: string;
   title: string;
   url: string;
   icon?: LucideIcon;
   comingSoon?: boolean;
   newTab?: boolean;
   isNew?: boolean;
+  restricted?: boolean;
 }
 
 export interface NavMainItem {
+  key?: string;
   title: string;
   url: string;
   icon?: LucideIcon;
@@ -27,6 +31,7 @@ export interface NavMainItem {
   comingSoon?: boolean;
   newTab?: boolean;
   isNew?: boolean;
+  restricted?: boolean;
 }
 
 export interface NavGroup {
@@ -41,57 +46,15 @@ export const sidebarItems: NavGroup[] = [
     id: 1,
     label: "Dashboards",
     items: [
-      // {
-      //   title: "Default",
-      //   url: "/dashboard/default",
-      //   icon: LayoutDashboard,
-      // },
-      // {
-      //   title: "CRM",
-      //   url: "/dashboard/crm",
-      //   icon: ChartBar,
-      // },
-      // {
-      //   title: "Finance",
-      //   url: "/dashboard/finance",
-      //   icon: Banknote,
-      // },
-      // {
-      //   title: "Analytics",
-      //   url: "/dashboard/analytics",
-      //   icon: Gauge,
-      // },
-      // {
-      //   title: "E-commerce",
-      //   url: "/dashboard/coming-soon",
-      //   icon: ShoppingBag,
-      //   comingSoon: true,
-      // },
-      // {
-      //   title: "Academy",
-      //   url: "/dashboard/coming-soon",
-      //   icon: GraduationCap,
-      //   comingSoon: true,
-      // },
-      // {
-      //   title: "Logistics",
-      //   url: "/dashboard/coming-soon",
-      //   icon: Forklift,
-      //   comingSoon: true,
-      // },
-      // {
-      //   title: "Xspector",
-      //   url: "/dashboard/coming-soon",
-      //   icon: Forklift,
-      //   comingSoon: true,
-      // },
       {
+        key: "budget",
         title: "Budget",
         url: "/budget",
         icon: Banknote,
         comingSoon: false,
       },
       {
+        key: "project",
         title: "Project",
         url: "/project",
         icon: RainbowIcon,
@@ -104,22 +67,32 @@ export const sidebarItems: NavGroup[] = [
       //   comingSoon: false,
       // },
       {
+        key: "purchase",
         title: "Purchase Request",
         url: "/purchase",
         icon: ClipboardList,
         comingSoon: true,
       },
       {
+        key: "booking-car",
         title: "BTM",
         url: "/booking-car",
         icon: Car,
         comingSoon: true,
       },
       {
+        key: "facility-quality-inspection",
         title: "Facility QI",
         url: "/facility-quality-inspection",
         icon: ClipboardCheck,
         comingSoon: true,
+      },
+      {
+        key: "admin-menu-access",
+        title: "Menu Access",
+        url: "/admin/menu-access",
+        icon: ShieldUserIcon,
+        restricted: false,
       },
       // {
       //   title: "SSHE",

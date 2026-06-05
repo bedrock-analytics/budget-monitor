@@ -84,6 +84,22 @@ const JUSTIFICATION_REASONS = [
   { id: 8, label: "Others which provide best benefit to th company" },
 ] as const;
 
+const TITLE_PREFIXES = ["Supply of", "Provision of"] as const;
+
+type TitlePrefix = (typeof TITLE_PREFIXES)[number];
+
+function splitTitle(value: string): { prefix: TitlePrefix; rest: string } {
+  for (const prefix of TITLE_PREFIXES) {
+    if (value.startsWith(`${prefix} `)) {
+      return { prefix, rest: value.slice(prefix.length + 1) };
+    }
+    if (value === prefix) {
+      return { prefix, rest: "" };
+    }
+  }
+  return { prefix: "Supply of", rest: value };
+}
+
 const JUSTIFICATION_REMARKS = [
   "Purchase from Manufacturer Authorized Supplier (Single Source) - Justification No.5",
   "Continue work from previous PO: (Please Identify PO No.) - Justification No.8",
@@ -93,6 +109,7 @@ const JUSTIFICATION_REMARKS = [
 
 const formSchema = z
   .object({
+    orderType: z.enum(["PURCHASE_ORDER", "SERVICE_ORDER"]).default("PURCHASE_ORDER"),
     title: z.string().min(1, "Title is required"),
     description: z.string().optional(),
     department: z.string().optional(),
@@ -104,7 +121,7 @@ const formSchema = z
       .enum(["CALL_FOR_TENDER", "DIRECT_NEGOTIATION"])
       .optional(),
     justificationReasons: z.array(z.number()).default([]),
-    businessJustification: z.string().optional(),
+    businessJustification: z.string().min(1, "Explanation is required"),
     biddingVendors: z.array(biddingVendorSchema).default([]),
     budgetId: z.string().min(1, "Budget is required"),
     items: z.array(itemSchema).min(1, "At least one item is required"),
@@ -123,13 +140,6 @@ const formSchema = z
           code: z.ZodIssueCode.custom,
           path: ["justificationReasons"],
           message: "Select at least one justification",
-        });
-      }
-      if (!val.businessJustification?.trim()) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["businessJustification"],
-          message: "Explanation is required",
         });
       }
     }
@@ -162,6 +172,7 @@ const STEPS = [
     key: "details",
     label: "Request Details",
     fields: [
+      "orderType",
       "title",
       "description",
       "department",
@@ -205,6 +216,7 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
     resolver: zodResolver(formSchema),
     defaultValues: initialData
       ? {
+          orderType: initialData.orderType,
           title: initialData.title,
           description: initialData.description || "",
           department: initialData.department || "",
@@ -240,6 +252,7 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
           })),
         }
       : {
+          orderType: "PURCHASE_ORDER",
           title: "",
           description: "",
           department: "",
@@ -554,19 +567,78 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
           <FieldGroup className="grid gap-4 sm:grid-cols-2">
             <Controller
               control={form.control}
-              name="title"
-              render={({ field, fieldState }) => (
-                <Field
-                  className="gap-1.5 sm:col-span-2"
-                  data-invalid={fieldState.invalid}
-                >
-                  <FieldLabel>Title</FieldLabel>
-                  <Input {...field} placeholder="e.g. Office supplies for Q2" />
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
+              name="orderType"
+              render={({ field }) => (
+                <Field className="gap-1.5 sm:col-span-2">
+                  <FieldLabel>Order Type</FieldLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="PURCHASE_ORDER">
+                        Purchase order
+                      </SelectItem>
+                      <SelectItem value="SERVICE_ORDER">
+                        Service order
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </Field>
               )}
+            />
+
+            <Controller
+              control={form.control}
+              name="title"
+              render={({ field, fieldState }) => {
+                const { prefix, rest } = splitTitle(field.value || "");
+                return (
+                  <Field
+                    className="gap-1.5 sm:col-span-2"
+                    data-invalid={fieldState.invalid}
+                  >
+                    <FieldLabel>Title</FieldLabel>
+                    <div className="flex gap-2">
+                      <Select
+                        value={prefix}
+                        onValueChange={(v) =>
+                          field.onChange(rest ? `${v} ${rest}` : v)
+                        }
+                      >
+                        <SelectTrigger className="w-40">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {TITLE_PREFIXES.map((p) => (
+                            <SelectItem key={p} value={p}>
+                              {p}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        value={rest}
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value
+                              ? `${prefix} ${e.target.value}`
+                              : prefix,
+                          )
+                        }
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        ref={field.ref}
+                        placeholder="e.g. Office supplies for Q2"
+                        className="flex-1"
+                      />
+                    </div>
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                );
+              }}
             />
 
             <Controller
@@ -735,36 +807,6 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
                 );
               }}
             />
-
-            <Controller
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <Field className="gap-1.5 sm:col-span-2">
-                  <FieldLabel>Description</FieldLabel>
-                  <Textarea
-                    {...field}
-                    placeholder="Additional details..."
-                    rows={3}
-                  />
-                </Field>
-              )}
-            />
-
-            <Controller
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <Field className="gap-1.5 sm:col-span-2">
-                  <FieldLabel>Notes</FieldLabel>
-                  <Textarea
-                    {...field}
-                    placeholder="Internal notes..."
-                    rows={2}
-                  />
-                </Field>
-              )}
-            />
           </FieldGroup>
         </CardContent>
       </Card>
@@ -810,6 +852,23 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
             )}
           />
 
+          <Controller
+            control={form.control}
+            name="businessJustification"
+            render={({ field, fieldState }) => (
+              <Field className="gap-1.5" data-invalid={fieldState.invalid}>
+                <FieldLabel>Explanation</FieldLabel>
+                <Textarea
+                  {...field}
+                  placeholder="Provide explanation..."
+                  rows={3}
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
           {watchStrategy === "DIRECT_NEGOTIATION" && (
             <>
               <div className="grid gap-6 md:grid-cols-2">
@@ -873,24 +932,6 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
                   </ul>
                 </Field>
               </div>
-
-              <Controller
-                control={form.control}
-                name="businessJustification"
-                render={({ field, fieldState }) => (
-                  <Field className="gap-1.5" data-invalid={fieldState.invalid}>
-                    <FieldLabel>Explanation</FieldLabel>
-                    <Textarea
-                      {...field}
-                      placeholder="Provide explanation for selected justification(s)..."
-                      rows={3}
-                    />
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
-              />
             </>
           )}
 

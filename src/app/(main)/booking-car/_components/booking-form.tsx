@@ -5,24 +5,19 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Check, Plus, Trash2 } from "lucide-react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
-import { Plus, Trash2 } from "lucide-react";
 import { z } from "zod";
 
-import {
-  CAR_OPTIONS,
-  type CarBookingRow,
-  type CarBookingUser,
-} from "@/lib/booking-car";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Field,
   FieldError,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -32,6 +27,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  CAR_OPTIONS,
+  type CarBookingRow,
+  type CarBookingUser,
+} from "@/lib/booking-car";
+import { cn } from "@/lib/utils";
 
 const hotelSchema = z
   .object({
@@ -66,6 +67,7 @@ const formSchema = z
     type: z.enum(["offshore", "non-offshore"]).optional(),
     carIndex: z.string().min(1, "Car is required"),
     purpose: z.string().min(1, "Purpose is required"),
+    pickupLocation: z.string().min(1, "Pick-up location is required"),
     destination: z.string().optional(),
     startDate: z.string().min(1, "Start date is required"),
     endDate: z.string().min(1, "End date is required"),
@@ -150,10 +152,18 @@ interface BookingFormProps {
   booking?: CarBookingRow;
 }
 
+const STEPS = [
+  { id: 1, label: "Booking Detail" },
+  { id: 2, label: "Passengers" },
+  { id: 3, label: "Hotel Booking" },
+  { id: 4, label: "Flight Booking" },
+] as const;
+
 export function BookingForm({ userId, booking }: BookingFormProps) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [allUsers, setAllUsers] = useState<CarBookingUser[]>([]);
+  const [step, setStep] = useState(1);
 
   const fetchData = useCallback(async () => {
     try {
@@ -186,6 +196,7 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
             ),
           ),
           purpose: booking.purpose,
+          pickupLocation: booking.pickupLocation || "",
           destination: booking.destination || "",
           startDate: toLocalDatetime(booking.startDate),
           endDate: toLocalDatetime(booking.endDate),
@@ -227,6 +238,7 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
           type: undefined,
           carIndex: "",
           purpose: "",
+          pickupLocation: "",
           destination: "",
           startDate: "",
           endDate: "",
@@ -286,6 +298,7 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
       carName: car.name,
       licensePlate: car.licensePlate,
       purpose: values.purpose,
+      pickupLocation: values.pickupLocation,
       destination: values.destination || null,
       startDate: values.startDate,
       endDate: values.endDate,
@@ -358,408 +371,484 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
       onSubmit={form.handleSubmit(onSubmit)}
       className="flex flex-col gap-6"
     >
-      <Card>
-        <CardHeader>
-          <CardTitle>Booking Details</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <FieldGroup className="grid gap-4 sm:grid-cols-2">
-            <Controller
-              control={form.control}
-              name="projectCode"
-              render={({ field }) => (
-                <Field className="gap-1.5">
-                  <FieldLabel>Project Code</FieldLabel>
-                  <Input {...field} placeholder="e.g. RVLCP.XX.XXXXX" />
-                </Field>
-              )}
-            />
-            <Controller
-              control={form.control}
-              name="projectType"
-              render={({ field }) => (
-                <Field className="gap-1.5">
-                  <FieldLabel>Project Type</FieldLabel>
-                  <Input {...field} placeholder="e.g. RVL_ZQ_Survey" />
-                </Field>
-              )}
-            />
-            <Controller
-              control={form.control}
-              name="type"
-              render={({ field }) => (
-                <Field className="gap-1.5">
-                  <FieldLabel>Type</FieldLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="offshore">Offshore</SelectItem>
-                      <SelectItem value="non-offshore">Non-offshore</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </Field>
-              )}
-            />
-            <Controller
-              control={form.control}
-              name="carIndex"
-              render={({ field, fieldState }) => (
-                <Field className="gap-1.5" data-invalid={fieldState.invalid}>
-                  <FieldLabel>Car</FieldLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a car" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CAR_OPTIONS.map((car, idx) => (
-                        <SelectItem key={idx} value={String(idx)}>
-                          {car.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
+      <ol className="flex items-center gap-2">
+        {STEPS.map((s, idx) => {
+          const isActive = step === s.id;
+          const isCompleted = step > s.id;
+          return (
+            <li key={s.id} className="flex flex-1 items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setStep(s.id)}
+                className="flex items-center gap-2 text-left"
+              >
+                <span
+                  className={cn(
+                    "flex size-8 items-center justify-center rounded-full border font-medium text-sm",
+                    isActive &&
+                      "border-primary bg-primary text-primary-foreground",
+                    isCompleted &&
+                      "border-primary bg-primary text-primary-foreground",
+                    !isActive &&
+                      !isCompleted &&
+                      "border-border bg-muted text-muted-foreground",
                   )}
-                </Field>
-              )}
-            />
-
-            <Controller
-              control={form.control}
-              name="purpose"
-              render={({ field, fieldState }) => (
-                <Field className="gap-1.5" data-invalid={fieldState.invalid}>
-                  <FieldLabel>Purpose</FieldLabel>
-                  <Input
-                    {...field}
-                    placeholder="e.g. Site visit, Client meeting"
-                  />
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
-
-            <Controller
-              control={form.control}
-              name="destination"
-              render={({ field }) => (
-                <Field className="gap-1.5">
-                  <FieldLabel>Destination</FieldLabel>
-                  <Input {...field} placeholder="e.g. Bangkok, Rayong" />
-                </Field>
-              )}
-            />
-
-            <Controller
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <Field className="gap-1.5">
-                  <FieldLabel>Trip description</FieldLabel>
-                  <Textarea
-                    {...field}
-                    placeholder="Additional notes..."
-                    rows={2}
-                  />
-                </Field>
-              )}
-            />
-
-            <Controller
-              control={form.control}
-              name="startDate"
-              render={({ field, fieldState }) => (
-                <Field className="gap-1.5" data-invalid={fieldState.invalid}>
-                  <FieldLabel>Business Date From</FieldLabel>
-                  <Input {...field} type="datetime-local" />
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
-
-            <Controller
-              control={form.control}
-              name="endDate"
-              render={({ field, fieldState }) => (
-                <Field className="gap-1.5" data-invalid={fieldState.invalid}>
-                  <FieldLabel>Business Date To</FieldLabel>
-                  <Input {...field} type="datetime-local" />
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
-          </FieldGroup>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="flex-row items-center justify-between">
-          <CardTitle>Passengers</CardTitle>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              appendPassenger({
-                name: "",
-                email: "",
-                phone: "",
-                dateOfBirth: "",
-                usePersonalCar: false,
-                role: "passenger",
-                userId: "",
-              })
-            }
-          >
-            <Plus data-icon="inline-start" />
-            Add Passenger
-          </Button>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          {passengerFields.length === 0 && (
-            <p className="text-muted-foreground text-sm">
-              No passengers added yet. Click &quot;Add Passenger&quot; to add
-              one.
-            </p>
-          )}
-          {passengerFields.map((field, index) => (
-            <div
-              key={field.id}
-              className="flex flex-col gap-3 rounded-lg border p-4"
-            >
-              <div className="flex items-center justify-between">
-                <span className="font-medium text-sm">
-                  Passenger {index + 1}
+                >
+                  {isCompleted ? <Check className="size-4" /> : s.id}
                 </span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="size-8 text-destructive"
-                  onClick={() => removePassenger(index)}
+                <span
+                  className={cn(
+                    "font-medium text-sm",
+                    isActive ? "text-foreground" : "text-muted-foreground",
+                  )}
                 >
-                  <Trash2 className="size-4" />
-                </Button>
-              </div>
-              <FieldGroup className="grid gap-3 sm:grid-cols-2">
-                <Field className="gap-1.5 sm:col-span-2">
-                  <FieldLabel>Link to User</FieldLabel>
-                  <Select
-                    value={form.watch(`passengers.${index}.userId`) || ""}
-                    onValueChange={(uid) => {
-                      const user = allUsers.find((u) => u.id === uid);
-                      if (user) {
-                        form.setValue(`passengers.${index}.userId`, user.id);
-                        form.setValue(
-                          `passengers.${index}.name`,
-                          user.name || "",
-                        );
-                        form.setValue(`passengers.${index}.email`, user.email);
-                        form.setValue(
-                          `passengers.${index}.phone`,
-                          user.phone || "",
-                        );
-                        form.setValue(
-                          `passengers.${index}.dateOfBirth`,
-                          user.dateOfBirth
-                            ? new Date(user.dateOfBirth)
-                                .toISOString()
-                                .split("T")[0]
-                            : "",
-                        );
-                      }
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a user to auto-fill..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {allUsers.map((user) => (
-                        <SelectItem key={user.id} value={user.id}>
-                          {user.name || user.email}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </Field>
-                <Controller
-                  control={form.control}
-                  name={`passengers.${index}.name`}
-                  render={({ field: f, fieldState }) => (
-                    <Field
-                      className="gap-1.5"
-                      data-invalid={fieldState.invalid}
-                    >
-                      <FieldLabel>Name</FieldLabel>
-                      <Input {...f} placeholder="Full name" />
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
-                    </Field>
+                  {s.label}
+                </span>
+              </button>
+              {idx < STEPS.length - 1 && (
+                <span
+                  className={cn(
+                    "h-px flex-1",
+                    step > s.id ? "bg-primary" : "bg-border",
                   )}
                 />
-                <Controller
-                  control={form.control}
-                  name={`passengers.${index}.email`}
-                  render={({ field: f }) => (
-                    <Field className="gap-1.5">
-                      <FieldLabel>Email</FieldLabel>
-                      <Input
-                        {...f}
-                        type="email"
-                        placeholder="email@example.com"
-                      />
-                    </Field>
-                  )}
-                />
-                <Controller
-                  control={form.control}
-                  name={`passengers.${index}.phone`}
-                  render={({ field: f }) => (
-                    <Field className="gap-1.5">
-                      <FieldLabel>Phone</FieldLabel>
-                      <Input
-                        {...f}
-                        type="tel"
-                        placeholder="e.g. 081-234-5678"
-                      />
-                    </Field>
-                  )}
-                />
-                <Controller
-                  control={form.control}
-                  name={`passengers.${index}.dateOfBirth`}
-                  render={({ field: f }) => (
-                    <Field className="gap-1.5">
-                      <FieldLabel>Date of Birth</FieldLabel>
-                      <Input {...f} type="date" />
-                    </Field>
-                  )}
-                />
-                <Controller
-                  control={form.control}
-                  name={`passengers.${index}.usePersonalCar`}
-                  render={({ field: f }) => (
-                    <Field className="flex items-center gap-2 sm:col-span-2">
-                      <Checkbox
-                        checked={f.value}
-                        onCheckedChange={f.onChange}
-                      />
-                      <FieldLabel className="mb-0 cursor-pointer">
-                        Use Personal Car
-                      </FieldLabel>
-                    </Field>
-                  )}
-                />
-              </FieldGroup>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+              )}
+            </li>
+          );
+        })}
+      </ol>
 
-      <Card>
-        <CardHeader className="flex-row items-center justify-between">
-          <CardTitle>Hotel Booking</CardTitle>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              appendHotel({ hotelName: "", checkInDate: "", checkOutDate: "" })
-            }
-          >
-            <Plus data-icon="inline-start" />
-            Add Hotel
-          </Button>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          {hotelFields.length === 0 && (
-            <p className="text-muted-foreground text-sm">
-              No hotel bookings added. Click &quot;Add Hotel&quot; if you need
-              accommodation.
-            </p>
-          )}
-          {hotelFields.map((field, index) => (
-            <div
-              key={field.id}
-              className="flex flex-col gap-3 rounded-lg border p-4"
+      <div className={cn(step !== 1 && "hidden")}>
+        <Card>
+          <CardHeader>
+            <CardTitle>Booking Details</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <FieldGroup className="grid gap-4 sm:grid-cols-2">
+              <Controller
+                control={form.control}
+                name="projectCode"
+                render={({ field }) => (
+                  <Field className="gap-1.5">
+                    <FieldLabel>Project Code</FieldLabel>
+                    <Input {...field} placeholder="e.g. RVLCP.XX.XXXXX" />
+                  </Field>
+                )}
+              />
+              <Controller
+                control={form.control}
+                name="projectType"
+                render={({ field }) => (
+                  <Field className="gap-1.5">
+                    <FieldLabel>Project Type</FieldLabel>
+                    <Input {...field} placeholder="e.g. RVL_ZQ_Survey" />
+                  </Field>
+                )}
+              />
+              <Controller
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <Field className="gap-1.5">
+                    <FieldLabel>Type</FieldLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="offshore">Offshore</SelectItem>
+                        <SelectItem value="non-offshore">
+                          Non-offshore
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                )}
+              />
+
+              <Controller
+                control={form.control}
+                name="carIndex"
+                render={({ field, fieldState }) => (
+                  <Field className="gap-1.5" data-invalid={fieldState.invalid}>
+                    <FieldLabel>Car</FieldLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a car" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CAR_OPTIONS.map((car, idx) => (
+                          <SelectItem key={idx} value={String(idx)}>
+                            {car.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
+              <Controller
+                control={form.control}
+                name="purpose"
+                render={({ field, fieldState }) => (
+                  <Field className="gap-1.5" data-invalid={fieldState.invalid}>
+                    <FieldLabel>Purpose</FieldLabel>
+                    <Input
+                      {...field}
+                      placeholder="e.g. Site visit, Client meeting"
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
+              <Controller
+                control={form.control}
+                name="pickupLocation"
+                render={({ field, fieldState }) => (
+                  <Field className="gap-1.5" data-invalid={fieldState.invalid}>
+                    <FieldLabel>Pick-up</FieldLabel>
+                    <Input {...field} placeholder="e.g. Office lobby, Hotel" />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
+              <Controller
+                control={form.control}
+                name="destination"
+                render={({ field }) => (
+                  <Field className="gap-1.5">
+                    <FieldLabel>Destination</FieldLabel>
+                    <Input {...field} placeholder="e.g. Bangkok, Rayong" />
+                  </Field>
+                )}
+              />
+
+              <Controller
+                control={form.control}
+                name="startDate"
+                render={({ field, fieldState }) => (
+                  <Field className="gap-1.5" data-invalid={fieldState.invalid}>
+                    <FieldLabel>Business Date From</FieldLabel>
+                    <Input {...field} type="datetime-local" />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
+              <Controller
+                control={form.control}
+                name="endDate"
+                render={({ field, fieldState }) => (
+                  <Field className="gap-1.5" data-invalid={fieldState.invalid}>
+                    <FieldLabel>Business Date To</FieldLabel>
+                    <Input {...field} type="datetime-local" />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+              <Controller
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <Field className="gap-1.5">
+                    <FieldLabel>Additional notes</FieldLabel>
+                    <Textarea
+                      {...field}
+                      placeholder="Additional notes..."
+                      rows={2}
+                    />
+                  </Field>
+                )}
+              />
+            </FieldGroup>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className={cn(step !== 2 && "hidden")}>
+        <Card>
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle>Passengers</CardTitle>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                appendPassenger({
+                  name: "",
+                  email: "",
+                  phone: "",
+                  dateOfBirth: "",
+                  usePersonalCar: false,
+                  role: "passenger",
+                  userId: "",
+                })
+              }
             >
-              <div className="flex items-center justify-between">
-                <span className="font-medium text-sm">Hotel {index + 1}</span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="size-8 text-destructive"
-                  onClick={() => removeHotel(index)}
-                >
-                  <Trash2 className="size-4" />
-                </Button>
+              <Plus data-icon="inline-start" />
+              Add Passenger
+            </Button>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            {passengerFields.length === 0 && (
+              <p className="text-muted-foreground text-sm">
+                No passengers added yet. Click &quot;Add Passenger&quot; to add
+                one.
+              </p>
+            )}
+            {passengerFields.map((field, index) => (
+              <div
+                key={field.id}
+                className="flex flex-col gap-3 rounded-lg border p-4"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-sm">
+                    Passenger {index + 1}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="size-8 text-destructive"
+                    onClick={() => removePassenger(index)}
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
+                <FieldGroup className="grid gap-3 sm:grid-cols-2">
+                  <Field className="gap-1.5 sm:col-span-2">
+                    <FieldLabel>Link to User</FieldLabel>
+                    <Select
+                      value={form.watch(`passengers.${index}.userId`) || ""}
+                      onValueChange={(uid) => {
+                        const user = allUsers.find((u) => u.id === uid);
+                        if (user) {
+                          form.setValue(`passengers.${index}.userId`, user.id);
+                          form.setValue(
+                            `passengers.${index}.name`,
+                            user.name || "",
+                          );
+                          form.setValue(
+                            `passengers.${index}.email`,
+                            user.email,
+                          );
+                          form.setValue(
+                            `passengers.${index}.phone`,
+                            user.phone || "",
+                          );
+                          form.setValue(
+                            `passengers.${index}.dateOfBirth`,
+                            user.dateOfBirth
+                              ? new Date(user.dateOfBirth)
+                                  .toISOString()
+                                  .split("T")[0]
+                              : "",
+                          );
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a user to auto-fill..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {allUsers.map((user) => (
+                          <SelectItem key={user.id} value={user.id}>
+                            {user.name || user.email}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                  <Controller
+                    control={form.control}
+                    name={`passengers.${index}.name`}
+                    render={({ field: f, fieldState }) => (
+                      <Field
+                        className="gap-1.5"
+                        data-invalid={fieldState.invalid}
+                      >
+                        <FieldLabel>Name</FieldLabel>
+                        <Input {...f} placeholder="Full name" />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+                  <Controller
+                    control={form.control}
+                    name={`passengers.${index}.email`}
+                    render={({ field: f }) => (
+                      <Field className="gap-1.5">
+                        <FieldLabel>Email</FieldLabel>
+                        <Input
+                          {...f}
+                          type="email"
+                          placeholder="email@example.com"
+                        />
+                      </Field>
+                    )}
+                  />
+                  <Controller
+                    control={form.control}
+                    name={`passengers.${index}.phone`}
+                    render={({ field: f }) => (
+                      <Field className="gap-1.5">
+                        <FieldLabel>Phone</FieldLabel>
+                        <Input
+                          {...f}
+                          type="tel"
+                          placeholder="e.g. 081-234-5678"
+                        />
+                      </Field>
+                    )}
+                  />
+                  <Controller
+                    control={form.control}
+                    name={`passengers.${index}.dateOfBirth`}
+                    render={({ field: f }) => (
+                      <Field className="gap-1.5">
+                        <FieldLabel>Date of Birth</FieldLabel>
+                        <Input {...f} type="date" />
+                      </Field>
+                    )}
+                  />
+                  <Controller
+                    control={form.control}
+                    name={`passengers.${index}.usePersonalCar`}
+                    render={({ field: f }) => (
+                      <Field className="flex items-center gap-2 sm:col-span-2">
+                        <Checkbox
+                          checked={f.value}
+                          onCheckedChange={f.onChange}
+                        />
+                        <FieldLabel className="mb-0 cursor-pointer">
+                          Use Personal Car
+                        </FieldLabel>
+                      </Field>
+                    )}
+                  />
+                </FieldGroup>
               </div>
-              <FieldGroup className="grid gap-3 sm:grid-cols-3">
-                <Controller
-                  control={form.control}
-                  name={`hotels.${index}.hotelName`}
-                  render={({ field: f, fieldState }) => (
-                    <Field
-                      className="gap-1.5"
-                      data-invalid={fieldState.invalid}
-                    >
-                      <FieldLabel>Hotel Name</FieldLabel>
-                      <Input {...f} placeholder="e.g. Ibis Rayong" />
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
-                    </Field>
-                  )}
-                />
-                <Controller
-                  control={form.control}
-                  name={`hotels.${index}.checkInDate`}
-                  render={({ field: f, fieldState }) => (
-                    <Field
-                      className="gap-1.5"
-                      data-invalid={fieldState.invalid}
-                    >
-                      <FieldLabel>Check-in</FieldLabel>
-                      <Input {...f} type="date" />
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
-                    </Field>
-                  )}
-                />
-                <Controller
-                  control={form.control}
-                  name={`hotels.${index}.checkOutDate`}
-                  render={({ field: f, fieldState }) => (
-                    <Field
-                      className="gap-1.5"
-                      data-invalid={fieldState.invalid}
-                    >
-                      <FieldLabel>Check-out</FieldLabel>
-                      <Input {...f} type="date" />
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
-                    </Field>
-                  )}
-                />
-              </FieldGroup>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-      {/* 
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className={cn(step !== 3 && "hidden")}>
+        <Card>
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle>Hotel Booking</CardTitle>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                appendHotel({
+                  hotelName: "",
+                  checkInDate: "",
+                  checkOutDate: "",
+                })
+              }
+            >
+              <Plus data-icon="inline-start" />
+              Add Hotel
+            </Button>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            {hotelFields.length === 0 && (
+              <p className="text-muted-foreground text-sm">
+                No hotel bookings added. Click &quot;Add Hotel&quot; if you need
+                accommodation.
+              </p>
+            )}
+            {hotelFields.map((field, index) => (
+              <div
+                key={field.id}
+                className="flex flex-col gap-3 rounded-lg border p-4"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-sm">Hotel {index + 1}</span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="size-8 text-destructive"
+                    onClick={() => removeHotel(index)}
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
+                <FieldGroup className="grid gap-3 sm:grid-cols-3">
+                  <Controller
+                    control={form.control}
+                    name={`hotels.${index}.hotelName`}
+                    render={({ field: f, fieldState }) => (
+                      <Field
+                        className="gap-1.5"
+                        data-invalid={fieldState.invalid}
+                      >
+                        <FieldLabel>Hotel Name</FieldLabel>
+                        <Input {...f} placeholder="e.g. Ibis Rayong" />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+                  <Controller
+                    control={form.control}
+                    name={`hotels.${index}.checkInDate`}
+                    render={({ field: f, fieldState }) => (
+                      <Field
+                        className="gap-1.5"
+                        data-invalid={fieldState.invalid}
+                      >
+                        <FieldLabel>Check-in</FieldLabel>
+                        <Input {...f} type="date" />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+                  <Controller
+                    control={form.control}
+                    name={`hotels.${index}.checkOutDate`}
+                    render={({ field: f, fieldState }) => (
+                      <Field
+                        className="gap-1.5"
+                        data-invalid={fieldState.invalid}
+                      >
+                        <FieldLabel>Check-out</FieldLabel>
+                        <Input {...f} type="date" />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+                </FieldGroup>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+      {/*
       <Card>
         <CardHeader className="flex-row items-center justify-between">
           <CardTitle>Daily Car Usage</CardTitle>
@@ -903,141 +992,151 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
         </CardContent>
       </Card> */}
 
-      <Card>
-        <CardHeader className="flex-row items-center justify-between">
-          <CardTitle>Flight Booking</CardTitle>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              appendFlight({
-                flightNumber: "",
-                airline: "",
-                route: "",
-                departureTime: "",
-                arrivalTime: "",
-                notes: "",
-              })
-            }
-          >
-            <Plus data-icon="inline-start" />
-            Add Flight
-          </Button>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          {flightFields.length === 0 && (
-            <p className="text-muted-foreground text-sm">
-              No flights added. Click &quot;Add Flight&quot; if you need a
-              flight.
-            </p>
-          )}
-          {flightFields.map((field, index) => (
-            <div
-              key={field.id}
-              className="flex flex-col gap-3 rounded-lg border p-4"
+      <div className={cn(step !== 4 && "hidden")}>
+        <Card>
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle>Flight Booking</CardTitle>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                appendFlight({
+                  flightNumber: "",
+                  airline: "",
+                  route: "",
+                  departureTime: "",
+                  arrivalTime: "",
+                  notes: "",
+                })
+              }
             >
-              <div className="flex items-center justify-between">
-                <span className="font-medium text-sm">Flight {index + 1}</span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="size-8 text-destructive"
-                  onClick={() => removeFlight(index)}
-                >
-                  <Trash2 className="size-4" />
-                </Button>
+              <Plus data-icon="inline-start" />
+              Add Flight
+            </Button>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            {flightFields.length === 0 && (
+              <p className="text-muted-foreground text-sm">
+                No flights added. Click &quot;Add Flight&quot; if you need a
+                flight.
+              </p>
+            )}
+            {flightFields.map((field, index) => (
+              <div
+                key={field.id}
+                className="flex flex-col gap-3 rounded-lg border p-4"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-sm">
+                    Flight {index + 1}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="size-8 text-destructive"
+                    onClick={() => removeFlight(index)}
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
+                <FieldGroup className="grid gap-3 sm:grid-cols-2">
+                  <Controller
+                    control={form.control}
+                    name={`flights.${index}.route`}
+                    render={({ field: f, fieldState }) => (
+                      <Field
+                        className="gap-1.5 sm:col-span-2"
+                        data-invalid={fieldState.invalid}
+                      >
+                        <FieldLabel>Route / Flight Detail</FieldLabel>
+                        <Input
+                          {...f}
+                          placeholder="e.g. BKK → HKT, Bangkok to Phuket"
+                        />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+                  <Controller
+                    control={form.control}
+                    name={`flights.${index}.airline`}
+                    render={({ field: f }) => (
+                      <Field className="gap-1.5">
+                        <FieldLabel>Airline</FieldLabel>
+                        <Input
+                          {...f}
+                          placeholder="e.g. Thai Airways, AirAsia"
+                        />
+                      </Field>
+                    )}
+                  />
+                  <Controller
+                    control={form.control}
+                    name={`flights.${index}.flightNumber`}
+                    render={({ field: f }) => (
+                      <Field className="gap-1.5">
+                        <FieldLabel>Flight Number</FieldLabel>
+                        <Input {...f} placeholder="e.g. TG 205" />
+                      </Field>
+                    )}
+                  />
+                  <Controller
+                    control={form.control}
+                    name={`flights.${index}.departureTime`}
+                    render={({ field: f, fieldState }) => (
+                      <Field
+                        className="gap-1.5"
+                        data-invalid={fieldState.invalid}
+                      >
+                        <FieldLabel>Departure Time</FieldLabel>
+                        <Input {...f} type="datetime-local" />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+                  <Controller
+                    control={form.control}
+                    name={`flights.${index}.arrivalTime`}
+                    render={({ field: f, fieldState }) => (
+                      <Field
+                        className="gap-1.5"
+                        data-invalid={fieldState.invalid}
+                      >
+                        <FieldLabel>Arrival Time</FieldLabel>
+                        <Input {...f} type="datetime-local" />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+                  <Controller
+                    control={form.control}
+                    name={`flights.${index}.notes`}
+                    render={({ field: f }) => (
+                      <Field className="gap-1.5 sm:col-span-2">
+                        <FieldLabel>Notes</FieldLabel>
+                        <Input
+                          {...f}
+                          placeholder="e.g. Window seat preferred"
+                        />
+                      </Field>
+                    )}
+                  />
+                </FieldGroup>
               </div>
-              <FieldGroup className="grid gap-3 sm:grid-cols-2">
-                <Controller
-                  control={form.control}
-                  name={`flights.${index}.route`}
-                  render={({ field: f, fieldState }) => (
-                    <Field
-                      className="gap-1.5 sm:col-span-2"
-                      data-invalid={fieldState.invalid}
-                    >
-                      <FieldLabel>Route / Flight Detail</FieldLabel>
-                      <Input
-                        {...f}
-                        placeholder="e.g. BKK → HKT, Bangkok to Phuket"
-                      />
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
-                    </Field>
-                  )}
-                />
-                <Controller
-                  control={form.control}
-                  name={`flights.${index}.airline`}
-                  render={({ field: f }) => (
-                    <Field className="gap-1.5">
-                      <FieldLabel>Airline</FieldLabel>
-                      <Input {...f} placeholder="e.g. Thai Airways, AirAsia" />
-                    </Field>
-                  )}
-                />
-                <Controller
-                  control={form.control}
-                  name={`flights.${index}.flightNumber`}
-                  render={({ field: f }) => (
-                    <Field className="gap-1.5">
-                      <FieldLabel>Flight Number</FieldLabel>
-                      <Input {...f} placeholder="e.g. TG 205" />
-                    </Field>
-                  )}
-                />
-                <Controller
-                  control={form.control}
-                  name={`flights.${index}.departureTime`}
-                  render={({ field: f, fieldState }) => (
-                    <Field
-                      className="gap-1.5"
-                      data-invalid={fieldState.invalid}
-                    >
-                      <FieldLabel>Departure Time</FieldLabel>
-                      <Input {...f} type="datetime-local" />
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
-                    </Field>
-                  )}
-                />
-                <Controller
-                  control={form.control}
-                  name={`flights.${index}.arrivalTime`}
-                  render={({ field: f, fieldState }) => (
-                    <Field
-                      className="gap-1.5"
-                      data-invalid={fieldState.invalid}
-                    >
-                      <FieldLabel>Arrival Time</FieldLabel>
-                      <Input {...f} type="datetime-local" />
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
-                    </Field>
-                  )}
-                />
-                <Controller
-                  control={form.control}
-                  name={`flights.${index}.notes`}
-                  render={({ field: f }) => (
-                    <Field className="gap-1.5 sm:col-span-2">
-                      <FieldLabel>Notes</FieldLabel>
-                      <Input {...f} placeholder="e.g. Window seat preferred" />
-                    </Field>
-                  )}
-                />
-              </FieldGroup>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
 
-      <div className="flex items-center justify-end gap-3">
+      <div className="flex items-center justify-between gap-3">
         <Button
           type="button"
           variant="outline"
@@ -1045,15 +1144,35 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
         >
           Cancel
         </Button>
-        <Button type="submit" disabled={submitting}>
-          {submitting
-            ? isEdit
-              ? "Saving..."
-              : "Creating..."
-            : isEdit
-              ? "Save Changes"
-              : "Create Booking"}
-        </Button>
+        <div className="flex items-center gap-3">
+          {step > 1 && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setStep((s) => Math.max(1, s - 1))}
+            >
+              Previous
+            </Button>
+          )}
+          {step < STEPS.length ? (
+            <Button
+              type="button"
+              onClick={() => setStep((s) => Math.min(STEPS.length, s + 1))}
+            >
+              Next
+            </Button>
+          ) : (
+            <Button type="submit" disabled={submitting}>
+              {submitting
+                ? isEdit
+                  ? "Saving..."
+                  : "Creating..."
+                : isEdit
+                  ? "Save Changes"
+                  : "Create Booking"}
+            </Button>
+          )}
+        </div>
       </div>
     </form>
   );

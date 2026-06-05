@@ -59,6 +59,7 @@ export interface CarBookingRow {
   carName: string;
   licensePlate: string;
   purpose: string;
+  pickupLocation: string | null;
   destination: string | null;
   startDate: string;
   endDate: string;

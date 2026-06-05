@@ -2,22 +2,30 @@
 
 import { type ReactNode, useEffect } from "react";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import { useSession } from "next-auth/react";
 
+import { useAllowedMenus } from "@/hooks/use-allowed-menus";
+import { isPathAllowed } from "@/navigation/sidebar/access";
+
 export function AuthGuard({ children }: { children: ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { status } = useSession();
+  const { data: allowedMenus, isLoading } = useAllowedMenus(status === "authenticated");
 
   useEffect(() => {
-    console.log("auth guard status ", status);
     if (status === "unauthenticated") {
       router.replace("/auth/login");
+      return;
     }
-  }, [router, status]);
+    if (status === "authenticated" && !isLoading && !isPathAllowed(pathname, allowedMenus)) {
+      router.replace("/unauthorized");
+    }
+  }, [router, status, pathname, allowedMenus, isLoading]);
 
-  if (status === "authenticated") {
+  if (status === "authenticated" && !isLoading && isPathAllowed(pathname, allowedMenus)) {
     return <>{children}</>;
   }
 

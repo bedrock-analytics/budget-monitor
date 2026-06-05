@@ -41,6 +41,7 @@ export async function POST(request: Request) {
       carName,
       licensePlate,
       purpose,
+      pickupLocation,
       destination,
       startDate,
       endDate,
@@ -51,9 +52,17 @@ export async function POST(request: Request) {
       trips,
     } = body;
 
-    if (!userId || !carName || !licensePlate || !purpose || !startDate || !endDate) {
+    if (
+      !userId ||
+      !carName ||
+      !licensePlate ||
+      !purpose ||
+      !pickupLocation ||
+      !startDate ||
+      !endDate
+    ) {
       return NextResponse.json(
-        { error: "User, car, purpose, and dates are required" },
+        { error: "User, car, purpose, pick-up, and dates are required" },
         { status: 400 },
       );
     }
@@ -118,6 +127,7 @@ export async function POST(request: Request) {
         carName,
         licensePlate,
         purpose,
+        pickupLocation,
         destination: destination || null,
         startDate: new Date(startDate),
         endDate: new Date(endDate),

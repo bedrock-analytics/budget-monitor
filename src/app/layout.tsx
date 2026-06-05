@@ -8,6 +8,7 @@ import { APP_CONFIG } from "@/config/app-config";
 import { fontVars } from "@/lib/fonts/registry";
 import { PREFERENCE_DEFAULTS } from "@/lib/preferences/preferences-config";
 import { NextAuthSessionProvider } from "@/providers/next-auth-session-provider";
+import { QueryClientProvider } from "@/providers/query-client-provider";
 import { ThemeBootScript } from "@/scripts/theme-boot";
 import { PreferencesStoreProvider } from "@/stores/preferences/preferences-provider";
 
@@ -18,18 +19,9 @@ export const metadata: Metadata = {
   description: APP_CONFIG.meta.description,
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{ children: ReactNode }>) {
-  const {
-    theme_mode,
-    theme_preset,
-    content_layout,
-    navbar_style,
-    sidebar_variant,
-    sidebar_collapsible,
-    font,
-  } = PREFERENCE_DEFAULTS;
+export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
+  const { theme_mode, theme_preset, content_layout, navbar_style, sidebar_variant, sidebar_collapsible, font } =
+    PREFERENCE_DEFAULTS;
   return (
     <html
       lang="en"
@@ -49,18 +41,20 @@ export default function RootLayout({
       <body className={`${fontVars} min-h-screen antialiased`}>
         <Suspense>
           <NextAuthSessionProvider>
-            <TooltipProvider>
-              <PreferencesStoreProvider
-                themeMode={theme_mode}
-                themePreset={theme_preset}
-                contentLayout={content_layout}
-                navbarStyle={navbar_style}
-                font={font}
-              >
-                {children}
-                <Toaster />
-              </PreferencesStoreProvider>
-            </TooltipProvider>
+            <QueryClientProvider>
+              <TooltipProvider>
+                <PreferencesStoreProvider
+                  themeMode={theme_mode}
+                  themePreset={theme_preset}
+                  contentLayout={content_layout}
+                  navbarStyle={navbar_style}
+                  font={font}
+                >
+                  {children}
+                  <Toaster />
+                </PreferencesStoreProvider>
+              </TooltipProvider>
+            </QueryClientProvider>
           </NextAuthSessionProvider>
         </Suspense>
       </body>
