@@ -71,14 +71,14 @@ export const sidebarItems: NavGroup[] = [
         title: "Purchase Request",
         url: "/purchase",
         icon: ClipboardList,
-        comingSoon: true,
+        comingSoon: false,
       },
       {
         key: "booking-car",
         title: "BTM",
         url: "/booking-car",
         icon: Car,
-        comingSoon: true,
+        comingSoon: false,
       },
       {
         key: "facility-quality-inspection",
