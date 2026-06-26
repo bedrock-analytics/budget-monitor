@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { BadgeCheck, Bell, CreditCard, LogOut } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -16,7 +17,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getInitials } from "@/lib/utils";
-import { useSession } from "next-auth/react";
 
 export function AccountSwitcher({
   users,
@@ -31,28 +31,18 @@ export function AccountSwitcher({
 }) {
   const { data: session } = useSession();
 
-  const [activeUser, setActiveUser] = useState(users[0]);
+  const [activeUser, _setActiveUser] = useState(users[0]);
   const router = useRouter();
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Avatar className="size-9 rounded-lg">
-          <AvatarImage
-            src={activeUser.avatar || undefined}
-            alt={activeUser.name}
-          />
-          <AvatarFallback className="rounded-lg">
-            {getInitials(activeUser.name)}
-          </AvatarFallback>
+          <AvatarImage src={activeUser.avatar || undefined} alt={activeUser.name} />
+          <AvatarFallback className="rounded-lg">{getInitials(activeUser.name)}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
-      <DropdownMenuContent
-        className="min-w-56 space-y-1 rounded-lg"
-        side="bottom"
-        align="end"
-        sideOffset={4}
-      >
+      <DropdownMenuContent className="min-w-56 space-y-1 rounded-lg" side="bottom" align="end" sideOffset={4}>
         <DropdownMenuItem
           key={session?.user?.email}
           // className={cn("p-0", session?.user?.id === activeUser.id && "border-l-2 border-l-primary bg-accent/50")}
@@ -63,12 +53,8 @@ export function AccountSwitcher({
                 <AvatarFallback className="rounded-lg">{getInitials(session?.user?.name)}</AvatarFallback>
               </Avatar> */}
             <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-semibold">
-                {session?.user?.name}
-              </span>
-              <span className="truncate text-xs capitalize">
-                {session?.user?.email}
-              </span>
+              <span className="truncate font-semibold">{session?.user?.name}</span>
+              <span className="truncate text-xs capitalize">{session?.user?.email}</span>
             </div>
           </div>
         </DropdownMenuItem>

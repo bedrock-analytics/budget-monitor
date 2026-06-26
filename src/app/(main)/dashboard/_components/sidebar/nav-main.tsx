@@ -3,10 +3,9 @@
 import Link from "next/link";
 import { redirect, usePathname } from "next/navigation";
 
-import { ChevronRight, MailIcon, PlusCircleIcon } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 
-import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   DropdownMenu,
@@ -170,7 +169,7 @@ export function NavMain({ items }: NavMainProps) {
     return await res.json();
   };
 
-  const onCreateChat = async () => {
+  const _onCreateChat = async () => {
     const data = await createChat(uuidv4());
     redirect(`/chat/${data.chat.id}`);
   };

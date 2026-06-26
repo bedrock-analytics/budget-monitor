@@ -9,15 +9,7 @@ import { useSession } from "next-auth/react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatUSD } from "@/lib/utils";
 
 import { CostTrackingUploadButton } from "./_components/cost-tracking-upload-button";
@@ -46,8 +38,7 @@ interface Row extends ProjectListItem {
   spentPct: number;
 }
 
-const formatDate = (d: string | null) =>
-  d ? new Date(d).toLocaleDateString() : "—";
+const formatDate = (d: string | null) => (d ? new Date(d).toLocaleDateString() : "—");
 
 export default function ProjectOverviewPage() {
   const { data: session } = useSession();
@@ -79,9 +70,7 @@ export default function ProjectOverviewPage() {
 
   const canUpload = useMemo(() => {
     const email = session?.user?.email?.toLowerCase();
-    return (
-      email === "thanabutc@rovula.com" || email === "nuttapongsa@rovula.com"
-    );
+    return email === "thanabutc@rovula.com" || email === "nuttapongsa@rovula.com";
   }, [session]);
 
   const rows = useMemo<Row[]>(() => {
@@ -109,11 +98,7 @@ export default function ProjectOverviewPage() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return rows;
-    return rows.filter(
-      (r) =>
-        r.projectCode.toLowerCase().includes(q) ||
-        r.projectName.toLowerCase().includes(q),
-    );
+    return rows.filter((r) => r.projectCode.toLowerCase().includes(q) || r.projectName.toLowerCase().includes(q));
   }, [rows, search]);
 
   const sorted = useMemo(() => {
@@ -174,10 +159,8 @@ export default function ProjectOverviewPage() {
     );
   }, [filtered]);
 
-  const totalSpentPct =
-    totals.estimate > 0 ? (totals.actual / totals.estimate) * 100 : 0;
-  const totalMarginPct =
-    totals.budget > 0 ? (totals.margin / totals.budget) * 100 : 0;
+  const totalSpentPct = totals.estimate > 0 ? (totals.actual / totals.estimate) * 100 : 0;
+  const totalMarginPct = totals.budget > 0 ? (totals.margin / totals.budget) * 100 : 0;
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) {
       setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -188,10 +171,7 @@ export default function ProjectOverviewPage() {
   };
 
   const sortIcon = (key: SortKey) => {
-    if (sortKey !== key)
-      return (
-        <ArrowUpDown className="ml-1 inline h-3 w-3 text-muted-foreground" />
-      );
+    if (sortKey !== key) return <ArrowUpDown className="ml-1 inline h-3 w-3 text-muted-foreground" />;
     return sortDir === "asc" ? (
       <ArrowUp className="ml-1 inline h-3 w-3" />
     ) : (
@@ -244,18 +224,12 @@ export default function ProjectOverviewPage() {
         {kpis.map((k) => (
           <Card key={k.title} data-slot="card">
             <CardHeader className="pb-2">
-              <CardTitle className="font-medium text-muted-foreground text-sm">
-                {k.title}
-              </CardTitle>
+              <CardTitle className="font-medium text-muted-foreground text-sm">{k.title}</CardTitle>
             </CardHeader>
             <CardContent>
               <div
                 className={`font-bold text-2xl tabular-nums ${
-                  k.tone === "danger"
-                    ? "text-destructive"
-                    : k.tone === "good"
-                      ? "text-green-600"
-                      : ""
+                  k.tone === "danger" ? "text-destructive" : k.tone === "good" ? "text-green-600" : ""
                 }`}
               >
                 {k.value}
@@ -272,11 +246,7 @@ export default function ProjectOverviewPage() {
           onChange={(e) => setSearch(e.target.value)}
           className="max-w-md"
         />
-        {loading && (
-          <span className="text-muted-foreground text-sm">
-            Loading projects...
-          </span>
-        )}
+        {loading && <span className="text-muted-foreground text-sm">Loading projects...</span>}
       </div>
 
       {error && <p className="text-destructive text-sm">{error}</p>}
@@ -295,40 +265,22 @@ export default function ProjectOverviewPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead
-                  className="cursor-pointer select-none"
-                  onClick={() => toggleSort("projectCode")}
-                >
+                <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("projectCode")}>
                   Code{sortIcon("projectCode")}
                 </TableHead>
-                <TableHead
-                  className="cursor-pointer select-none"
-                  onClick={() => toggleSort("projectName")}
-                >
+                <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("projectName")}>
                   Name{sortIcon("projectName")}
                 </TableHead>
-                <TableHead
-                  className="cursor-pointer select-none"
-                  onClick={() => toggleSort("startDate")}
-                >
+                <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("startDate")}>
                   Start{sortIcon("startDate")}
                 </TableHead>
-                <TableHead
-                  className="cursor-pointer select-none"
-                  onClick={() => toggleSort("endDate")}
-                >
+                <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("endDate")}>
                   End{sortIcon("endDate")}
                 </TableHead>
-                <TableHead
-                  className="cursor-pointer select-none text-right"
-                  onClick={() => toggleSort("budgetUSD")}
-                >
+                <TableHead className="cursor-pointer select-none text-right" onClick={() => toggleSort("budgetUSD")}>
                   Revenue{sortIcon("budgetUSD")}
                 </TableHead>
-                <TableHead
-                  className="cursor-pointer select-none text-right"
-                  onClick={() => toggleSort("estimateUSD")}
-                >
+                <TableHead className="cursor-pointer select-none text-right" onClick={() => toggleSort("estimateUSD")}>
                   Cost Reserved{sortIcon("estimateUSD")}
                 </TableHead>
                 <TableHead
@@ -337,16 +289,10 @@ export default function ProjectOverviewPage() {
                 >
                   Cost Actual{sortIcon("actualChargeUSD")}
                 </TableHead>
-                <TableHead
-                  className="cursor-pointer select-none text-right"
-                  onClick={() => toggleSort("marginUSD")}
-                >
+                <TableHead className="cursor-pointer select-none text-right" onClick={() => toggleSort("marginUSD")}>
                   Margin{sortIcon("marginUSD")}
                 </TableHead>
-                <TableHead
-                  className="cursor-pointer select-none text-right"
-                  onClick={() => toggleSort("spentPct")}
-                >
+                <TableHead className="cursor-pointer select-none text-right" onClick={() => toggleSort("spentPct")}>
                   % Spent{sortIcon("spentPct")}
                 </TableHead>
               </TableRow>
@@ -355,54 +301,33 @@ export default function ProjectOverviewPage() {
               {sorted.map((r) => (
                 <TableRow key={r.id} className="cursor-pointer">
                   <TableCell className="font-medium">
-                    <Link
-                      href={`/project/${encodeURIComponent(r.projectCode)}`}
-                      className="hover:underline"
-                    >
+                    <Link href={`/project/${encodeURIComponent(r.projectCode)}`} className="hover:underline">
                       {r.projectCode}
                     </Link>
                   </TableCell>
                   <TableCell>
-                    <Link
-                      href={`/project/${encodeURIComponent(r.projectCode)}`}
-                      className="hover:underline"
-                    >
+                    <Link href={`/project/${encodeURIComponent(r.projectCode)}`} className="hover:underline">
                       {r.projectName}
                     </Link>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {formatDate(r.startDate)}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {formatDate(r.endDate)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatUSD(r.budget)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatUSD(r.estimate)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatUSD(r.actual)}
-                  </TableCell>
+                  <TableCell className="text-muted-foreground">{formatDate(r.startDate)}</TableCell>
+                  <TableCell className="text-muted-foreground">{formatDate(r.endDate)}</TableCell>
+                  <TableCell className="text-right tabular-nums">{formatUSD(r.budget)}</TableCell>
+                  <TableCell className="text-right tabular-nums">{formatUSD(r.estimate)}</TableCell>
+                  <TableCell className="text-right tabular-nums">{formatUSD(r.actual)}</TableCell>
                   <TableCell
                     className={`text-right tabular-nums ${r.margin < 0 ? "text-destructive" : "text-green-600"}`}
                   >
                     {r.marginPct.toFixed(1)}%
                   </TableCell>
-                  <TableCell
-                    className={`text-right tabular-nums ${r.spentPct > 100 ? "text-destructive" : ""}`}
-                  >
+                  <TableCell className={`text-right tabular-nums ${r.spentPct > 100 ? "text-destructive" : ""}`}>
                     {r.spentPct.toFixed(1)}%
                   </TableCell>
                 </TableRow>
               ))}
               {sorted.length === 0 && !loading && (
                 <TableRow>
-                  <TableCell
-                    colSpan={9}
-                    className="py-8 text-center text-muted-foreground"
-                  >
+                  <TableCell colSpan={9} className="py-8 text-center text-muted-foreground">
                     No projects match your search.
                   </TableCell>
                 </TableRow>
@@ -412,23 +337,15 @@ export default function ProjectOverviewPage() {
               <TableFooter>
                 <TableRow className="bg-muted/50 font-semibold">
                   <TableCell colSpan={4}>Total ({filtered.length})</TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatUSD(totals.budget)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatUSD(totals.estimate)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatUSD(totals.actual)}
-                  </TableCell>
+                  <TableCell className="text-right tabular-nums">{formatUSD(totals.budget)}</TableCell>
+                  <TableCell className="text-right tabular-nums">{formatUSD(totals.estimate)}</TableCell>
+                  <TableCell className="text-right tabular-nums">{formatUSD(totals.actual)}</TableCell>
                   <TableCell
                     className={`text-right tabular-nums ${totals.margin < 0 ? "text-destructive" : "text-green-600"}`}
                   >
                     {totalMarginPct.toFixed(1)}%
                   </TableCell>
-                  <TableCell
-                    className={`text-right tabular-nums ${totalSpentPct > 100 ? "text-destructive" : ""}`}
-                  >
+                  <TableCell className={`text-right tabular-nums ${totalSpentPct > 100 ? "text-destructive" : ""}`}>
                     {totalSpentPct.toFixed(1)}%
                   </TableCell>
                 </TableRow>

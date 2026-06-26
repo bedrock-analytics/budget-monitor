@@ -10,9 +10,19 @@ export default function Layout({ children }: Readonly<{ children: ReactNode }>) 
     <main>
       <div className="grid h-dvh justify-center p-2 lg:grid-cols-2">
         <div className="relative order-2 hidden h-full rounded-3xl lg:flex">
-          <Image src={XplorerImage} alt="Bedrock Analytics" aria-hidden="true" className="w-full object-cover rounded-3xl" />
+          <Image
+            src={XplorerImage}
+            alt="Bedrock Analytics"
+            aria-hidden="true"
+            className="w-full rounded-3xl object-cover"
+          />
           <div className="absolute top-10 space-y-1 px-10 text-primary-foreground">
-            <Image src={LogoImage} alt="Bedrock Analytics" aria-hidden="true" className="w-full h-12 object-cover corner-round" />
+            <Image
+              src={LogoImage}
+              alt="Bedrock Analytics"
+              aria-hidden="true"
+              className="corner-round h-12 w-full object-cover"
+            />
           </div>
         </div>
         <div className="relative order-1 flex h-full">{children}</div>

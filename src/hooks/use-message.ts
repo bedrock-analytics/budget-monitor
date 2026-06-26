@@ -10,7 +10,7 @@ export type Message = {
   updatedAt: string;
 };
 
-export async function fetchMessages(params: { chatId: string }) {
+export async function fetchMessages(_params: { chatId: string }) {
   const qc = useQueryClient();
   // const res = await fetch(`/api/chats/${params.chatId}/messages`, {
   //   method: "GET",

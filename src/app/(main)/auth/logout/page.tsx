@@ -4,9 +4,9 @@ import { useEffect, useRef } from "react";
 
 import { useRouter } from "next/navigation";
 
-import { deleteClientCookie } from "@/lib/cookie.client";
-
 import { signOut, useSession } from "next-auth/react";
+
+import { deleteClientCookie } from "@/lib/cookie.client";
 
 export default function LogoutPage() {
   const router = useRouter();
@@ -23,7 +23,7 @@ export default function LogoutPage() {
       signOut();
     }
     router.replace("/auth/login");
-  }, [router]);
+  }, [router, session]);
 
   return (
     <div className="flex h-dvh items-center justify-center">

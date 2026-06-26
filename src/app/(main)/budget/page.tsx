@@ -1,22 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-import type {
-  BudgetData,
-  BudgetItemSummary,
-  BudgetRow,
-  BudgetSummary,
-  ProjectSummary,
-} from "@/lib/budget";
+import { useSession } from "next-auth/react";
+
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { BudgetData, BudgetItemSummary, BudgetRow, BudgetSummary, ProjectSummary } from "@/lib/budget";
 
 import { BudgetDetailTable } from "./_components/budget-detail-table";
 import { BudgetDetailUploadButton } from "./_components/budget-detail-upload-button";
@@ -25,7 +15,6 @@ import { BudgetKpiCards } from "./_components/budget-kpi-cards";
 import { BudgetProjectChart } from "./_components/budget-project-chart";
 import { BudgetUploadButton } from "./_components/budget-upload-button";
 import { BudgetUtilization } from "./_components/budget-utilization";
-import { useSession } from "next-auth/react";
 
 function aggregateFiltered(rows: BudgetRow[]) {
   const summary: BudgetSummary = {
@@ -66,9 +55,7 @@ function aggregateFiltered(rows: BudgetRow[]) {
     p.availableUSD += Number(row.availableUSD);
   }
   const byProject = Array.from(projectMap.values()).filter(
-    (p) =>
-      Math.abs(p.budgetTHB) + Math.abs(p.actualTHB) + Math.abs(p.reservedTHB) >
-      0,
+    (p) => Math.abs(p.budgetTHB) + Math.abs(p.actualTHB) + Math.abs(p.reservedTHB) > 0,
   );
 
   const itemMap = new Map<string, BudgetItemSummary>();
@@ -106,7 +93,7 @@ export default function BudgetPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [projectFilter, setProjectFilter] = useState("all");
+  const [projectFilter, _setProjectFilter] = useState("all");
   const [projectNameFilter, setProjectNameFilter] = useState("all");
 
   const fetchBudget = useCallback(async () => {
@@ -133,24 +120,15 @@ export default function BudgetPage() {
   }, [fetchBudget]);
 
   const activeRows = useMemo(
-    () =>
-      data?.rows.filter(
-        (r) =>
-          Math.abs(r.budgetTHB) +
-            Math.abs(r.actualTHB) +
-            Math.abs(r.reservedTHB) >
-          0,
-      ) ?? [],
+    () => data?.rows.filter((r) => Math.abs(r.budgetTHB) + Math.abs(r.actualTHB) + Math.abs(r.reservedTHB) > 0) ?? [],
     [data],
   );
 
-  const projectOptions = useMemo(
+  const _projectOptions = useMemo(
     () =>
-      Array.from(
-        new Map(
-          activeRows.map((r) => [r.projectType, r.projectTypeName]),
-        ).entries(),
-      ).sort((a, b) => a[1].localeCompare(b[1])),
+      Array.from(new Map(activeRows.map((r) => [r.projectType, r.projectTypeName])).entries()).sort((a, b) =>
+        a[1].localeCompare(b[1]),
+      ),
     [activeRows],
   );
 
@@ -164,10 +142,8 @@ export default function BudgetPage() {
 
   const filteredRows = useMemo(() => {
     return activeRows.filter((r) => {
-      const matchesProject =
-        projectFilter === "all" || r.projectType === projectFilter;
-      const matchesProjectName =
-        projectNameFilter === "all" || r.projectTypeName === projectNameFilter;
+      const matchesProject = projectFilter === "all" || r.projectType === projectFilter;
+      const matchesProjectName = projectNameFilter === "all" || r.projectTypeName === projectNameFilter;
       const q = search.toLowerCase();
       const matchesSearch =
         !q ||
@@ -178,10 +154,7 @@ export default function BudgetPage() {
     });
   }, [activeRows, search, projectFilter, projectNameFilter]);
 
-  const filtered = useMemo(
-    () => aggregateFiltered(filteredRows),
-    [filteredRows],
-  );
+  const filtered = useMemo(() => aggregateFiltered(filteredRows), [filteredRows]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -198,9 +171,7 @@ export default function BudgetPage() {
         <div className="flex items-center gap-3">
           {(() => {
             const email = session?.user?.email?.toLocaleLowerCase();
-            const canUpload =
-              email === "thanabutc@rovula.com" ||
-              email === "nuttapongsa@rovula.com";
+            const canUpload = email === "thanabutc@rovula.com" || email === "nuttapongsa@rovula.com";
             if (!canUpload) return null;
             return (
               <>
@@ -252,9 +223,7 @@ export default function BudgetPage() {
         )}
       </div>
 
-      {loading && (
-        <p className="text-muted-foreground text-sm">Loading budget data...</p>
-      )}
+      {loading && <p className="text-muted-foreground text-sm">Loading budget data...</p>}
       {error && <p className="text-destructive text-sm">{error}</p>}
       {data && (
         <>

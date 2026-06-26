@@ -1,7 +1,6 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
 import type { BudgetSummary } from "@/lib/budget";
 
 interface Props {
@@ -24,14 +23,10 @@ export function BudgetKpiCards({ summary }: Props) {
   };
 
   const utilizationPct =
-    summary.totalBudgetTHB > 0
-      ? ((summary.totalActualTHB / summary.totalBudgetTHB) * 100).toFixed(1)
-      : "0.0";
+    summary.totalBudgetTHB > 0 ? ((summary.totalActualTHB / summary.totalBudgetTHB) * 100).toFixed(1) : "0.0";
 
   const reservedPct =
-    summary.totalBudgetTHB > 0
-      ? ((summary.totalReservedTHB / summary.totalBudgetTHB) * 100).toFixed(1)
-      : "0.0";
+    summary.totalBudgetTHB > 0 ? ((summary.totalReservedTHB / summary.totalBudgetTHB) * 100).toFixed(1) : "0.0";
 
   const cards = [
     {
@@ -65,14 +60,10 @@ export function BudgetKpiCards({ summary }: Props) {
       {cards.map((card) => (
         <Card key={card.title} data-slot="card">
           <CardHeader className="pb-2">
-            <CardTitle className="font-medium text-muted-foreground text-sm">
-              {card.title}
-            </CardTitle>
+            <CardTitle className="font-medium text-muted-foreground text-sm">{card.title}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="font-bold text-2xl tabular-nums">
-              {card.valueTHB}
-            </div>
+            <div className="font-bold text-2xl tabular-nums">{card.valueTHB}</div>
             <div className="text-xl tabular-nums">{card.valueUSD}</div>
             <p className="mt-1 text-muted-foreground text-xs">{card.sub}</p>
           </CardContent>

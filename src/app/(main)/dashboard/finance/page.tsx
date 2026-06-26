@@ -15,15 +15,6 @@ export default function Page() {
       <Tabs className="gap-4" defaultValue="overview">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger disabled value="activity">
-            Activity
-          </TabsTrigger>
-          <TabsTrigger disabled value="insights">
-            Insights
-          </TabsTrigger>
-          <TabsTrigger disabled value="utilities">
-            Utilities
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">

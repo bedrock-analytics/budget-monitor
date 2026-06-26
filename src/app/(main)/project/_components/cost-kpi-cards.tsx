@@ -33,8 +33,7 @@ export function CostKpiCards({ budgetUSD, estimateUSD, actualUSD }: Props) {
     {
       title: "Margin",
       value: formatUSD(margin),
-      sub:
-        budgetUSD > 0 ? `${marginPct.toFixed(1)}% of budget` : "No budget set",
+      sub: budgetUSD > 0 ? `${marginPct.toFixed(1)}% of budget` : "No budget set",
       tone: isNegativeMargin ? "danger" : ("good" as const),
     },
     {
@@ -62,18 +61,12 @@ export function CostKpiCards({ budgetUSD, estimateUSD, actualUSD }: Props) {
       {cards.map((card) => (
         <Card key={card.title} data-slot="card">
           <CardHeader className="pb-2">
-            <CardTitle className="font-medium text-muted-foreground text-sm">
-              {card.title}
-            </CardTitle>
+            <CardTitle className="font-medium text-muted-foreground text-sm">{card.title}</CardTitle>
           </CardHeader>
           <CardContent>
             <div
               className={`font-bold text-2xl tabular-nums ${
-                card.tone === "danger"
-                  ? "text-destructive"
-                  : card.tone === "good"
-                    ? "text-green-600"
-                    : ""
+                card.tone === "danger" ? "text-destructive" : card.tone === "good" ? "text-green-600" : ""
               }`}
             >
               {card.value}

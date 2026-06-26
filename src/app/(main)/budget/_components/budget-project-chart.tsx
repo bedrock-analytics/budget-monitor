@@ -2,13 +2,7 @@
 
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   type ChartConfig,
   ChartContainer,
@@ -58,17 +52,11 @@ export function BudgetProjectChart({ byProject }: Props) {
     <Card>
       <CardHeader>
         <CardTitle>Budget by Project</CardTitle>
-        <CardDescription>
-          Budget, Reserved and Actual spending per project (THB)
-        </CardDescription>
+        <CardDescription>Budget, Reserved and Actual spending per project (THB)</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-80 w-full">
-          <BarChart
-            data={data}
-            layout="vertical"
-            margin={{ top: 4, right: 8, bottom: 4, left: 8 }}
-          >
+          <BarChart data={data} layout="vertical" margin={{ top: 4, right: 8, bottom: 4, left: 8 }}>
             <CartesianGrid horizontal={true} />
             <YAxis
               dataKey="name"
@@ -92,28 +80,15 @@ export function BudgetProjectChart({ byProject }: Props) {
                 <ChartTooltipContent
                   formatter={(value, name) => [
                     formatTHB(value as number),
-                    chartConfig[name as keyof typeof chartConfig]?.label ??
-                      name,
+                    chartConfig[name as keyof typeof chartConfig]?.label ?? name,
                   ]}
                 />
               }
             />
             <ChartLegend content={<ChartLegendContent />} />
-            <Bar
-              dataKey="budgetTHB"
-              fill="var(--color-budgetTHB)"
-              radius={[0, 4, 4, 0]}
-            />
-            <Bar
-              dataKey="reservedTHB"
-              fill="var(--color-reservedTHB)"
-              radius={[0, 4, 4, 0]}
-            />
-            <Bar
-              dataKey="actualTHB"
-              fill="var(--color-actualTHB)"
-              radius={[0, 4, 4, 0]}
-            />
+            <Bar dataKey="budgetTHB" fill="var(--color-budgetTHB)" radius={[0, 4, 4, 0]} />
+            <Bar dataKey="reservedTHB" fill="var(--color-reservedTHB)" radius={[0, 4, 4, 0]} />
+            <Bar dataKey="actualTHB" fill="var(--color-actualTHB)" radius={[0, 4, 4, 0]} />
           </BarChart>
         </ChartContainer>
       </CardContent>

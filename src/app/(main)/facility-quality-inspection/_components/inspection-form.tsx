@@ -5,41 +5,18 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Trash2 } from "lucide-react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import type { InspectionRow } from "@/lib/facility-quality-inspection";
-import {
-  INSPECTION_CATEGORIES,
-  INSPECTION_TYPES,
-  PRIORITY_LEVELS,
-} from "@/lib/facility-quality-inspection";
+import { INSPECTION_TYPES, PRIORITY_LEVELS } from "@/lib/facility-quality-inspection";
 
 const itemSchema = z.object({
   category: z.string().min(1, "Category is required"),
@@ -89,11 +66,7 @@ const emptyItem: FormItem = {
   remarks: "",
 };
 
-export function InspectionForm({
-  inspectorId,
-  initialData,
-  templateItems,
-}: InspectionFormProps) {
+export function InspectionForm({ inspectorId, initialData, templateItems }: InspectionFormProps) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [users, setUsers] = useState<{ id: string; name: string }[]>([]);
@@ -174,10 +147,7 @@ export function InspectionForm({
   };
 
   return (
-    <form
-      onSubmit={form.handleSubmit(onSubmit)}
-      className="flex flex-col gap-6"
-    >
+    <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
       <Card>
         <CardHeader>
           <CardTitle>Inspection Details</CardTitle>
@@ -191,9 +161,7 @@ export function InspectionForm({
                 <Field className="gap-1.5" data-invalid={fieldState.invalid}>
                   <FieldLabel>Facility Name</FieldLabel>
                   <Input {...field} placeholder="e.g. Platform Alpha" />
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                 </Field>
               )}
             />
@@ -204,10 +172,7 @@ export function InspectionForm({
               render={({ field }) => (
                 <Field className="gap-1.5">
                   <FieldLabel>Location</FieldLabel>
-                  <Input
-                    {...field}
-                    placeholder="e.g. Block A, Gulf of Thailand"
-                  />
+                  <Input {...field} placeholder="e.g. Block A, Gulf of Thailand" />
                 </Field>
               )}
             />
@@ -230,9 +195,7 @@ export function InspectionForm({
                       ))}
                     </SelectContent>
                   </Select>
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                 </Field>
               )}
             />
@@ -244,9 +207,7 @@ export function InspectionForm({
                 <Field className="gap-1.5" data-invalid={fieldState.invalid}>
                   <FieldLabel>Date and Time of Inspection</FieldLabel>
                   <Input {...field} type="date" />
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                 </Field>
               )}
             />
@@ -257,11 +218,7 @@ export function InspectionForm({
               render={({ field }) => (
                 <Field className="gap-1.5 sm:col-span-2">
                   <FieldLabel>Description</FieldLabel>
-                  <Textarea
-                    {...field}
-                    placeholder="Inspection scope and objectives..."
-                    rows={3}
-                  />
+                  <Textarea {...field} placeholder="Inspection scope and objectives..." rows={3} />
                 </Field>
               )}
             />
@@ -317,9 +274,7 @@ export function InspectionForm({
                   <TableHead className="max-w-[100px]">Check Item</TableHead>
                   <TableHead className="w-[100px]">YES/NO/N/A</TableHead>
                   <TableHead className="w-[100px]">Priority</TableHead>
-                  <TableHead className="min-w-[180px]">
-                    Corrective Action
-                  </TableHead>
+                  <TableHead className="min-w-[180px]">Corrective Action</TableHead>
                   <TableHead className="min-w-[130px]">Action Party</TableHead>
                   {/* <TableHead className="w-10" /> */}
                 </TableRow>
@@ -327,9 +282,7 @@ export function InspectionForm({
               <TableBody>
                 {fields.map((field, index) => (
                   <TableRow key={field.id} className="align-top">
-                    <TableCell className="pt-3 text-muted-foreground">
-                      {index + 1}
-                    </TableCell>
+                    <TableCell className="pt-3 text-muted-foreground">{index + 1}</TableCell>
 
                     <TableCell>
                       <Controller
@@ -395,9 +348,7 @@ export function InspectionForm({
                         render={({ field: f }) => (
                           <Select
                             value={f.value || "none"}
-                            onValueChange={(val) =>
-                              f.onChange(val === "none" ? "" : val)
-                            }
+                            onValueChange={(val) => f.onChange(val === "none" ? "" : val)}
                           >
                             <SelectTrigger className="h-9 text-xs">
                               <SelectValue placeholder="-" />
@@ -420,11 +371,7 @@ export function InspectionForm({
                         control={form.control}
                         name={`items.${index}.correctiveAction`}
                         render={({ field: f }) => (
-                          <Input
-                            {...f}
-                            className="h-9 text-xs"
-                            placeholder="Corrective action..."
-                          />
+                          <Input {...f} className="h-9 text-xs" placeholder="Corrective action..." />
                         )}
                       />
                     </TableCell>
@@ -436,9 +383,7 @@ export function InspectionForm({
                         render={({ field: f }) => (
                           <Select
                             value={f.value || "none"}
-                            onValueChange={(val) =>
-                              f.onChange(val === "none" ? "" : val)
-                            }
+                            onValueChange={(val) => f.onChange(val === "none" ? "" : val)}
                           >
                             <SelectTrigger className="h-9 text-xs">
                               <SelectValue placeholder="-" />
@@ -476,27 +421,17 @@ export function InspectionForm({
           </div>
 
           {form.formState.errors.items?.root && (
-            <p className="mt-2 text-destructive text-sm">
-              {form.formState.errors.items.root.message}
-            </p>
+            <p className="mt-2 text-destructive text-sm">{form.formState.errors.items.root.message}</p>
           )}
         </CardContent>
       </Card>
 
       <div className="flex items-center justify-end gap-3">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => router.push("/facility-quality-inspection")}
-        >
+        <Button type="button" variant="outline" onClick={() => router.push("/facility-quality-inspection")}>
           Cancel
         </Button>
         <Button type="submit" disabled={submitting}>
-          {submitting
-            ? "Saving..."
-            : initialData
-              ? "Update Inspection"
-              : "Create Inspection"}
+          {submitting ? "Saving..." : initialData ? "Update Inspection" : "Create Inspection"}
         </Button>
       </div>
     </form>

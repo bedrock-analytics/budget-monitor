@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { useRouter } from "next/navigation";
+
 import { useSession } from "next-auth/react";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
@@ -32,7 +33,7 @@ export default function ChatSection(prop: { chatId: string }) {
     } else {
       getMessages(prop.chatId);
     }
-  }, []);
+  }, [createChat, getMessages, prop.chatId]);
 
   const getMessages = async (chatId: string) => {
     try {
@@ -46,7 +47,7 @@ export default function ChatSection(prop: { chatId: string }) {
         setMessages(data.messages);
       }
       setIsLoading(false);
-    } catch (error) {
+    } catch (_error) {
       setIsLoading(false);
     }
   };
@@ -62,7 +63,7 @@ export default function ChatSection(prop: { chatId: string }) {
       });
       const data = await res.json();
       router.push(`/chat/${data.chat.id}`);
-    } catch (error) {
+    } catch (_error) {
       setIsLoading(false);
     }
   };
@@ -93,10 +94,7 @@ export default function ChatSection(prop: { chatId: string }) {
     return response;
   };
 
-  const saveMessage = async (
-    content: string,
-    role: "system" | "user" | "assistant",
-  ) => {
+  const saveMessage = async (content: string, role: "system" | "user" | "assistant") => {
     const res = await fetch(`/api/chats/${chatId}/messages`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -128,10 +126,7 @@ export default function ChatSection(prop: { chatId: string }) {
         throw new Error(response.error || "No reply from server");
       }
 
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: response.reply ?? "" },
-      ]);
+      setMessages((prev) => [...prev, { role: "assistant", content: response.reply ?? "" }]);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Failed to send message";
       setError(msg);
@@ -140,19 +135,14 @@ export default function ChatSection(prop: { chatId: string }) {
     }
   };
 
-  const canSend = useMemo(
-    () => input.trim().length > 0 && !isSending,
-    [input, isSending],
-  );
+  const canSend = useMemo(() => input.trim().length > 0 && !isSending, [input, isSending]);
 
   return (
     <div className="@container/main flex h-[calc(100dvh-10rem)] flex-col gap-4 md:gap-6">
       <div className="flex-1 space-y-3 overflow-auto rounded-xl border bg-background p-4">
         {messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-4">
-            <p className="text-muted-foreground text-sm">
-              Ask me anything, {session?.user?.name ?? ""}. ?
-            </p>
+            <p className="text-muted-foreground text-sm">Ask me anything, {session?.user?.name ?? ""}. ?</p>
             <div className="flex flex-wrap justify-center gap-2">
               {SUGGESTIONS.map((s) => (
                 <button
@@ -171,15 +161,10 @@ export default function ChatSection(prop: { chatId: string }) {
         ) : null}
 
         {messages.map((msg, index) => (
-          <div
-            key={index}
-            className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-          >
+          <div key={index} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
             <div
               className={`max-w-[80%] whitespace-pre-wrap rounded-2xl px-4 py-2 text-sm ${
-                msg.role === "user"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-foreground"
+                msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
               }`}
             >
               {msg.content}

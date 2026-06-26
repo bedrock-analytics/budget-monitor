@@ -118,25 +118,13 @@ export function parseBudgetCSV(): BudgetRow[] {
 export function aggregateBudgetData(rows: any[]): BudgetData {
   const summary: BudgetSummary = {
     totalBudgetTHB: rows.reduce((s, r) => Number(s) + Number(r.budgetTHB), 0),
-    totalReservedTHB: rows.reduce(
-      (s, r) => Number(s) + Number(r.reservedTHB),
-      0,
-    ),
+    totalReservedTHB: rows.reduce((s, r) => Number(s) + Number(r.reservedTHB), 0),
     totalActualTHB: rows.reduce((s, r) => Number(s) + Number(r.actualTHB), 0),
-    totalAvailableTHB: rows.reduce(
-      (s, r) => Number(s) + Number(r.availableTHB),
-      0,
-    ),
+    totalAvailableTHB: rows.reduce((s, r) => Number(s) + Number(r.availableTHB), 0),
     totalBudgetUSD: rows.reduce((s, r) => Number(s) + Number(r.budgetUSD), 0),
-    totalReservedUSD: rows.reduce(
-      (s, r) => Number(s) + Number(r.reservedUSD),
-      0,
-    ),
+    totalReservedUSD: rows.reduce((s, r) => Number(s) + Number(r.reservedUSD), 0),
     totalActualUSD: rows.reduce((s, r) => Number(s) + Number(r.actualUSD), 0),
-    totalAvailableUSD: rows.reduce(
-      (s, r) => Number(s) + Number(r.availableUSD),
-      0,
-    ),
+    totalAvailableUSD: rows.reduce((s, r) => Number(s) + Number(r.availableUSD), 0),
   };
 
   const projectMap = new Map<string, ProjectSummary>();
@@ -167,9 +155,7 @@ export function aggregateBudgetData(rows: any[]): BudgetData {
     p.availableUSD += Number(row.availableUSD);
   }
   const byProject = Array.from(projectMap.values()).filter(
-    (p) =>
-      Math.abs(p.budgetTHB) + Math.abs(p.actualTHB) + Math.abs(p.reservedTHB) >
-      0,
+    (p) => Math.abs(p.budgetTHB) + Math.abs(p.actualTHB) + Math.abs(p.reservedTHB) > 0,
   );
 
   const itemMap = new Map<string, BudgetItemSummary>();

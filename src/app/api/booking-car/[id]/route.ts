@@ -2,10 +2,7 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 
-export async function PATCH(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const body = await request.json();
@@ -30,10 +27,7 @@ export async function PATCH(
 
     const existing = await db.carBooking.findUnique({ where: { id } });
     if (!existing) {
-      return NextResponse.json(
-        { error: "Booking not found" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Booking not found" }, { status: 404 });
     }
 
     // Update core booking fields if provided
@@ -58,17 +52,15 @@ export async function PATCH(
     if (passengers !== undefined) {
       await db.carBookingPassenger.deleteMany({ where: { bookingId: id } });
 
-      const passengerList = (
-        passengers as {
-          name: string;
-          email?: string;
-          phone?: string;
-          dateOfBirth?: string;
-          role?: string;
-          userId?: string;
-          usePersonalCar?: boolean;
-        }[]
-      );
+      const passengerList = passengers as {
+        name: string;
+        email?: string;
+        phone?: string;
+        dateOfBirth?: string;
+        role?: string;
+        userId?: string;
+        usePersonalCar?: boolean;
+      }[];
 
       // Sync phone/dateOfBirth to User table if User fields are empty
       for (const p of passengerList) {
@@ -77,8 +69,7 @@ export async function PATCH(
           if (user) {
             const update: Record<string, unknown> = {};
             if (!user.phone && p.phone) update.phone = p.phone;
-            if (!user.dateOfBirth && p.dateOfBirth)
-              update.dateOfBirth = new Date(p.dateOfBirth);
+            if (!user.dateOfBirth && p.dateOfBirth) update.dateOfBirth = new Date(p.dateOfBirth);
             if (Object.keys(update).length > 0) {
               await db.user.update({ where: { id: p.userId }, data: update });
             }
@@ -204,35 +195,23 @@ export async function PATCH(
     return NextResponse.json(updated);
   } catch (error) {
     console.error("Failed to update car booking:", error);
-    return NextResponse.json(
-      { error: "Failed to update car booking" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to update car booking" }, { status: 500 });
   }
 }
 
-export async function DELETE(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
 
     const existing = await db.carBooking.findUnique({ where: { id } });
     if (!existing) {
-      return NextResponse.json(
-        { error: "Booking not found" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Booking not found" }, { status: 404 });
     }
 
     await db.carBooking.delete({ where: { id } });
     return NextResponse.json({ deleted: true });
   } catch (error) {
     console.error("Failed to delete car booking:", error);
-    return NextResponse.json(
-      { error: "Failed to delete car booking" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to delete car booking" }, { status: 500 });
   }
 }

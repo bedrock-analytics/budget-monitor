@@ -34,9 +34,7 @@ export default function CreateBookingPage() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="font-bold text-2xl">New Car Booking</h1>
-        <p className="mt-1 text-muted-foreground text-sm">
-          Book a company car for your trip
-        </p>
+        <p className="mt-1 text-muted-foreground text-sm">Book a company car for your trip</p>
       </div>
       <BookingForm userId={userId} />
     </div>

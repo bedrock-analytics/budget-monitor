@@ -12,26 +12,11 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  CAR_OPTIONS,
-  type CarBookingRow,
-  type CarBookingUser,
-} from "@/lib/booking-car";
+import { CAR_OPTIONS, type CarBookingRow, type CarBookingUser } from "@/lib/booking-car";
 import { cn } from "@/lib/utils";
 
 const hotelSchema = z
@@ -186,15 +171,8 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
       ? {
           projectCode: booking.projectCode || "",
           projectType: booking.projectType || "",
-          type:
-            booking.type === "offshore" || booking.type === "non-offshore"
-              ? booking.type
-              : undefined,
-          carIndex: String(
-            CAR_OPTIONS.findIndex(
-              (c) => c.licensePlate === booking.licensePlate,
-            ),
-          ),
+          type: booking.type === "offshore" || booking.type === "non-offshore" ? booking.type : undefined,
+          carIndex: String(CAR_OPTIONS.findIndex((c) => c.licensePlate === booking.licensePlate)),
           purpose: booking.purpose,
           pickupLocation: booking.pickupLocation || "",
           destination: booking.destination || "",
@@ -337,9 +315,7 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
 
     try {
       setSubmitting(true);
-      const url = isEdit
-        ? `/api/booking-car/${booking.id}`
-        : "/api/booking-car";
+      const url = isEdit ? `/api/booking-car/${booking.id}` : "/api/booking-car";
       const res = await fetch(url, {
         method: isEdit ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
@@ -348,70 +324,43 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(
-          data.error || `Failed to ${isEdit ? "update" : "create"} booking`,
-        );
+        throw new Error(data.error || `Failed to ${isEdit ? "update" : "create"} booking`);
       }
 
       router.push("/booking-car");
       router.refresh();
     } catch (err) {
-      alert(
-        err instanceof Error
-          ? err.message
-          : `Failed to ${isEdit ? "update" : "create"} booking`,
-      );
+      alert(err instanceof Error ? err.message : `Failed to ${isEdit ? "update" : "create"} booking`);
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <form
-      onSubmit={form.handleSubmit(onSubmit)}
-      className="flex flex-col gap-6"
-    >
+    <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
       <ol className="flex items-center gap-2">
         {STEPS.map((s, idx) => {
           const isActive = step === s.id;
           const isCompleted = step > s.id;
           return (
             <li key={s.id} className="flex flex-1 items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setStep(s.id)}
-                className="flex items-center gap-2 text-left"
-              >
+              <button type="button" onClick={() => setStep(s.id)} className="flex items-center gap-2 text-left">
                 <span
                   className={cn(
                     "flex size-8 items-center justify-center rounded-full border font-medium text-sm",
-                    isActive &&
-                      "border-primary bg-primary text-primary-foreground",
-                    isCompleted &&
-                      "border-primary bg-primary text-primary-foreground",
-                    !isActive &&
-                      !isCompleted &&
-                      "border-border bg-muted text-muted-foreground",
+                    isActive && "border-primary bg-primary text-primary-foreground",
+                    isCompleted && "border-primary bg-primary text-primary-foreground",
+                    !isActive && !isCompleted && "border-border bg-muted text-muted-foreground",
                   )}
                 >
                   {isCompleted ? <Check className="size-4" /> : s.id}
                 </span>
-                <span
-                  className={cn(
-                    "font-medium text-sm",
-                    isActive ? "text-foreground" : "text-muted-foreground",
-                  )}
-                >
+                <span className={cn("font-medium text-sm", isActive ? "text-foreground" : "text-muted-foreground")}>
                   {s.label}
                 </span>
               </button>
               {idx < STEPS.length - 1 && (
-                <span
-                  className={cn(
-                    "h-px flex-1",
-                    step > s.id ? "bg-primary" : "bg-border",
-                  )}
-                />
+                <span className={cn("h-px flex-1", step > s.id ? "bg-primary" : "bg-border")} />
               )}
             </li>
           );
@@ -457,9 +406,7 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="offshore">Offshore</SelectItem>
-                        <SelectItem value="non-offshore">
-                          Non-offshore
-                        </SelectItem>
+                        <SelectItem value="non-offshore">Non-offshore</SelectItem>
                       </SelectContent>
                     </Select>
                   </Field>
@@ -484,9 +431,7 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
                         ))}
                       </SelectContent>
                     </Select>
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                   </Field>
                 )}
               />
@@ -497,13 +442,8 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
                 render={({ field, fieldState }) => (
                   <Field className="gap-1.5" data-invalid={fieldState.invalid}>
                     <FieldLabel>Purpose</FieldLabel>
-                    <Input
-                      {...field}
-                      placeholder="e.g. Site visit, Client meeting"
-                    />
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
+                    <Input {...field} placeholder="e.g. Site visit, Client meeting" />
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                   </Field>
                 )}
               />
@@ -515,9 +455,7 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
                   <Field className="gap-1.5" data-invalid={fieldState.invalid}>
                     <FieldLabel>Pick-up</FieldLabel>
                     <Input {...field} placeholder="e.g. Office lobby, Hotel" />
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                   </Field>
                 )}
               />
@@ -540,9 +478,7 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
                   <Field className="gap-1.5" data-invalid={fieldState.invalid}>
                     <FieldLabel>Business Date From</FieldLabel>
                     <Input {...field} type="datetime-local" />
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                   </Field>
                 )}
               />
@@ -554,9 +490,7 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
                   <Field className="gap-1.5" data-invalid={fieldState.invalid}>
                     <FieldLabel>Business Date To</FieldLabel>
                     <Input {...field} type="datetime-local" />
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                   </Field>
                 )}
               />
@@ -566,11 +500,7 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
                 render={({ field }) => (
                   <Field className="gap-1.5">
                     <FieldLabel>Additional notes</FieldLabel>
-                    <Textarea
-                      {...field}
-                      placeholder="Additional notes..."
-                      rows={2}
-                    />
+                    <Textarea {...field} placeholder="Additional notes..." rows={2} />
                   </Field>
                 )}
               />
@@ -606,19 +536,13 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
           <CardContent className="flex flex-col gap-4">
             {passengerFields.length === 0 && (
               <p className="text-muted-foreground text-sm">
-                No passengers added yet. Click &quot;Add Passenger&quot; to add
-                one.
+                No passengers added yet. Click &quot;Add Passenger&quot; to add one.
               </p>
             )}
             {passengerFields.map((field, index) => (
-              <div
-                key={field.id}
-                className="flex flex-col gap-3 rounded-lg border p-4"
-              >
+              <div key={field.id} className="flex flex-col gap-3 rounded-lg border p-4">
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-sm">
-                    Passenger {index + 1}
-                  </span>
+                  <span className="font-medium text-sm">Passenger {index + 1}</span>
                   <Button
                     type="button"
                     variant="ghost"
@@ -638,25 +562,12 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
                         const user = allUsers.find((u) => u.id === uid);
                         if (user) {
                           form.setValue(`passengers.${index}.userId`, user.id);
-                          form.setValue(
-                            `passengers.${index}.name`,
-                            user.name || "",
-                          );
-                          form.setValue(
-                            `passengers.${index}.email`,
-                            user.email,
-                          );
-                          form.setValue(
-                            `passengers.${index}.phone`,
-                            user.phone || "",
-                          );
+                          form.setValue(`passengers.${index}.name`, user.name || "");
+                          form.setValue(`passengers.${index}.email`, user.email);
+                          form.setValue(`passengers.${index}.phone`, user.phone || "");
                           form.setValue(
                             `passengers.${index}.dateOfBirth`,
-                            user.dateOfBirth
-                              ? new Date(user.dateOfBirth)
-                                  .toISOString()
-                                  .split("T")[0]
-                              : "",
+                            user.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split("T")[0] : "",
                           );
                         }
                       }}
@@ -677,15 +588,10 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
                     control={form.control}
                     name={`passengers.${index}.name`}
                     render={({ field: f, fieldState }) => (
-                      <Field
-                        className="gap-1.5"
-                        data-invalid={fieldState.invalid}
-                      >
+                      <Field className="gap-1.5" data-invalid={fieldState.invalid}>
                         <FieldLabel>Name</FieldLabel>
                         <Input {...f} placeholder="Full name" />
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                       </Field>
                     )}
                   />
@@ -695,11 +601,7 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
                     render={({ field: f }) => (
                       <Field className="gap-1.5">
                         <FieldLabel>Email</FieldLabel>
-                        <Input
-                          {...f}
-                          type="email"
-                          placeholder="email@example.com"
-                        />
+                        <Input {...f} type="email" placeholder="email@example.com" />
                       </Field>
                     )}
                   />
@@ -709,11 +611,7 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
                     render={({ field: f }) => (
                       <Field className="gap-1.5">
                         <FieldLabel>Phone</FieldLabel>
-                        <Input
-                          {...f}
-                          type="tel"
-                          placeholder="e.g. 081-234-5678"
-                        />
+                        <Input {...f} type="tel" placeholder="e.g. 081-234-5678" />
                       </Field>
                     )}
                   />
@@ -732,13 +630,8 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
                     name={`passengers.${index}.usePersonalCar`}
                     render={({ field: f }) => (
                       <Field className="flex items-center gap-2 sm:col-span-2">
-                        <Checkbox
-                          checked={f.value}
-                          onCheckedChange={f.onChange}
-                        />
-                        <FieldLabel className="mb-0 cursor-pointer">
-                          Use Personal Car
-                        </FieldLabel>
+                        <Checkbox checked={f.value} onCheckedChange={f.onChange} />
+                        <FieldLabel className="mb-0 cursor-pointer">Use Personal Car</FieldLabel>
                       </Field>
                     )}
                   />
@@ -772,15 +665,11 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
           <CardContent className="flex flex-col gap-4">
             {hotelFields.length === 0 && (
               <p className="text-muted-foreground text-sm">
-                No hotel bookings added. Click &quot;Add Hotel&quot; if you need
-                accommodation.
+                No hotel bookings added. Click &quot;Add Hotel&quot; if you need accommodation.
               </p>
             )}
             {hotelFields.map((field, index) => (
-              <div
-                key={field.id}
-                className="flex flex-col gap-3 rounded-lg border p-4"
-              >
+              <div key={field.id} className="flex flex-col gap-3 rounded-lg border p-4">
                 <div className="flex items-center justify-between">
                   <span className="font-medium text-sm">Hotel {index + 1}</span>
                   <Button
@@ -798,15 +687,10 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
                     control={form.control}
                     name={`hotels.${index}.hotelName`}
                     render={({ field: f, fieldState }) => (
-                      <Field
-                        className="gap-1.5"
-                        data-invalid={fieldState.invalid}
-                      >
+                      <Field className="gap-1.5" data-invalid={fieldState.invalid}>
                         <FieldLabel>Hotel Name</FieldLabel>
                         <Input {...f} placeholder="e.g. Ibis Rayong" />
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                       </Field>
                     )}
                   />
@@ -814,15 +698,10 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
                     control={form.control}
                     name={`hotels.${index}.checkInDate`}
                     render={({ field: f, fieldState }) => (
-                      <Field
-                        className="gap-1.5"
-                        data-invalid={fieldState.invalid}
-                      >
+                      <Field className="gap-1.5" data-invalid={fieldState.invalid}>
                         <FieldLabel>Check-in</FieldLabel>
                         <Input {...f} type="date" />
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                       </Field>
                     )}
                   />
@@ -830,15 +709,10 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
                     control={form.control}
                     name={`hotels.${index}.checkOutDate`}
                     render={({ field: f, fieldState }) => (
-                      <Field
-                        className="gap-1.5"
-                        data-invalid={fieldState.invalid}
-                      >
+                      <Field className="gap-1.5" data-invalid={fieldState.invalid}>
                         <FieldLabel>Check-out</FieldLabel>
                         <Input {...f} type="date" />
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                       </Field>
                     )}
                   />
@@ -848,7 +722,6 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
           </CardContent>
         </Card>
       </div>
-      {/*
       <Card>
         <CardHeader className="flex-row items-center justify-between">
           <CardTitle>Daily Car Usage</CardTitle>
@@ -874,15 +747,11 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
         <CardContent className="flex flex-col gap-4">
           {tripFields.length === 0 && (
             <p className="text-muted-foreground text-sm">
-              No daily trips added. Click &quot;Add Trip&quot; to plan your
-              daily car usage during the business trip.
+              No daily trips added. Click &quot;Add Trip&quot; to plan your daily car usage during the business trip.
             </p>
           )}
           {tripFields.map((field, index) => (
-            <div
-              key={field.id}
-              className="flex flex-col gap-3 rounded-lg border p-4"
-            >
+            <div key={field.id} className="flex flex-col gap-3 rounded-lg border p-4">
               <div className="flex items-center justify-between">
                 <span className="font-medium text-sm">Day {index + 1}</span>
                 <Button
@@ -900,15 +769,10 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
                   control={form.control}
                   name={`trips.${index}.date`}
                   render={({ field: f, fieldState }) => (
-                    <Field
-                      className="gap-1.5"
-                      data-invalid={fieldState.invalid}
-                    >
+                    <Field className="gap-1.5" data-invalid={fieldState.invalid}>
                       <FieldLabel>Date</FieldLabel>
                       <Input {...f} type="date" />
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                     </Field>
                   )}
                 />
@@ -916,15 +780,10 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
                   control={form.control}
                   name={`trips.${index}.departureTime`}
                   render={({ field: f, fieldState }) => (
-                    <Field
-                      className="gap-1.5"
-                      data-invalid={fieldState.invalid}
-                    >
+                    <Field className="gap-1.5" data-invalid={fieldState.invalid}>
                       <FieldLabel>Departure Time</FieldLabel>
                       <Input {...f} type="time" />
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                     </Field>
                   )}
                 />
@@ -932,15 +791,10 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
                   control={form.control}
                   name={`trips.${index}.arrivalTime`}
                   render={({ field: f, fieldState }) => (
-                    <Field
-                      className="gap-1.5"
-                      data-invalid={fieldState.invalid}
-                    >
+                    <Field className="gap-1.5" data-invalid={fieldState.invalid}>
                       <FieldLabel>Arrival Time</FieldLabel>
                       <Input {...f} type="time" />
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                     </Field>
                   )}
                 />
@@ -948,15 +802,10 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
                   control={form.control}
                   name={`trips.${index}.origin`}
                   render={({ field: f, fieldState }) => (
-                    <Field
-                      className="gap-1.5"
-                      data-invalid={fieldState.invalid}
-                    >
+                    <Field className="gap-1.5" data-invalid={fieldState.invalid}>
                       <FieldLabel>From</FieldLabel>
                       <Input {...f} placeholder="e.g. Office, Hotel" />
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                     </Field>
                   )}
                 />
@@ -964,15 +813,10 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
                   control={form.control}
                   name={`trips.${index}.destination`}
                   render={({ field: f, fieldState }) => (
-                    <Field
-                      className="gap-1.5"
-                      data-invalid={fieldState.invalid}
-                    >
+                    <Field className="gap-1.5" data-invalid={fieldState.invalid}>
                       <FieldLabel>To</FieldLabel>
                       <Input {...f} placeholder="e.g. Client site, Factory" />
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                     </Field>
                   )}
                 />
@@ -990,7 +834,7 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
             </div>
           ))}
         </CardContent>
-      </Card> */}
+      </Card>
 
       <div className={cn(step !== 4 && "hidden")}>
         <Card>
@@ -1018,19 +862,13 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
           <CardContent className="flex flex-col gap-4">
             {flightFields.length === 0 && (
               <p className="text-muted-foreground text-sm">
-                No flights added. Click &quot;Add Flight&quot; if you need a
-                flight.
+                No flights added. Click &quot;Add Flight&quot; if you need a flight.
               </p>
             )}
             {flightFields.map((field, index) => (
-              <div
-                key={field.id}
-                className="flex flex-col gap-3 rounded-lg border p-4"
-              >
+              <div key={field.id} className="flex flex-col gap-3 rounded-lg border p-4">
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-sm">
-                    Flight {index + 1}
-                  </span>
+                  <span className="font-medium text-sm">Flight {index + 1}</span>
                   <Button
                     type="button"
                     variant="ghost"
@@ -1046,18 +884,10 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
                     control={form.control}
                     name={`flights.${index}.route`}
                     render={({ field: f, fieldState }) => (
-                      <Field
-                        className="gap-1.5 sm:col-span-2"
-                        data-invalid={fieldState.invalid}
-                      >
+                      <Field className="gap-1.5 sm:col-span-2" data-invalid={fieldState.invalid}>
                         <FieldLabel>Route / Flight Detail</FieldLabel>
-                        <Input
-                          {...f}
-                          placeholder="e.g. BKK → HKT, Bangkok to Phuket"
-                        />
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
+                        <Input {...f} placeholder="e.g. BKK → HKT, Bangkok to Phuket" />
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                       </Field>
                     )}
                   />
@@ -1067,10 +897,7 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
                     render={({ field: f }) => (
                       <Field className="gap-1.5">
                         <FieldLabel>Airline</FieldLabel>
-                        <Input
-                          {...f}
-                          placeholder="e.g. Thai Airways, AirAsia"
-                        />
+                        <Input {...f} placeholder="e.g. Thai Airways, AirAsia" />
                       </Field>
                     )}
                   />
@@ -1088,15 +915,10 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
                     control={form.control}
                     name={`flights.${index}.departureTime`}
                     render={({ field: f, fieldState }) => (
-                      <Field
-                        className="gap-1.5"
-                        data-invalid={fieldState.invalid}
-                      >
+                      <Field className="gap-1.5" data-invalid={fieldState.invalid}>
                         <FieldLabel>Departure Time</FieldLabel>
                         <Input {...f} type="datetime-local" />
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                       </Field>
                     )}
                   />
@@ -1104,15 +926,10 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
                     control={form.control}
                     name={`flights.${index}.arrivalTime`}
                     render={({ field: f, fieldState }) => (
-                      <Field
-                        className="gap-1.5"
-                        data-invalid={fieldState.invalid}
-                      >
+                      <Field className="gap-1.5" data-invalid={fieldState.invalid}>
                         <FieldLabel>Arrival Time</FieldLabel>
                         <Input {...f} type="datetime-local" />
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                       </Field>
                     )}
                   />
@@ -1122,10 +939,7 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
                     render={({ field: f }) => (
                       <Field className="gap-1.5 sm:col-span-2">
                         <FieldLabel>Notes</FieldLabel>
-                        <Input
-                          {...f}
-                          placeholder="e.g. Window seat preferred"
-                        />
+                        <Input {...f} placeholder="e.g. Window seat preferred" />
                       </Field>
                     )}
                   />
@@ -1137,39 +951,22 @@ export function BookingForm({ userId, booking }: BookingFormProps) {
       </div>
 
       <div className="flex items-center justify-between gap-3">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => router.push("/booking-car")}
-        >
+        <Button type="button" variant="outline" onClick={() => router.push("/booking-car")}>
           Cancel
         </Button>
         <div className="flex items-center gap-3">
           {step > 1 && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setStep((s) => Math.max(1, s - 1))}
-            >
+            <Button type="button" variant="outline" onClick={() => setStep((s) => Math.max(1, s - 1))}>
               Previous
             </Button>
           )}
           {step < STEPS.length ? (
-            <Button
-              type="button"
-              onClick={() => setStep((s) => Math.min(STEPS.length, s + 1))}
-            >
+            <Button type="button" onClick={() => setStep((s) => Math.min(STEPS.length, s + 1))}>
               Next
             </Button>
           ) : (
             <Button type="submit" disabled={submitting}>
-              {submitting
-                ? isEdit
-                  ? "Saving..."
-                  : "Creating..."
-                : isEdit
-                  ? "Save Changes"
-                  : "Create Booking"}
+              {submitting ? (isEdit ? "Saving..." : "Creating...") : isEdit ? "Save Changes" : "Create Booking"}
             </Button>
           )}
         </div>

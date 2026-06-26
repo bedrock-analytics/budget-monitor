@@ -5,15 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Check,
-  ChevronsUpDown,
-  Download,
-  Paperclip,
-  Plus,
-  Trash2,
-  Upload,
-} from "lucide-react";
+import { Check, ChevronsUpDown, Download, Paperclip, Plus, Trash2, Upload } from "lucide-react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -21,39 +13,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import type {
-  BudgetOption,
-  PurchaseRequestAttachmentRow,
-  PurchaseRequestRow,
-} from "@/lib/purchase-request";
+import type { BudgetOption, PurchaseRequestAttachmentRow, PurchaseRequestRow } from "@/lib/purchase-request";
 import { cn } from "@/lib/utils";
 
 const itemSchema = z.object({
@@ -73,8 +39,7 @@ const JUSTIFICATION_REASONS = [
   { id: 1, label: "Not worth for bidding" },
   {
     id: 2,
-    label:
-      "Lack of sufficient qualified bidder and/or absence of competitive market",
+    label: "Lack of sufficient qualified bidder and/or absence of competitive market",
   },
   { id: 3, label: "Emergency requirement" },
   { id: 4, label: "Bidding cancellation" },
@@ -117,9 +82,7 @@ const formSchema = z
     notes: z.string().optional(),
     dueDate: z.string().optional(),
     deliveryTo: z.string().optional(),
-    proposedStrategy: z
-      .enum(["CALL_FOR_TENDER", "DIRECT_NEGOTIATION"])
-      .optional(),
+    proposedStrategy: z.enum(["CALL_FOR_TENDER", "DIRECT_NEGOTIATION"]).optional(),
     justificationReasons: z.array(z.number()).default([]),
     businessJustification: z.string().min(1, "Explanation is required"),
     biddingVendors: z.array(biddingVendorSchema).default([]),
@@ -186,12 +149,7 @@ const STEPS = [
   {
     key: "justification",
     label: "Business Justification",
-    fields: [
-      "proposedStrategy",
-      "justificationReasons",
-      "businessJustification",
-      "biddingVendors",
-    ] as const,
+    fields: ["proposedStrategy", "justificationReasons", "businessJustification", "biddingVendors"] as const,
   },
   { key: "attachments", label: "Attachments", fields: [] as const },
   { key: "items", label: "Line Items", fields: ["items"] as const },
@@ -201,9 +159,9 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
   const router = useRouter();
   const [budgetOptions, setBudgetOptions] = useState<BudgetOption[]>([]);
   const [submitting, setSubmitting] = useState(false);
-  const [existingAttachments, setExistingAttachments] = useState<
-    PurchaseRequestAttachmentRow[]
-  >(initialData?.attachments ?? []);
+  const [existingAttachments, setExistingAttachments] = useState<PurchaseRequestAttachmentRow[]>(
+    initialData?.attachments ?? [],
+  );
   const [newAttachments, setNewAttachments] = useState<NewAttachment[]>([]);
   const [uploading, setUploading] = useState(false);
   const [budgetOpen, setBudgetOpen] = useState(false);
@@ -225,9 +183,7 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
           dueDate: initialData.dueDate ? initialData.dueDate.slice(0, 10) : "",
           deliveryTo: initialData.deliveryTo || "",
           proposedStrategy: initialData.proposedStrategy || undefined,
-          justificationReasons:
-            (initialData as { justificationReasons?: number[] })
-              .justificationReasons ?? [],
+          justificationReasons: (initialData as { justificationReasons?: number[] }).justificationReasons ?? [],
           businessJustification: initialData.businessJustification || "",
           biddingVendors:
             (
@@ -294,10 +250,7 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
   const watchCurrency = form.watch("currency");
   const watchStrategy = form.watch("proposedStrategy");
 
-  const totalAmount = watchItems.reduce(
-    (sum, item) => sum + (item.quantity || 0) * (item.unitPrice || 0),
-    0,
-  );
+  const totalAmount = watchItems.reduce((sum, item) => sum + (item.quantity || 0) * (item.unitPrice || 0), 0);
 
   useEffect(() => {
     fetch("/api/budget/options")
@@ -309,9 +262,7 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
   useEffect(() => {
     try {
       const names = JSON.parse(localStorage.getItem("pr:vendorNames") ?? "[]");
-      const contacts = JSON.parse(
-        localStorage.getItem("pr:vendorContacts") ?? "[]",
-      );
+      const contacts = JSON.parse(localStorage.getItem("pr:vendorContacts") ?? "[]");
       if (Array.isArray(names)) setSavedVendorNames(names);
       if (Array.isArray(contacts)) setSavedContacts(contacts);
     } catch {
@@ -361,16 +312,12 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
     (budgetId: string) => {
       const budget = budgetOptions.find((b) => b.id === budgetId);
       if (!budget) return null;
-      return watchCurrency === "USD"
-        ? budget.availableUSD
-        : budget.availableTHB;
+      return watchCurrency === "USD" ? budget.availableUSD : budget.availableTHB;
     },
     [budgetOptions, watchCurrency],
   );
 
-  const handleFileSelect = async (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
@@ -382,18 +329,15 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
           continue;
         }
 
-        const presignRes = await fetch(
-          "/api/purchase-request/attachments/presign-upload",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              fileName: file.name,
-              contentType: file.type || "application/octet-stream",
-              fileSize: file.size,
-            }),
-          },
-        );
+        const presignRes = await fetch("/api/purchase-request/attachments/presign-upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fileName: file.name,
+            contentType: file.type || "application/octet-stream",
+            fileSize: file.size,
+          }),
+        });
 
         if (!presignRes.ok) {
           const err = await presignRes.json();
@@ -459,9 +403,7 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
   const onSubmit = async (values: FormValues) => {
     try {
       setSubmitting(true);
-      const url = initialData
-        ? `/api/purchase-request/${initialData.id}`
-        : "/api/purchase-request";
+      const url = initialData ? `/api/purchase-request/${initialData.id}` : "/api/purchase-request";
       const method = initialData ? "PUT" : "POST";
 
       const payload = initialData
@@ -482,9 +424,7 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
       router.push("/purchase");
       router.refresh();
     } catch (err) {
-      alert(
-        err instanceof Error ? err.message : "Failed to save purchase request",
-      );
+      alert(err instanceof Error ? err.message : "Failed to save purchase request");
     } finally {
       setSubmitting(false);
     }
@@ -493,9 +433,7 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
   const goNext = async () => {
     const step = STEPS[currentStep];
     if (step.fields.length > 0) {
-      const valid = await form.trigger(
-        step.fields as unknown as Parameters<typeof form.trigger>[0],
-      );
+      const valid = await form.trigger(step.fields as unknown as Parameters<typeof form.trigger>[0]);
       if (!valid) return;
     }
     setCurrentStep((s) => Math.min(s + 1, STEPS.length - 1));
@@ -508,10 +446,7 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
   const isLastStep = currentStep === STEPS.length - 1;
 
   return (
-    <form
-      onSubmit={form.handleSubmit(onSubmit)}
-      className="flex flex-col gap-6"
-    >
+    <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
       {/* Stepper */}
       <nav aria-label="Progress">
         <ol className="flex items-center gap-2 sm:gap-4">
@@ -523,21 +458,17 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
                 <div className="flex items-center gap-2">
                   <div
                     className={cn(
-                      "flex size-8 shrink-0 items-center justify-center rounded-full border text-sm font-medium",
-                      isActive &&
-                        "border-primary bg-primary text-primary-foreground",
-                      isCompleted &&
-                        "border-primary bg-primary text-primary-foreground",
-                      !isActive &&
-                        !isCompleted &&
-                        "border-muted-foreground/30 text-muted-foreground",
+                      "flex size-8 shrink-0 items-center justify-center rounded-full border font-medium text-sm",
+                      isActive && "border-primary bg-primary text-primary-foreground",
+                      isCompleted && "border-primary bg-primary text-primary-foreground",
+                      !isActive && !isCompleted && "border-muted-foreground/30 text-muted-foreground",
                     )}
                   >
                     {isCompleted ? <Check className="size-4" /> : index + 1}
                   </div>
                   <span
                     className={cn(
-                      "hidden text-sm font-medium sm:inline",
+                      "hidden font-medium text-sm sm:inline",
                       isActive ? "text-foreground" : "text-muted-foreground",
                     )}
                   >
@@ -545,12 +476,7 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
                   </span>
                 </div>
                 {index < STEPS.length - 1 && (
-                  <div
-                    className={cn(
-                      "h-px flex-1",
-                      isCompleted ? "bg-primary" : "bg-muted-foreground/30",
-                    )}
-                  />
+                  <div className={cn("h-px flex-1", isCompleted ? "bg-primary" : "bg-muted-foreground/30")} />
                 )}
               </li>
             );
@@ -576,12 +502,8 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="PURCHASE_ORDER">
-                        Purchase order
-                      </SelectItem>
-                      <SelectItem value="SERVICE_ORDER">
-                        Service order
-                      </SelectItem>
+                      <SelectItem value="PURCHASE_ORDER">Purchase order</SelectItem>
+                      <SelectItem value="SERVICE_ORDER">Service order</SelectItem>
                     </SelectContent>
                   </Select>
                 </Field>
@@ -594,18 +516,10 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
               render={({ field, fieldState }) => {
                 const { prefix, rest } = splitTitle(field.value || "");
                 return (
-                  <Field
-                    className="gap-1.5 sm:col-span-2"
-                    data-invalid={fieldState.invalid}
-                  >
+                  <Field className="gap-1.5 sm:col-span-2" data-invalid={fieldState.invalid}>
                     <FieldLabel>Title</FieldLabel>
                     <div className="flex gap-2">
-                      <Select
-                        value={prefix}
-                        onValueChange={(v) =>
-                          field.onChange(rest ? `${v} ${rest}` : v)
-                        }
-                      >
+                      <Select value={prefix} onValueChange={(v) => field.onChange(rest ? `${v} ${rest}` : v)}>
                         <SelectTrigger className="w-40">
                           <SelectValue />
                         </SelectTrigger>
@@ -619,13 +533,7 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
                       </Select>
                       <Input
                         value={rest}
-                        onChange={(e) =>
-                          field.onChange(
-                            e.target.value
-                              ? `${prefix} ${e.target.value}`
-                              : prefix,
-                          )
-                        }
+                        onChange={(e) => field.onChange(e.target.value ? `${prefix} ${e.target.value}` : prefix)}
                         onBlur={field.onBlur}
                         name={field.name}
                         ref={field.ref}
@@ -633,9 +541,7 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
                         className="flex-1"
                       />
                     </div>
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                   </Field>
                 );
               }}
@@ -688,10 +594,7 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
               render={({ field }) => (
                 <Field className="gap-1.5">
                   <FieldLabel>Delivery To</FieldLabel>
-                  <Input
-                    {...field}
-                    placeholder="e.g. HQ Bangkok, Warehouse 2"
-                  />
+                  <Input {...field} placeholder="e.g. HQ Bangkok, Warehouse 2" />
                 </Field>
               )}
             />
@@ -700,17 +603,10 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
               control={form.control}
               name="budgetId"
               render={({ field, fieldState }) => {
-                const available = field.value
-                  ? getBudgetAvailable(field.value)
-                  : null;
-                const selected = budgetOptions.find(
-                  (b) => b.id === field.value,
-                );
+                const available = field.value ? getBudgetAvailable(field.value) : null;
+                const selected = budgetOptions.find((b) => b.id === field.value);
                 return (
-                  <Field
-                    className="gap-1.5 sm:col-span-2"
-                    data-invalid={fieldState.invalid}
-                  >
+                  <Field className="gap-1.5 sm:col-span-2" data-invalid={fieldState.invalid}>
                     <FieldLabel>Budget Line</FieldLabel>
                     <Popover open={budgetOpen} onOpenChange={setBudgetOpen}>
                       <PopoverTrigger asChild>
@@ -719,23 +615,15 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
                           variant="outline"
                           role="combobox"
                           aria-expanded={budgetOpen}
-                          className={cn(
-                            "w-full justify-between font-normal",
-                            !field.value && "text-muted-foreground",
-                          )}
+                          className={cn("w-full justify-between font-normal", !field.value && "text-muted-foreground")}
                         >
                           <span className="truncate">
-                            {selected
-                              ? `${selected.projectTypeName} - ${selected.budgetItemName}`
-                              : "Select budget..."}
+                            {selected ? `${selected.projectTypeName} - ${selected.budgetItemName}` : "Select budget..."}
                           </span>
                           <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent
-                        align="start"
-                        className="w-[var(--radix-popover-trigger-width)] p-0"
-                      >
+                      <PopoverContent align="start" className="w-[var(--radix-popover-trigger-width)] p-0">
                         <Command>
                           <CommandInput placeholder="Search budget..." />
                           <CommandList>
@@ -761,17 +649,10 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
                                       <span className="truncate">
                                         {b.projectTypeName} - {b.budgetItemName}
                                       </span>
-                                      <span className="text-muted-foreground text-xs">
-                                        {availableLabel} available
-                                      </span>
+                                      <span className="text-muted-foreground text-xs">{availableLabel} available</span>
                                     </div>
                                     <Check
-                                      className={cn(
-                                        "ml-2 size-4 shrink-0",
-                                        isSelected
-                                          ? "opacity-100"
-                                          : "opacity-0",
-                                      )}
+                                      className={cn("ml-2 size-4 shrink-0", isSelected ? "opacity-100" : "opacity-0")}
                                     />
                                   </CommandItem>
                                 );
@@ -781,26 +662,14 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
                         </Command>
                       </PopoverContent>
                     </Popover>
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                     {available !== null && (
                       <div className="flex items-center gap-2 text-xs">
-                        <span className="text-muted-foreground">
-                          Available budget:
-                        </span>
-                        <Badge
-                          variant={
-                            available >= totalAmount ? "outline" : "destructive"
-                          }
-                        >
+                        <span className="text-muted-foreground">Available budget:</span>
+                        <Badge variant={available >= totalAmount ? "outline" : "destructive"}>
                           {formatCurrency(available)}
                         </Badge>
-                        {available < totalAmount && (
-                          <span className="text-destructive">
-                            Exceeds available budget!
-                          </span>
-                        )}
+                        {available < totalAmount && <span className="text-destructive">Exceeds available budget!</span>}
                       </div>
                     )}
                   </Field>
@@ -845,9 +714,7 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
                     Direct Negotiation
                   </label>
                 </div>
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
+                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
               </Field>
             )}
           />
@@ -858,81 +725,61 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
             render={({ field, fieldState }) => (
               <Field className="gap-1.5" data-invalid={fieldState.invalid}>
                 <FieldLabel>Explanation</FieldLabel>
-                <Textarea
-                  {...field}
-                  placeholder="Provide explanation..."
-                  rows={3}
-                />
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
+                <Textarea {...field} placeholder="Provide explanation..." rows={3} />
+                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
               </Field>
             )}
           />
           {watchStrategy === "DIRECT_NEGOTIATION" && (
-            <>
-              <div className="grid gap-6 md:grid-cols-2">
-                <Controller
-                  control={form.control}
-                  name="justificationReasons"
-                  render={({ field, fieldState }) => (
-                    <Field className="gap-3" data-invalid={fieldState.invalid}>
-                      <FieldLabel>
-                        Justification{" "}
-                        <span className="text-muted-foreground text-xs font-normal">
-                          * Refer to procurement Regulation
-                        </span>
-                      </FieldLabel>
-                      <div className="flex flex-col gap-2">
-                        {JUSTIFICATION_REASONS.map((reason) => {
-                          const checked =
-                            field.value?.includes(reason.id) ?? false;
-                          return (
-                            <label
-                              key={reason.id}
-                              className="flex items-start gap-2 text-sm"
-                            >
-                              <Checkbox
-                                checked={checked}
-                                onCheckedChange={(
-                                  v: boolean | "indeterminate",
-                                ) => {
-                                  const current = field.value ?? [];
-                                  if (v === true) {
-                                    field.onChange([...current, reason.id]);
-                                  } else {
-                                    field.onChange(
-                                      current.filter(
-                                        (id: number) => id !== reason.id,
-                                      ),
-                                    );
-                                  }
-                                }}
-                              />
-                              <span>
-                                {reason.id}. {reason.label}
-                              </span>
-                            </label>
-                          );
-                        })}
-                      </div>
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
-                    </Field>
-                  )}
-                />
+            <div className="grid gap-6 md:grid-cols-2">
+              <Controller
+                control={form.control}
+                name="justificationReasons"
+                render={({ field, fieldState }) => (
+                  <Field className="gap-3" data-invalid={fieldState.invalid}>
+                    <FieldLabel>
+                      Justification{" "}
+                      <span className="font-normal text-muted-foreground text-xs">
+                        * Refer to procurement Regulation
+                      </span>
+                    </FieldLabel>
+                    <div className="flex flex-col gap-2">
+                      {JUSTIFICATION_REASONS.map((reason) => {
+                        const checked = field.value?.includes(reason.id) ?? false;
+                        return (
+                          <label key={reason.id} className="flex items-start gap-2 text-sm">
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={(v: boolean | "indeterminate") => {
+                                const current = field.value ?? [];
+                                if (v === true) {
+                                  field.onChange([...current, reason.id]);
+                                } else {
+                                  field.onChange(current.filter((id: number) => id !== reason.id));
+                                }
+                              }}
+                            />
+                            <span>
+                              {reason.id}. {reason.label}
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  </Field>
+                )}
+              />
 
-                <Field className="gap-3">
-                  <FieldLabel>Remark</FieldLabel>
-                  <ul className="flex flex-col gap-2 text-sm text-muted-foreground">
-                    {JUSTIFICATION_REMARKS.map((remark) => (
-                      <li key={remark}>- {remark}</li>
-                    ))}
-                  </ul>
-                </Field>
-              </div>
-            </>
+              <Field className="gap-3">
+                <FieldLabel>Remark</FieldLabel>
+                <ul className="flex flex-col gap-2 text-muted-foreground text-sm">
+                  {JUSTIFICATION_REMARKS.map((remark) => (
+                    <li key={remark}>- {remark}</li>
+                  ))}
+                </ul>
+              </Field>
+            </div>
           )}
 
           <datalist id="pr-vendor-names">
@@ -953,26 +800,17 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() =>
-                  appendVendor({ vendorName: "", contact: "", note: "" })
-                }
+                onClick={() => appendVendor({ vendorName: "", contact: "", note: "" })}
               >
                 <Plus data-icon="inline-start" />
                 Add Vendor
               </Button>
             </div>
-            {vendorFields.length === 0 && (
-              <p className="text-muted-foreground text-sm">No vendors added.</p>
-            )}
+            {vendorFields.length === 0 && <p className="text-muted-foreground text-sm">No vendors added.</p>}
             {vendorFields.map((vendorField, index) => (
-              <div
-                key={vendorField.id}
-                className="flex flex-col gap-3 rounded-lg border p-4"
-              >
+              <div key={vendorField.id} className="flex flex-col gap-3 rounded-lg border p-4">
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-sm">
-                    Vendor {index + 1}
-                  </span>
+                  <span className="font-medium text-sm">Vendor {index + 1}</span>
                   <Button
                     type="button"
                     variant="ghost"
@@ -988,10 +826,7 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
                     control={form.control}
                     name={`biddingVendors.${index}.vendorName`}
                     render={({ field: f, fieldState }) => (
-                      <Field
-                        className="gap-1.5"
-                        data-invalid={fieldState.invalid}
-                      >
+                      <Field className="gap-1.5" data-invalid={fieldState.invalid}>
                         <FieldLabel>Vendor Name</FieldLabel>
                         <Input
                           {...f}
@@ -1002,9 +837,7 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
                             saveVendorName(e.target.value);
                           }}
                         />
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                       </Field>
                     )}
                   />
@@ -1032,11 +865,7 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
                     render={({ field: f }) => (
                       <Field className="gap-1.5 sm:col-span-2">
                         <FieldLabel>Note</FieldLabel>
-                        <Textarea
-                          {...f}
-                          placeholder="Additional notes..."
-                          rows={2}
-                        />
+                        <Textarea {...f} placeholder="Additional notes..." rows={2} />
                       </Field>
                     )}
                   />
@@ -1061,25 +890,14 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
             <Upload data-icon="inline-start" />
             {uploading ? "Uploading..." : "Attach Files"}
           </Button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            className="hidden"
-            onChange={handleFileSelect}
-          />
+          <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleFileSelect} />
         </CardHeader>
         <CardContent className="flex flex-col gap-2">
           {existingAttachments.length === 0 && newAttachments.length === 0 && (
-            <p className="text-muted-foreground text-sm">
-              No attachments. Max 25 MB per file.
-            </p>
+            <p className="text-muted-foreground text-sm">No attachments. Max 25 MB per file.</p>
           )}
           {existingAttachments.map((a) => (
-            <div
-              key={a.id}
-              className="flex items-center justify-between rounded-md border p-3"
-            >
+            <div key={a.id} className="flex items-center justify-between rounded-md border p-3">
               <div className="flex min-w-0 items-center gap-2">
                 <Paperclip className="size-4 shrink-0 text-muted-foreground" />
                 <span className="truncate text-sm">{a.fileName}</span>
@@ -1108,10 +926,7 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
             </div>
           ))}
           {newAttachments.map((a) => (
-            <div
-              key={a.fileKey}
-              className="flex items-center justify-between rounded-md border border-dashed p-3"
-            >
+            <div key={a.fileKey} className="flex items-center justify-between rounded-md border border-dashed p-3">
               <div className="flex min-w-0 items-center gap-2">
                 <Paperclip className="size-4 shrink-0 text-muted-foreground" />
                 <span className="truncate text-sm">{a.fileName}</span>
@@ -1155,15 +970,10 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           {fields.map((field, index) => {
-            const itemTotal =
-              (watchItems[index]?.quantity || 0) *
-              (watchItems[index]?.unitPrice || 0);
+            const itemTotal = (watchItems[index]?.quantity || 0) * (watchItems[index]?.unitPrice || 0);
 
             return (
-              <div
-                key={field.id}
-                className="rounded-lg border p-4 flex flex-col gap-3"
-              >
+              <div key={field.id} className="flex flex-col gap-3 rounded-lg border p-4">
                 <div className="flex items-center justify-between">
                   <span className="font-medium text-sm">Item {index + 1}</span>
                   {fields.length > 1 && (
@@ -1185,15 +995,10 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
                     control={form.control}
                     name={`items.${index}.description`}
                     render={({ field: f, fieldState }) => (
-                      <Field
-                        className="gap-1.5 sm:col-span-2"
-                        data-invalid={fieldState.invalid}
-                      >
+                      <Field className="gap-1.5 sm:col-span-2" data-invalid={fieldState.invalid}>
                         <FieldLabel>Description</FieldLabel>
                         <Input {...f} placeholder="Item description..." />
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                       </Field>
                     )}
                   />
@@ -1203,20 +1008,10 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
                     control={form.control}
                     name={`items.${index}.quantity`}
                     render={({ field: f, fieldState }) => (
-                      <Field
-                        className="gap-1.5"
-                        data-invalid={fieldState.invalid}
-                      >
+                      <Field className="gap-1.5" data-invalid={fieldState.invalid}>
                         <FieldLabel>Quantity</FieldLabel>
-                        <Input
-                          {...f}
-                          type="number"
-                          min={1}
-                          onChange={(e) => f.onChange(Number(e.target.value))}
-                        />
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
+                        <Input {...f} type="number" min={1} onChange={(e) => f.onChange(Number(e.target.value))} />
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                       </Field>
                     )}
                   />
@@ -1226,15 +1021,10 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
                     control={form.control}
                     name={`items.${index}.unit`}
                     render={({ field: f, fieldState }) => (
-                      <Field
-                        className="gap-1.5"
-                        data-invalid={fieldState.invalid}
-                      >
+                      <Field className="gap-1.5" data-invalid={fieldState.invalid}>
                         <FieldLabel>Unit</FieldLabel>
                         <Input {...f} placeholder="EA" />
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                       </Field>
                     )}
                   />
@@ -1244,10 +1034,7 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
                     control={form.control}
                     name={`items.${index}.unitPrice`}
                     render={({ field: f, fieldState }) => (
-                      <Field
-                        className="gap-1.5"
-                        data-invalid={fieldState.invalid}
-                      >
+                      <Field className="gap-1.5" data-invalid={fieldState.invalid}>
                         <FieldLabel>Unit Price</FieldLabel>
                         <Input
                           {...f}
@@ -1256,9 +1043,7 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
                           step={0.01}
                           onChange={(e) => f.onChange(Number(e.target.value))}
                         />
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                       </Field>
                     )}
                   />
@@ -1266,7 +1051,7 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
                   {/* Line Total */}
                   <Field className="gap-1.5">
                     <FieldLabel>Line Total</FieldLabel>
-                    <div className="flex h-9 items-center rounded-md bg-muted px-3 text-sm font-medium">
+                    <div className="flex h-9 items-center rounded-md bg-muted px-3 font-medium text-sm">
                       {formatCurrency(itemTotal)}
                     </div>
                   </Field>
@@ -1276,28 +1061,20 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
           })}
 
           {form.formState.errors.items?.root && (
-            <p className="text-destructive text-sm">
-              {form.formState.errors.items.root.message}
-            </p>
+            <p className="text-destructive text-sm">{form.formState.errors.items.root.message}</p>
           )}
 
           {/* Total */}
           <div className="flex items-center justify-between rounded-lg bg-muted p-4">
             <span className="font-semibold text-lg">Total Amount</span>
-            <span className="font-bold text-lg">
-              {formatCurrency(totalAmount)}
-            </span>
+            <span className="font-bold text-lg">{formatCurrency(totalAmount)}</span>
           </div>
         </CardContent>
       </Card>
 
       {/* Actions */}
       <div className="flex items-center justify-between gap-3">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => router.push("/purchase")}
-        >
+        <Button type="button" variant="outline" onClick={() => router.push("/purchase")}>
           Cancel
         </Button>
         <div className="flex items-center gap-3">
@@ -1313,11 +1090,7 @@ export function PRForm({ requesterId, initialData }: PRFormProps) {
           )}
           {isLastStep && (
             <Button type="submit" disabled={submitting}>
-              {submitting
-                ? "Saving..."
-                : initialData
-                  ? "Update Request"
-                  : "Create Request"}
+              {submitting ? "Saving..." : initialData ? "Update Request" : "Create Request"}
             </Button>
           )}
         </div>

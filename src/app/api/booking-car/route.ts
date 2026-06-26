@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { db } from "@/lib/db";
 import { generateBookingNumber } from "@/lib/booking-car";
+import { db } from "@/lib/db";
 
 export async function GET() {
   try {
@@ -23,10 +23,7 @@ export async function GET() {
     return NextResponse.json(data);
   } catch (error) {
     console.error("Failed to fetch car bookings:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch car bookings" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to fetch car bookings" }, { status: 500 });
   }
 }
 
@@ -52,26 +49,12 @@ export async function POST(request: Request) {
       trips,
     } = body;
 
-    if (
-      !userId ||
-      !carName ||
-      !licensePlate ||
-      !purpose ||
-      !pickupLocation ||
-      !startDate ||
-      !endDate
-    ) {
-      return NextResponse.json(
-        { error: "User, car, purpose, pick-up, and dates are required" },
-        { status: 400 },
-      );
+    if (!userId || !carName || !licensePlate || !purpose || !pickupLocation || !startDate || !endDate) {
+      return NextResponse.json({ error: "User, car, purpose, pick-up, and dates are required" }, { status: 400 });
     }
 
     if (new Date(startDate) >= new Date(endDate)) {
-      return NextResponse.json(
-        { error: "End date must be after start date" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "End date must be after start date" }, { status: 400 });
     }
 
     // Check for overlapping bookings on the same car
@@ -85,10 +68,7 @@ export async function POST(request: Request) {
     });
 
     if (overlapping) {
-      return NextResponse.json(
-        { error: "This car is already booked for the selected dates" },
-        { status: 409 },
-      );
+      return NextResponse.json({ error: "This car is already booked for the selected dates" }, { status: 409 });
     }
 
     // Sync passenger phone/dateOfBirth to User table if User fields are empty
@@ -108,8 +88,7 @@ export async function POST(request: Request) {
         if (user) {
           const update: Record<string, unknown> = {};
           if (!user.phone && p.phone) update.phone = p.phone;
-          if (!user.dateOfBirth && p.dateOfBirth)
-            update.dateOfBirth = new Date(p.dateOfBirth);
+          if (!user.dateOfBirth && p.dateOfBirth) update.dateOfBirth = new Date(p.dateOfBirth);
           if (Object.keys(update).length > 0) {
             await db.user.update({ where: { id: p.userId }, data: update });
           }
@@ -133,26 +112,22 @@ export async function POST(request: Request) {
         endDate: new Date(endDate),
         notes: notes || null,
         passengers: {
-          create: passengerList.map(
-            (p) => ({
-              userId: p.userId || null,
-              role: p.role || "passenger",
-              name: p.name,
-              email: p.email || null,
-              phone: p.phone || null,
-              dateOfBirth: p.dateOfBirth ? new Date(p.dateOfBirth) : null,
-              usePersonalCar: p.usePersonalCar || false,
-            }),
-          ),
+          create: passengerList.map((p) => ({
+            userId: p.userId || null,
+            role: p.role || "passenger",
+            name: p.name,
+            email: p.email || null,
+            phone: p.phone || null,
+            dateOfBirth: p.dateOfBirth ? new Date(p.dateOfBirth) : null,
+            usePersonalCar: p.usePersonalCar || false,
+          })),
         },
         hotels: {
-          create: (hotels || []).map(
-            (h: { hotelName: string; checkInDate: string; checkOutDate: string }) => ({
-              hotelName: h.hotelName,
-              checkInDate: new Date(h.checkInDate),
-              checkOutDate: new Date(h.checkOutDate),
-            }),
-          ),
+          create: (hotels || []).map((h: { hotelName: string; checkInDate: string; checkOutDate: string }) => ({
+            hotelName: h.hotelName,
+            checkInDate: new Date(h.checkInDate),
+            checkOutDate: new Date(h.checkOutDate),
+          })),
         },
         flights: {
           create: (flights || []).map(
@@ -209,9 +184,6 @@ export async function POST(request: Request) {
     return NextResponse.json(booking, { status: 201 });
   } catch (error) {
     console.error("Failed to create car booking:", error);
-    return NextResponse.json(
-      { error: "Failed to create car booking" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to create car booking" }, { status: 500 });
   }
 }

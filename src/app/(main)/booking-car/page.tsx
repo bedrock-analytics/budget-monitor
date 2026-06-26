@@ -3,20 +3,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import Link from "next/link";
-import { useSession } from "next-auth/react";
-import { Plus } from "lucide-react";
 
-import type { CarBookingRow, CarBookingStatus } from "@/lib/booking-car";
+import { Plus } from "lucide-react";
+import { useSession } from "next-auth/react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { CarBookingRow, CarBookingStatus } from "@/lib/booking-car";
 
 import { BookingTable } from "./_components/booking-table";
 
@@ -49,8 +44,7 @@ export default function BookingCarPage() {
 
   const filteredData = useMemo(() => {
     return data.filter((row) => {
-      const matchesStatus =
-        statusFilter === "all" || row.status === statusFilter;
+      const matchesStatus = statusFilter === "all" || row.status === statusFilter;
       const q = search.toLowerCase();
       const matchesSearch =
         !q ||
@@ -121,9 +115,7 @@ export default function BookingCarPage() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="font-bold text-2xl">Car Booking</h1>
-          <p className="mt-1 text-muted-foreground text-sm">
-            Book and manage company car reservations
-          </p>
+          <p className="mt-1 text-muted-foreground text-sm">Book and manage company car reservations</p>
         </div>
         <Button asChild>
           <Link href="/booking-car/create">

@@ -76,13 +76,7 @@ export interface CarBookingRow {
   trips: CarBookingTrip[];
 }
 
-export type CarBookingStatus =
-  | "PENDING"
-  | "APPROVED"
-  | "REJECTED"
-  | "IN_USE"
-  | "RETURNED"
-  | "CANCELLED";
+export type CarBookingStatus = "PENDING" | "APPROVED" | "REJECTED" | "IN_USE" | "RETURNED" | "CANCELLED";
 
 export const CAR_OPTIONS = [
   { name: "Taxi", licensePlate: "กข-1" },

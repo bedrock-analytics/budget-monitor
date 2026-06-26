@@ -3,12 +3,10 @@ import {
   Car,
   ClipboardCheck,
   ClipboardList,
-  Forklift,
   type LucideIcon,
-  ProjectorIcon,
+  MessageSquare,
   RainbowIcon,
   ShieldUserIcon,
-  UserIcon,
 } from "lucide-react";
 
 export interface NavSubItem {
@@ -60,12 +58,12 @@ export const sidebarItems: NavGroup[] = [
         icon: RainbowIcon,
         comingSoon: false,
       },
-      // {
-      //   title: "Chat",
-      //   url: "/chat",
-      //   icon: Forklift,
-      //   comingSoon: false,
-      // },
+      {
+        title: "Chat",
+        url: "/chat",
+        icon: MessageSquare,
+        comingSoon: false,
+      },
       {
         key: "purchase",
         title: "Purchase Request",
@@ -85,7 +83,7 @@ export const sidebarItems: NavGroup[] = [
         title: "Facility QI",
         url: "/facility-quality-inspection",
         icon: ClipboardCheck,
-        comingSoon: true,
+        comingSoon: false,
       },
       {
         key: "admin-menu-access",

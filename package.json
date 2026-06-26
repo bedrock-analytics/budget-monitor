@@ -21,9 +21,7 @@
     "build:prod": "NEXT_PUBLIC_NODE_ENVIRONMENT=production next build"
   },
   "lint-staged": {
-    "*.{js,ts,jsx,tsx}": [
-      "biome check --write --no-errors-on-unmatched"
-    ]
+    "*.{js,ts,jsx,tsx}": ["biome check --write --no-errors-on-unmatched"]
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-agent-runtime": "^3.1012.0",

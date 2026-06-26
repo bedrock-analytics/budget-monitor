@@ -67,7 +67,7 @@ export function PRTable({ data, onStatusChange, onDelete }: PRTableProps) {
       {
         accessorKey: "title",
         header: "Title",
-        cell: ({ row }) => <span className="max-w-[200px] truncate block">{row.original.title}</span>,
+        cell: ({ row }) => <span className="block max-w-[200px] truncate">{row.original.title}</span>,
       },
       {
         accessorKey: "requester.name",
@@ -170,7 +170,7 @@ export function PRTable({ data, onStatusChange, onDelete }: PRTableProps) {
       <CardContent className="flex flex-col gap-4">
         <div className="flex items-center gap-2">
           <div className="relative max-w-sm flex-1">
-            <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="-translate-y-1/2 absolute top-1/2 left-3 size-4 text-muted-foreground" />
             <Input
               placeholder="Search by PR number or title..."
               value={(table.getColumn("prNumber")?.getFilterValue() as string) ?? ""}

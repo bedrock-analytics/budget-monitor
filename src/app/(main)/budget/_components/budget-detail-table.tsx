@@ -1,26 +1,12 @@
 "use client";
 
 import { Fragment, useEffect, useMemo, useState } from "react";
-import { ChevronDown, ChevronRight } from "lucide-react";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-
-import { formatTHB, formatUSD } from "@/lib/utils";
 import type { BudgetRow } from "@/lib/budget";
+import { formatTHB, formatUSD } from "@/lib/utils";
 
 interface BudgetDetailRecord {
   id: string;
@@ -62,7 +48,7 @@ export function BudgetDetailTable({ rows }: Props) {
   const [detailSearch, setDetailSearch] = useState("");
   const [expandedNos, setExpandedNos] = useState<Set<string>>(new Set());
 
-  const toggleNo = (no: string) => {
+  const _toggleNo = (no: string) => {
     setExpandedNos((prev) => {
       const next = new Set(prev);
       if (next.has(no)) next.delete(no);
@@ -106,9 +92,7 @@ export function BudgetDetailTable({ rows }: Props) {
   }, [details]);
 
   const selectedMatches = selected
-    ? (detailsByKey.get(
-        rowKey(selected.projectType, selected.budgetItemName),
-      ) ?? [])
+    ? (detailsByKey.get(rowKey(selected.projectType, selected.budgetItemName)) ?? [])
     : [];
 
   const groupedMatches = useMemo(() => {
@@ -172,10 +156,7 @@ export function BudgetDetailTable({ rows }: Props) {
       .sort((a, b) => b.sum.totalSpentTHB - a.sum.totalSpentTHB);
   }, [selectedMatches, detailSearch]);
 
-  const filteredCount = useMemo(
-    () => groupedMatches.reduce((s, g) => s + g.entries.length, 0),
-    [groupedMatches],
-  );
+  const _filteredCount = useMemo(() => groupedMatches.reduce((s, g) => s + g.entries.length, 0), [groupedMatches]);
 
   return (
     <Card>
@@ -192,24 +173,12 @@ export function BudgetDetailTable({ rows }: Props) {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/50">
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                  Project
-                </th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                  Budget item name
-                </th>
-                <th className="px-4 py-3 text-right font-medium text-muted-foreground">
-                  Budget
-                </th>
-                <th className="px-4 py-3 text-right font-medium text-muted-foreground">
-                  Reserved
-                </th>
-                <th className="px-4 py-3 text-right font-medium text-muted-foreground">
-                  Actual
-                </th>
-                <th className="px-4 py-3 text-right font-medium text-muted-foreground">
-                  Available
-                </th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Project</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Budget item name</th>
+                <th className="px-4 py-3 text-right font-medium text-muted-foreground">Budget</th>
+                <th className="px-4 py-3 text-right font-medium text-muted-foreground">Reserved</th>
+                <th className="px-4 py-3 text-right font-medium text-muted-foreground">Actual</th>
+                <th className="px-4 py-3 text-right font-medium text-muted-foreground">Available</th>
               </tr>
             </thead>
             <tbody>
@@ -228,16 +197,13 @@ export function BudgetDetailTable({ rows }: Props) {
                   >
                     <td className="px-4 py-2.5">
                       <div className="font-medium">{row.projectTypeName}</div>
-                      <div className="text-muted-foreground text-xs">
-                        {row.projectType}
-                      </div>
+                      <div className="text-muted-foreground text-xs">{row.projectType}</div>
                     </td>
                     <td className="px-4 py-2.5 text-muted-foreground">
                       {row.budgetItemName}
                       {hasDetails && (
                         <span className="ml-2 text-xs">
-                          ({groupCount}{" "}
-                          {groupCount === 1 ? "entry" : "entries"})
+                          ({groupCount} {groupCount === 1 ? "entry" : "entries"})
                         </span>
                       )}
                     </td>
@@ -277,10 +243,7 @@ export function BudgetDetailTable({ rows }: Props) {
               })}
               {rows.length === 0 && (
                 <tr>
-                  <td
-                    colSpan={6}
-                    className="px-4 py-8 text-center text-muted-foreground"
-                  >
+                  <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
                     No matching items found.
                   </td>
                 </tr>
@@ -288,38 +251,14 @@ export function BudgetDetailTable({ rows }: Props) {
             </tbody>
             {rows.length > 0 &&
               (() => {
-                const totalBudgetTHB = rows.reduce(
-                  (s, r) => s + Number(r.budgetTHB),
-                  0,
-                );
-                const totalBudgetUSD = rows.reduce(
-                  (s, r) => s + Number(r.budgetUSD),
-                  0,
-                );
-                const totalReservedTHB = rows.reduce(
-                  (s, r) => s + Number(r.reservedTHB),
-                  0,
-                );
-                const totalReservedUSD = rows.reduce(
-                  (s, r) => s + Number(r.reservedUSD),
-                  0,
-                );
-                const totalActualTHB = rows.reduce(
-                  (s, r) => s + Number(r.actualTHB),
-                  0,
-                );
-                const totalActualUSD = rows.reduce(
-                  (s, r) => s + Number(r.actualUSD),
-                  0,
-                );
-                const totalAvailableTHB = rows.reduce(
-                  (s, r) => s + Number(r.availableTHB),
-                  0,
-                );
-                const totalAvailableUSD = rows.reduce(
-                  (s, r) => s + Number(r.availableUSD),
-                  0,
-                );
+                const totalBudgetTHB = rows.reduce((s, r) => s + Number(r.budgetTHB), 0);
+                const totalBudgetUSD = rows.reduce((s, r) => s + Number(r.budgetUSD), 0);
+                const totalReservedTHB = rows.reduce((s, r) => s + Number(r.reservedTHB), 0);
+                const totalReservedUSD = rows.reduce((s, r) => s + Number(r.reservedUSD), 0);
+                const totalActualTHB = rows.reduce((s, r) => s + Number(r.actualTHB), 0);
+                const totalActualUSD = rows.reduce((s, r) => s + Number(r.actualUSD), 0);
+                const totalAvailableTHB = rows.reduce((s, r) => s + Number(r.availableTHB), 0);
+                const totalAvailableUSD = rows.reduce((s, r) => s + Number(r.availableUSD), 0);
                 return (
                   <tfoot>
                     <tr className="border-t-2 bg-muted/50 font-semibold">
@@ -371,9 +310,7 @@ export function BudgetDetailTable({ rows }: Props) {
           <DialogHeader>
             <DialogTitle>
               {selected?.projectTypeName}{" "}
-              <span className="text-muted-foreground text-sm font-normal">
-                ({selected?.projectType})
-              </span>
+              <span className="font-normal text-muted-foreground text-sm">({selected?.projectType})</span>
             </DialogTitle>
             <DialogDescription>
               {selected?.budgetItemName} ·{" "}
@@ -381,8 +318,7 @@ export function BudgetDetailTable({ rows }: Props) {
                 ? `${filteredCount} of ${selectedMatches.length}`
                 : selectedMatches.length}{" "} */}
               {/* {selectedMatches.length === 1 ? "entry" : "entries"} ·{" "} */}
-              {groupedMatches.length}{" "}
-              {groupedMatches.length === 1 ? "document" : "documents"}
+              {groupedMatches.length} {groupedMatches.length === 1 ? "document" : "documents"}
             </DialogDescription>
           </DialogHeader>
           <Input
@@ -396,33 +332,15 @@ export function BudgetDetailTable({ rows }: Props) {
               <thead className="sticky top-0 bg-muted/60">
                 <tr className="border-b">
                   {/* <th className="w-8 px-2 py-2" /> */}
-                  <th className="px-3 py-2 text-left font-medium text-muted-foreground">
-                    PO No.
-                  </th>
-                  <th className="px-3 py-2 text-left font-medium text-muted-foreground">
-                    Date
-                  </th>
-                  <th className="px-3 py-2 text-left font-medium text-muted-foreground">
-                    Type
-                  </th>
-                  <th className="px-3 py-2 text-left font-medium text-muted-foreground">
-                    Category
-                  </th>
-                  <th className="px-3 py-2 text-left font-medium text-muted-foreground">
-                    Vendor
-                  </th>
-                  <th className="px-3 py-2 text-left font-medium text-muted-foreground">
-                    Remark
-                  </th>
-                  <th className="px-3 py-2 text-right font-medium text-muted-foreground">
-                    Reserved
-                  </th>
-                  <th className="px-3 py-2 text-right font-medium text-muted-foreground">
-                    Actual
-                  </th>
-                  <th className="px-3 py-2 text-right font-medium text-muted-foreground">
-                    Total Spent
-                  </th>
+                  <th className="px-3 py-2 text-left font-medium text-muted-foreground">PO No.</th>
+                  <th className="px-3 py-2 text-left font-medium text-muted-foreground">Date</th>
+                  <th className="px-3 py-2 text-left font-medium text-muted-foreground">Type</th>
+                  <th className="px-3 py-2 text-left font-medium text-muted-foreground">Category</th>
+                  <th className="px-3 py-2 text-left font-medium text-muted-foreground">Vendor</th>
+                  <th className="px-3 py-2 text-left font-medium text-muted-foreground">Remark</th>
+                  <th className="px-3 py-2 text-right font-medium text-muted-foreground">Reserved</th>
+                  <th className="px-3 py-2 text-right font-medium text-muted-foreground">Actual</th>
+                  <th className="px-3 py-2 text-right font-medium text-muted-foreground">Total Spent</th>
                 </tr>
               </thead>
               <tbody>
@@ -431,7 +349,7 @@ export function BudgetDetailTable({ rows }: Props) {
                   return (
                     <Fragment key={g.no}>
                       <tr
-                        className=" border-b bg-muted/30 font-medium hover:bg-muted/40"
+                        className="border-b bg-muted/30 font-medium hover:bg-muted/40"
                         // onClick={() => toggleNo(g.no)}
                       >
                         {/* <td className="px-2 py-2 text-muted-foreground">
@@ -441,7 +359,7 @@ export function BudgetDetailTable({ rows }: Props) {
                             <ChevronRight className="h-4 w-4" />
                           )}
                         </td> */}
-                        <td className="px-3 py-2 whitespace-nowrap">
+                        <td className="whitespace-nowrap px-3 py-2">
                           {g.no}
 
                           {/* <span className="ml-2 text-muted-foreground text-[11px] font-normal">
@@ -449,89 +367,60 @@ export function BudgetDetailTable({ rows }: Props) {
                             {g.entries.length === 1 ? "entry" : "entries"})
                           </span> */}
                         </td>
-                        <td className="px-3 py-2  ">
-                          {g.date ? new Date(g.date).toLocaleDateString() : "—"}
-                        </td>
+                        <td className="px-3 py-2">{g.date ? new Date(g.date).toLocaleDateString() : "—"}</td>
                         {/* <td className="px-3 py-2 whitespace-nowrap">
                           {g.type || "—"}
                         </td> */}
                         <td className="px-3 py-2">
-                          <span className="text-muted-foreground">
-                            {g.type}
-                          </span>
+                          <span className="text-muted-foreground">{g.type}</span>
                         </td>
                         <td className="px-3 py-2">
-                          <span className="text-muted-foreground">
-                            {g.budgetCategory}
-                          </span>
+                          <span className="text-muted-foreground">{g.budgetCategory}</span>
                         </td>
                         <td className="px-3 py-2">{g.vendor}</td>
-                        <td className="px-3 py-2 text-muted-foreground max-w-[240px]">
-                          <div className="whitespace-pre-wrap break-words">
-                            {g.remark || "—"}
-                          </div>
+                        <td className="max-w-[240px] px-3 py-2 text-muted-foreground">
+                          <div className="whitespace-pre-wrap break-words">{g.remark || "—"}</div>
                         </td>
                         {/* <td className="px-3 py-2 text-muted-foreground">—</td> */}
                         <td className="px-3 py-2 text-right tabular-nums">
                           <div>{formatTHB(g.sum.reservedTHB)}</div>
-                          <div className="text-muted-foreground font-normal">
-                            {formatUSD(g.sum.reservedUSD)}
-                          </div>
+                          <div className="font-normal text-muted-foreground">{formatUSD(g.sum.reservedUSD)}</div>
                         </td>
                         <td className="px-3 py-2 text-right tabular-nums">
                           <div>{formatTHB(g.sum.actualTHB)}</div>
-                          <div className="text-muted-foreground font-normal">
-                            {formatUSD(g.sum.actualUSD)}
-                          </div>
+                          <div className="font-normal text-muted-foreground">{formatUSD(g.sum.actualUSD)}</div>
                         </td>
                         <td className="px-3 py-2 text-right tabular-nums">
                           <div>{formatTHB(g.sum.totalSpentTHB)}</div>
-                          <div className="text-muted-foreground font-normal">
-                            {formatUSD(g.sum.totalSpentUSD)}
-                          </div>
+                          <div className="font-normal text-muted-foreground">{formatUSD(g.sum.totalSpentUSD)}</div>
                         </td>
                       </tr>
                       {isOpen &&
                         g.entries.map((d) => (
-                          <tr
-                            key={d.id}
-                            className="border-b last:border-0 hover:bg-muted/10"
-                          >
+                          <tr key={d.id} className="border-b last:border-0 hover:bg-muted/10">
                             <td />
-                            <td className="px-3 py-2 whitespace-nowrap text-muted-foreground">
-                              <span className="ml-4">
-                                {d.date
-                                  ? new Date(d.date).toLocaleDateString()
-                                  : "—"}
-                              </span>
+                            <td className="whitespace-nowrap px-3 py-2 text-muted-foreground">
+                              <span className="ml-4">{d.date ? new Date(d.date).toLocaleDateString() : "—"}</span>
                             </td>
-                            <td className="px-3 py-2 whitespace-nowrap text-muted-foreground">
+                            <td className="whitespace-nowrap px-3 py-2 text-muted-foreground">
                               {/* {d.type || "—"} */}
                             </td>
-                            <td className="px-3 py-2">
-                              {d.budgetCategory || "—"}
-                            </td>
-                            <td className="px-3 py-2"></td>
-                            <td className="px-3 py-2 text-muted-foreground max-w-[240px]"></td>
+                            <td className="px-3 py-2">{d.budgetCategory || "—"}</td>
+                            <td className="px-3 py-2" />
+                            <td className="max-w-[240px] px-3 py-2 text-muted-foreground" />
                             <td className="px-3 py-2 text-right tabular-nums">
                               <div>{formatTHB(Number(d.reservedTHB))}</div>
-                              <div className="text-muted-foreground">
-                                {formatUSD(Number(d.reservedUSD))}
-                              </div>
+                              <div className="text-muted-foreground">{formatUSD(Number(d.reservedUSD))}</div>
                             </td>
                             <td className="px-3 py-2 text-right tabular-nums">
                               <div>{formatTHB(Number(d.actualTHB))}</div>
-                              <div className="text-muted-foreground">
-                                {formatUSD(Number(d.actualUSD))}
-                              </div>
+                              <div className="text-muted-foreground">{formatUSD(Number(d.actualUSD))}</div>
                             </td>
                             <td className="px-3 py-2 text-right tabular-nums">
                               <div>{formatTHB(Number(d.totalSpentTHB))}</div>
-                              <div className="text-muted-foreground">
-                                {formatUSD(Number(d.totalSpentUSD))}
-                              </div>
+                              <div className="text-muted-foreground">{formatUSD(Number(d.totalSpentUSD))}</div>
                             </td>
-                            <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">
+                            <td className="whitespace-nowrap px-3 py-2 text-muted-foreground">
                               {/* {d.creator || "—"} */}
                             </td>
                           </tr>
@@ -541,13 +430,8 @@ export function BudgetDetailTable({ rows }: Props) {
                 })}
                 {groupedMatches.length === 0 && (
                   <tr>
-                    <td
-                      colSpan={11}
-                      className="px-3 py-6 text-center text-muted-foreground"
-                    >
-                      {detailSearch
-                        ? "No entries match your search."
-                        : "No detail entries."}
+                    <td colSpan={11} className="px-3 py-6 text-center text-muted-foreground">
+                      {detailSearch ? "No entries match your search." : "No detail entries."}
                     </td>
                   </tr>
                 )}

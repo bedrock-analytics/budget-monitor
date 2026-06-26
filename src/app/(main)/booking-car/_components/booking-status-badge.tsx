@@ -11,10 +11,7 @@ interface BookingStatusBadgeProps {
 export function BookingStatusBadge({ status }: BookingStatusBadgeProps) {
   return (
     <span
-      className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
-        getStatusColor(status),
-      )}
+      className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 font-medium text-xs", getStatusColor(status))}
     >
       {formatStatus(status)}
     </span>

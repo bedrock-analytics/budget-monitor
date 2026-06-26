@@ -1,24 +1,19 @@
 // import { BedrockRuntimeClient, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime";
 import { type NextRequest, NextResponse } from "next/server";
 
-import {
-  BedrockAgentRuntimeClient,
-  RetrieveAndGenerateCommand,
-} from "@aws-sdk/client-bedrock-agent-runtime";
+import { BedrockAgentRuntimeClient, RetrieveAndGenerateCommand } from "@aws-sdk/client-bedrock-agent-runtime";
 
 const client = new BedrockAgentRuntimeClient({
   region: process.env.AWS_REGION || "ap-southeast-1",
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID ?? "",
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY ?? "",
   },
 });
 
 export async function POST(req: NextRequest) {
   try {
     const { message } = await req.json();
-
-    console.log("mes ", message);
 
     const command = new RetrieveAndGenerateCommand({
       input: {
@@ -27,9 +22,8 @@ export async function POST(req: NextRequest) {
       retrieveAndGenerateConfiguration: {
         type: "KNOWLEDGE_BASE",
         knowledgeBaseConfiguration: {
-          knowledgeBaseId: process.env.KB_ID!,
-          modelArn:
-            "arn:aws:bedrock:ap-southeast-1:174466744028:inference-profile/global.anthropic.claude-sonnet-4-6",
+          knowledgeBaseId: process.env.KB_ID ?? "",
+          modelArn: "arn:aws:bedrock:ap-southeast-1:174466744028:inference-profile/global.anthropic.claude-sonnet-4-6",
 
           retrievalConfiguration: {
             vectorSearchConfiguration: {
@@ -213,40 +207,3 @@ Answer:
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
-
-// const client = new BedrockRuntimeClient({
-//   region: process.env.AWS_REGION
-// });
-
-// export async function POST(req: Request) {
-//   console.log("POST");
-//   const { message } = await req.json();
-
-//   const body = JSON.stringify({
-//     anthropic_version: "bedrock-2023-05-31",
-//     max_tokens: 500,
-//     messages: [
-//       {
-//         role: "user",
-//         content: message
-//       }
-//     ]
-//   });
-
-//   const command = new InvokeModelCommand({
-//     modelId: "global.anthropic.claude-sonnet-4-6",
-//     body,
-//     contentType: "application/json",
-//     accept: "application/json"
-//   });
-
-//   const response = await client.send(command);
-
-//   const responseBody = JSON.parse(
-//     new TextDecoder().decode(response.body)
-//   );
-
-//   return Response.json({
-//     reply: responseBody.content[0].text
-//   });
-// }

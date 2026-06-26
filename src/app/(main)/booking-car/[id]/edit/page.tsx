@@ -3,10 +3,11 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { useParams } from "next/navigation";
+
 import { useSession } from "next-auth/react";
 
-import type { CarBookingRow } from "@/lib/booking-car";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { CarBookingRow } from "@/lib/booking-car";
 
 import { BookingForm } from "../../_components/booking-form";
 
@@ -19,10 +20,7 @@ export default function EditBookingPage() {
 
   const fetchData = useCallback(async () => {
     try {
-      const [userRes, bookingsRes] = await Promise.all([
-        fetch("/api/user"),
-        fetch("/api/booking-car"),
-      ]);
+      const [userRes, bookingsRes] = await Promise.all([fetch("/api/user"), fetch("/api/booking-car")]);
 
       if (userRes.ok) {
         const { user } = await userRes.json();
@@ -70,9 +68,7 @@ export default function EditBookingPage() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="font-bold text-2xl">Edit Booking</h1>
-        <p className="mt-1 text-muted-foreground text-sm">
-          Edit booking {booking.bookingNumber}
-        </p>
+        <p className="mt-1 text-muted-foreground text-sm">Edit booking {booking.bookingNumber}</p>
       </div>
       <BookingForm userId={userId} booking={booking} />
     </div>
