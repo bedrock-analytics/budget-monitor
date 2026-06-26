@@ -4,7 +4,7 @@ import { Command } from "lucide-react";
 
 import { LoginForm } from "../../_components/login-form";
 import { GoogleButton } from "../../_components/social-auth/google-button";
-import { MicrosoftButton } from "../../_components/social-auth/microsoft-button";
+import { CognitoButton } from "../../_components/social-auth/cognito-button";
 
 export default function LoginV1() {
   return (
@@ -32,7 +32,7 @@ export default function LoginV1() {
           <div className="space-y-4">
             <LoginForm />
             {/* <GoogleButton className="w-full" variant="outline" /> */}
-            <MicrosoftButton className="w-full" variant="outline" />
+            <CognitoButton className="w-full" variant="outline" />
           </div>
         </div>
       </div>
