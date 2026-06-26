@@ -1,9 +1,6 @@
-import Link from "next/link";
-
 import { Command } from "lucide-react";
 
 import { LoginForm } from "../../_components/login-form";
-import { GoogleButton } from "../../_components/social-auth/google-button";
 import { CognitoButton } from "../../_components/social-auth/cognito-button";
 
 export default function LoginV1() {
