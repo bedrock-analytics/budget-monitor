@@ -1,17 +1,12 @@
 import NextAuth, { type NextAuthOptions } from "next-auth";
-import AzureADProvider from "next-auth/providers/azure-ad";
+import CognitoProvider from "next-auth/providers/cognito";
 
 export const authOptions: NextAuthOptions = {
   providers: [
-    AzureADProvider({
-      clientId: process.env.AZURE_CLIENT_ID ?? "",
-      clientSecret: process.env.AZURE_CLIENT_SECRET ?? "",
-      tenantId: process.env.AZURE_TENANT_ID ?? "",
-      authorization: {
-        params: {
-          scope: "openid profile email",
-        },
-      },
+    CognitoProvider({
+      clientId: process.env.COGNITO_CLIENT_ID ?? "",
+      clientSecret: process.env.COGNITO_CLIENT_SECRET ?? "",
+      issuer: process.env.COGNITO_ISSUER,
     }),
   ],
   secret: process.env.NEXTAUTH_SECRET,
