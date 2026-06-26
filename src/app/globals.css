@@ -58,9 +58,8 @@ These serve as the fallback; there is no separate default.css file. */
   --card-foreground: oklch(0.148 0.004 228.8);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.148 0.004 228.8);
-  --primary: #cfc700;
-  /* --primary-foreground: rgb(239, 246, 255); */
-  --primary-foreground: #000000;
+  --primary: #015850;
+  --primary-foreground: #ffffff;
   --secondary: #f4f4f5;
   --secondary-foreground: oklch(0.21 0.006 285.885);
   --muted: oklch(0.963 0.002 197.1);
@@ -175,6 +174,9 @@ These serve as the fallback; there is no separate default.css file. */
   }
   html[data-font="notoSans"] body {
     --font-sans: var(--font-noto-sans);
+  }
+  html[data-font="notoSansThai"] body {
+    --font-sans: var(--font-noto-sans-thai);
   }
   html[data-font="nunitoSans"] body {
     --font-sans: var(--font-nunito-sans);

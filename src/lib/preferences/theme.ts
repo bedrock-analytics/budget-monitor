@@ -15,7 +15,7 @@ export const THEME_PRESET_OPTIONS = [
     label: "Default",
     value: "default",
     primary: {
-      light: "#cfc700",
+      light: "#015850",
       dark: "#cfc700",
     },
   },

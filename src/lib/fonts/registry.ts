@@ -8,6 +8,7 @@ import {
   Lora,
   Merriweather,
   Noto_Sans,
+  Noto_Sans_Thai,
   Noto_Serif,
   Nunito_Sans,
   Outfit,
@@ -28,6 +29,12 @@ const inter = Inter({
 const notoSans = Noto_Sans({
   subsets: ["latin"],
   variable: "--font-noto-sans",
+});
+
+const notoSansThai = Noto_Sans_Thai({
+  subsets: ["thai"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-noto-sans-thai",
 });
 
 const roboto = Roboto({
@@ -119,6 +126,10 @@ export const fontRegistry = {
   notoSans: {
     label: "Noto Sans",
     font: notoSans,
+  },
+  notoSansThai: {
+    label: "Noto Sans Thai",
+    font: notoSansThai,
   },
   nunitoSans: {
     label: "Nunito Sans",
