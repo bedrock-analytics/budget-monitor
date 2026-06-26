@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import Image from "next/image";
 
 import LogoImage from "@/lib/images/logo.png";
-import XplorerImage from "@/lib/images/xplorer.jpg";
+import SmartPlatformImage from "@/lib/images/smart-platform.webp";
 
 export default function Layout({ children }: Readonly<{ children: ReactNode }>) {
   return (
@@ -11,7 +11,7 @@ export default function Layout({ children }: Readonly<{ children: ReactNode }>) 
       <div className="grid h-dvh justify-center p-2 lg:grid-cols-2">
         <div className="relative order-2 hidden h-full rounded-3xl lg:flex">
           <Image
-            src={XplorerImage}
+            src={SmartPlatformImage}
             alt="Bedrock Analytics"
             aria-hidden="true"
             className="w-full rounded-3xl object-cover"
