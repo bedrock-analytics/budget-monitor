@@ -33,7 +33,8 @@ export default function ChatSection(prop: { chatId: string }) {
     } else {
       getMessages(prop.chatId);
     }
-  }, [createChat, getMessages, prop.chatId]);
+  // ponytail: createChat/getMessages omitted from deps — they're re-created every render; prop.chatId is the real trigger
+  }, [prop.chatId]);
 
   const getMessages = async (chatId: string) => {
     try {
