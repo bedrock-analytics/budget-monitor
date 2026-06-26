@@ -31,21 +31,21 @@ env:
             secretKeyRef:
                 name: subsea-x-app
                 key: NEXTAUTH_SECRET
-      - name: AZURE_CLIENT_ID
+      - name: COGNITO_CLIENT_ID
         valueFrom:
             secretKeyRef:
                 name: subsea-x-app
-                key: AZURE_CLIENT_ID
-      - name: AZURE_CLIENT_SECRET
+                key: COGNITO_CLIENT_ID
+      - name: COGNITO_CLIENT_SECRET
         valueFrom:
             secretKeyRef:
                 name: subsea-x-app
-                key: AZURE_CLIENT_SECRET
-      - name: AZURE_TENANT_ID
+                key: COGNITO_CLIENT_SECRET
+      - name: COGNITO_ISSUER
         valueFrom:
             configMapKeyRef:
                 name: subsea-x-app
-                key: AZURE_TENANT_ID
+                key: COGNITO_ISSUER
       - name: DATABASE_URL
         valueFrom:
             configMapKeyRef:
