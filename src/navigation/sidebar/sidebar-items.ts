@@ -62,7 +62,7 @@ export const sidebarItems: NavGroup[] = [
         title: "Chat",
         url: "/chat",
         icon: MessageSquare,
-        comingSoon: false,
+        comingSoon: true,
       },
       {
         key: "purchase",
