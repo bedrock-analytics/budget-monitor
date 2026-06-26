@@ -1,0 +1,6 @@
+#!/bin/bash
+# Coolify splits multi-word start commands into an argv array, and the nixpacks
+# entrypoint `bash -l -c` only consumes the first token — so a `cmd && cmd`
+# start command silently runs only the first word. Keep startup in this single
+# script and point Coolify's start command at `./start-prod` (one token).
+npx prisma migrate deploy && node .next/standalone/server.js
