@@ -15,6 +15,12 @@ enum MessageRole {
   tool
 }
 
+enum UserRole {
+  ADMIN
+  MANAGER
+  USER
+}
+
 model User {
   id        String   @id @default(cuid())
   email       String    @unique
@@ -26,6 +32,8 @@ model User {
   department  String?
   canSeeStaffBenefit Boolean @default(false)
   allowedMenus String[] @default([])
+  role      UserRole @default(USER)
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -35,8 +43,23 @@ model User {
   carBookingPassengers CarBookingPassenger[]
   facilityInspections  FacilityQualityInspection[]
   activities           UserActivity[]
+  auditLogs            AuditLog[]
 
   @@index([createdAt])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String
+  action    String
+  target    String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  actor User @relation(fields: [actorId], references: [id])
+
+  @@index([actorId, createdAt])
+  @@index([action, createdAt])
 }
 
 model UserActivity {

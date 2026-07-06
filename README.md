@@ -1,6 +1,15 @@
 # x
 
+## Admin bootstrap
 
+On a fresh database nobody has `role = ADMIN`, so the `/admin/*` pages and APIs are unreachable. Set
+`ADMIN_BOOTSTRAP_EMAILS` (comma-separated) in the environment and run:
+
+```
+npm run db:seed
+```
+
+This promotes each listed email to `ADMIN` (creating the user if it doesn't exist yet). Safe to re-run.
 
 ## Getting started
 

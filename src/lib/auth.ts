@@ -1,3 +1,4 @@
+import type { User } from "@prisma/client";
 import { getServerSession } from "next-auth";
 
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
@@ -25,10 +26,15 @@ async function recordDailyActivity(userId: string) {
   }
 }
 
-export async function requireUser() {
+export type ResolvedUser =
+  | { status: "unauthenticated" }
+  | { status: "inactive"; user: User }
+  | { status: "ok"; user: User };
+
+export async function resolveUser(): Promise<ResolvedUser> {
   const session = await getServerSession(authOptions);
   const email = session?.user?.email;
-  if (!email) return null;
+  if (!email) return { status: "unauthenticated" };
 
   const user = await db.user.upsert({
     where: { email },
@@ -43,7 +49,14 @@ export async function requireUser() {
     },
   });
 
+  if (!user.isActive) return { status: "inactive", user };
+
   await recordDailyActivity(user.id);
 
-  return user;
+  return { status: "ok", user };
+}
+
+export async function requireUser() {
+  const result = await resolveUser();
+  return result.status === "ok" ? result.user : null;
 }
