@@ -139,6 +139,19 @@ function extractProjectMeta(headerCell: string): {
 
 const HEADER_COL_COUNT = 12;
 
+export function validateCostTrackingActivities(activities: CostTrackingActivityRow[]): string[] {
+  const errors: string[] = [];
+  activities.forEach((a, i) => {
+    const line = i + 1;
+    if (!a.itemCode) errors.push(`Activity ${line}: missing item code`);
+    if (!a.description) errors.push(`Activity ${line}: missing description`);
+    if (!Number.isFinite(a.lumpSum) || !Number.isFinite(a.rate)) {
+      errors.push(`Activity ${line}: invalid numeric value`);
+    }
+  });
+  return errors;
+}
+
 export function parseCostTrackingCSV(content: string): ParsedCostTracking {
   const records = parseRecords(content);
   if (records.length === 0) {

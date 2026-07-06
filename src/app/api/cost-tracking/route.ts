@@ -1,16 +1,20 @@
 import { NextResponse } from "next/server";
 
-import type { Prisma } from "@prisma/client";
+import type { Prisma, User } from "@prisma/client";
 import * as XLSX from "xlsx";
 
 import { requireUser } from "@/lib/auth";
+import { requireRole } from "@/lib/authz";
 import {
   isBudgetSummaryCSV,
   type ParsedBudgetSummary,
+  type ParsedCostTracking,
   parseBudgetSummaryCSV,
   parseCostTrackingCSV,
+  validateCostTrackingActivities,
 } from "@/lib/cost-tracking";
 import { db } from "@/lib/db";
+import { checkRowCount, validateImportFile } from "@/lib/import-validation";
 
 function isExcelFile(file: File): boolean {
   const name = file.name.toLowerCase();
@@ -87,6 +91,13 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const auth = await requireRole("MANAGER");
+    if (auth instanceof NextResponse) return auth;
+    const { user } = auth;
+
+    const url = new URL(request.url);
+    const dryRun = url.searchParams.get("dryRun") === "1";
+
     const formData = await request.formData();
     const file = formData.get("file");
 
@@ -96,15 +107,26 @@ export async function POST(request: Request) {
 
     const fileObj = file as File;
 
+    const fileError = validateImportFile(fileObj, [".csv", ".xlsx", ".xls"]);
+    if (fileError) return NextResponse.json({ error: fileError }, { status: 400 });
+
     if (!isExcelFile(fileObj)) {
       const text = await fileObj.text();
       if (isBudgetSummaryCSV(text)) {
-        return await applyBudgetSummaryOnly(parseBudgetSummaryCSV(text));
+        return await applyBudgetSummaryOnly(parseBudgetSummaryCSV(text), user, dryRun);
       }
     }
 
-    const { activitiesCSV, budgetCSV } = await extractSheets(fileObj);
-    const parsed = parseCostTrackingCSV(activitiesCSV);
+    let activitiesCSV: string;
+    let budgetCSV: string | null;
+    let parsed: ParsedCostTracking;
+    try {
+      ({ activitiesCSV, budgetCSV } = await extractSheets(fileObj));
+      parsed = parseCostTrackingCSV(activitiesCSV);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Invalid file";
+      return NextResponse.json({ error: message }, { status: 400 });
+    }
 
     if (!parsed.projectCode) {
       return NextResponse.json({ error: "Could not detect project code from CSV header" }, { status: 400 });
@@ -113,74 +135,104 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No activity rows found in CSV" }, { status: 400 });
     }
 
+    const rowCountError = checkRowCount(parsed.activities.length);
+    if (rowCountError) return NextResponse.json({ error: rowCountError }, { status: 400 });
+
+    const errors = validateCostTrackingActivities(parsed.activities);
+
     const summary = budgetCSV ? parseBudgetSummaryCSV(budgetCSV) : null;
     const budgetUSD = summary?.projectRevenue && summary.projectRevenue > 0 ? summary.projectRevenue : undefined;
     const budgetByItemCode = summary?.budgetByItemCode ?? {};
 
-    const project = await db.costTrackingProject.upsert({
-      where: { projectCode: parsed.projectCode },
-      create: {
+    if (dryRun) {
+      return NextResponse.json({
+        dryRun: true,
         projectCode: parsed.projectCode,
-        projectName: parsed.projectName,
-        startDate: parsed.startDate,
-        endDate: parsed.endDate,
-        actualChargeUSD: parsed.actualChargeUSD,
-        estimateUSD: parsed.estimateUSD,
-        exchangeRates: parsed.exchangeRates,
-        ...(budgetUSD !== undefined ? { budgetUSD } : {}),
-        budgetByItemCode: budgetByItemCode as Prisma.InputJsonValue,
-      },
-      update: {
-        projectName: parsed.projectName,
-        startDate: parsed.startDate,
-        endDate: parsed.endDate,
-        actualChargeUSD: parsed.actualChargeUSD,
-        estimateUSD: parsed.estimateUSD,
-        exchangeRates: parsed.exchangeRates,
-        ...(budgetUSD !== undefined ? { budgetUSD } : {}),
-        ...(summary ? { budgetByItemCode: budgetByItemCode as Prisma.InputJsonValue } : {}),
-      },
-    });
+        rowCount: parsed.activities.length,
+        errors,
+      });
+    }
 
-    await db.costTrackingActivity.deleteMany({
-      where: { projectId: project.id },
-    });
+    if (errors.length > 0) {
+      return NextResponse.json({ error: "Validation failed", errors }, { status: 400 });
+    }
 
-    await db.costTrackingActivity.createMany({
-      data: parsed.activities.map((a) => ({
-        projectId: project.id,
-        position: a.position,
-        groupName: a.groupName,
-        description: a.description,
-        itemCode: a.itemCode,
-        lumpSum: a.lumpSum,
-        rate: a.rate,
-        invoiceLocal: a.invoiceLocal,
-        invoiceUSD: a.invoiceUSD,
-        sumPOLocal: a.sumPOLocal,
-        currency: a.currency,
-        sumPOUSD: a.sumPOUSD,
-        trackingAmount: a.trackingAmount,
-        poEstAmount: a.poEstAmount,
-        dailyValues: a.dailyValues as unknown as Prisma.InputJsonValue,
-      })),
+    const result = await db.$transaction(async (tx) => {
+      const project = await tx.costTrackingProject.upsert({
+        where: { projectCode: parsed.projectCode },
+        create: {
+          projectCode: parsed.projectCode,
+          projectName: parsed.projectName,
+          startDate: parsed.startDate,
+          endDate: parsed.endDate,
+          actualChargeUSD: parsed.actualChargeUSD,
+          estimateUSD: parsed.estimateUSD,
+          exchangeRates: parsed.exchangeRates,
+          ...(budgetUSD !== undefined ? { budgetUSD } : {}),
+          budgetByItemCode: budgetByItemCode as Prisma.InputJsonValue,
+        },
+        update: {
+          projectName: parsed.projectName,
+          startDate: parsed.startDate,
+          endDate: parsed.endDate,
+          actualChargeUSD: parsed.actualChargeUSD,
+          estimateUSD: parsed.estimateUSD,
+          exchangeRates: parsed.exchangeRates,
+          ...(budgetUSD !== undefined ? { budgetUSD } : {}),
+          ...(summary ? { budgetByItemCode: budgetByItemCode as Prisma.InputJsonValue } : {}),
+        },
+      });
+
+      await tx.costTrackingActivity.deleteMany({
+        where: { projectId: project.id },
+      });
+
+      await tx.costTrackingActivity.createMany({
+        data: parsed.activities.map((a) => ({
+          projectId: project.id,
+          position: a.position,
+          groupName: a.groupName,
+          description: a.description,
+          itemCode: a.itemCode,
+          lumpSum: a.lumpSum,
+          rate: a.rate,
+          invoiceLocal: a.invoiceLocal,
+          invoiceUSD: a.invoiceUSD,
+          sumPOLocal: a.sumPOLocal,
+          currency: a.currency,
+          sumPOUSD: a.sumPOUSD,
+          trackingAmount: a.trackingAmount,
+          poEstAmount: a.poEstAmount,
+          dailyValues: a.dailyValues as unknown as Prisma.InputJsonValue,
+        })),
+      });
+
+      await tx.auditLog.create({
+        data: {
+          actorId: user.id,
+          action: "cost-tracking.import",
+          target: "cost-tracking",
+          metadata: { filename: fileObj.name, projectCode: project.projectCode, imported: parsed.activities.length },
+        },
+      });
+
+      return project;
     });
 
     return NextResponse.json({
-      projectCode: project.projectCode,
-      projectName: project.projectName,
+      projectCode: result.projectCode,
+      projectName: result.projectName,
       activities: parsed.activities.length,
       budgetUSD: budgetUSD ?? null,
       budgetItems: Object.keys(budgetByItemCode).length,
     });
   } catch (error) {
     console.error("Failed to import cost tracking CSV:", error);
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ error: `Failed to import CSV: ${message}` }, { status: 500 });
+    return NextResponse.json({ error: "Failed to import cost tracking data" }, { status: 500 });
   }
 }
 
-async function applyBudgetSummaryOnly(summary: ParsedBudgetSummary) {
+async function applyBudgetSummaryOnly(summary: ParsedBudgetSummary, user: User, dryRun: boolean) {
   if (!summary.projectCode) {
     return NextResponse.json({ error: "Budget CSV is missing Project Code" }, { status: 400 });
   }
@@ -191,13 +243,35 @@ async function applyBudgetSummaryOnly(summary: ParsedBudgetSummary) {
       { status: 400 },
     );
   }
-  await db.costTrackingProject.update({
-    where: { projectCode: summary.projectCode },
-    data: {
-      ...(summary.projectRevenue > 0 ? { budgetUSD: summary.projectRevenue } : {}),
-      budgetByItemCode: summary.budgetByItemCode as Prisma.InputJsonValue,
-    },
+
+  if (dryRun) {
+    return NextResponse.json({
+      dryRun: true,
+      projectCode: summary.projectCode,
+      budgetUSD: summary.projectRevenue,
+      budgetItems: Object.keys(summary.budgetByItemCode).length,
+    });
+  }
+
+  await db.$transaction(async (tx) => {
+    await tx.costTrackingProject.update({
+      where: { projectCode: summary.projectCode },
+      data: {
+        ...(summary.projectRevenue > 0 ? { budgetUSD: summary.projectRevenue } : {}),
+        budgetByItemCode: summary.budgetByItemCode as Prisma.InputJsonValue,
+      },
+    });
+
+    await tx.auditLog.create({
+      data: {
+        actorId: user.id,
+        action: "cost-tracking.import",
+        target: "cost-tracking",
+        metadata: { projectCode: summary.projectCode, budgetOnly: true },
+      },
+    });
   });
+
   return NextResponse.json({
     projectCode: summary.projectCode,
     activities: 0,

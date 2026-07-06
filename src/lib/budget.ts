@@ -108,6 +108,19 @@ export function parseCSVContent(content: string): BudgetRow[] {
   });
 }
 
+export function validateBudgetRows(rows: BudgetRow[]): string[] {
+  const errors: string[] = [];
+  rows.forEach((r, i) => {
+    const line = i + 2; // +1 header, +1 to make it 1-indexed
+    if (!r.projectType) errors.push(`Row ${line}: missing project type`);
+    if (!r.budgetItemName) errors.push(`Row ${line}: missing budget item name`);
+    if (!Number.isInteger(r.year) || r.year < 2000 || r.year > 2100) {
+      errors.push(`Row ${line}: invalid year "${r.year}"`);
+    }
+  });
+  return errors;
+}
+
 export function parseBudgetCSV(): BudgetRow[] {
   const filePath = path.join(process.cwd(), "Budget Report 6.3.26.csv");
   const content = fs.readFileSync(filePath, "utf-8");

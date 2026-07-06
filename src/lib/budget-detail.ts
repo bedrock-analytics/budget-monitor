@@ -100,6 +100,19 @@ function extractProjectType(val: string | undefined): string {
 
 const ALLOWED_TYPES = new Set(["PO", "PR", "DraftPR"]);
 
+export function validateBudgetDetailRows(rows: BudgetDetailRow[]): string[] {
+  const errors: string[] = [];
+  rows.forEach((r, i) => {
+    const line = i + 2;
+    if (!r.projectCode) errors.push(`Row ${line}: missing project code`);
+    if (!r.acctCode) errors.push(`Row ${line}: missing account code`);
+    if (!Number.isFinite(r.reservedTHB) || !Number.isFinite(r.actualTHB)) {
+      errors.push(`Row ${line}: invalid THB amount`);
+    }
+  });
+  return errors;
+}
+
 export function parseBudgetDetailCSV(content: string): BudgetDetailRow[] {
   const records = parseRecords(content);
   if (records.length === 0) return [];
