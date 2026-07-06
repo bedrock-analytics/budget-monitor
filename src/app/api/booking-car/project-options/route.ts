@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 
+import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 
 export async function GET() {
   try {
+    const user = await requireUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const budgets = await db.budget.findMany({
       select: { projectType: true, projectTypeName: true },
       distinct: ["projectType"],

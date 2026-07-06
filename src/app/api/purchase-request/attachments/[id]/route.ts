@@ -3,16 +3,27 @@ import { NextResponse } from "next/server";
 import { DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
+import { requireUser } from "@/lib/auth";
+import { assertOwnership } from "@/lib/authz";
 import { db } from "@/lib/db";
 import { S3_BUCKET, s3 } from "@/lib/s3";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const user = await requireUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const { id } = await params;
-    const attachment = await db.purchaseRequestAttachment.findUnique({ where: { id } });
+    const attachment = await db.purchaseRequestAttachment.findUnique({
+      where: { id },
+      include: { purchaseRequest: { select: { requesterId: true } } },
+    });
 
     if (!attachment) {
       return NextResponse.json({ error: "Attachment not found" }, { status: 404 });
+    }
+    if (!assertOwnership(attachment.purchaseRequest.requesterId, user)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const command = new GetObjectCommand({
@@ -32,11 +43,20 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const user = await requireUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const { id } = await params;
-    const attachment = await db.purchaseRequestAttachment.findUnique({ where: { id } });
+    const attachment = await db.purchaseRequestAttachment.findUnique({
+      where: { id },
+      include: { purchaseRequest: { select: { requesterId: true } } },
+    });
 
     if (!attachment) {
       return NextResponse.json({ error: "Attachment not found" }, { status: 404 });
+    }
+    if (!assertOwnership(attachment.purchaseRequest.requesterId, user)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     await s3.send(new DeleteObjectCommand({ Bucket: S3_BUCKET, Key: attachment.fileKey }));

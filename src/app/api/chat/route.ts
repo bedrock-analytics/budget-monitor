@@ -3,6 +3,8 @@ import { type NextRequest, NextResponse } from "next/server";
 
 import { BedrockAgentRuntimeClient, RetrieveAndGenerateCommand } from "@aws-sdk/client-bedrock-agent-runtime";
 
+import { requireUser } from "@/lib/auth";
+
 const client = new BedrockAgentRuntimeClient({
   region: process.env.AWS_REGION || "ap-southeast-1",
   credentials: {
@@ -13,6 +15,9 @@ const client = new BedrockAgentRuntimeClient({
 
 export async function POST(req: NextRequest) {
   try {
+    const user = await requireUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const { message } = await req.json();
 
     const command = new RetrieveAndGenerateCommand({

@@ -24,7 +24,7 @@ export async function requireUser(): Promise<AuthResult> {
   return { user: result.user };
 }
 
-function hasRole(user: User, min: UserRole): boolean {
+export function hasRole(user: User, min: UserRole): boolean {
   return isAdmin(user) || ROLE_RANK[user.role] >= ROLE_RANK[min];
 }
 
@@ -41,14 +41,4 @@ export async function requireAdmin(): Promise<AuthResult> {
 
 export function assertOwnership(resourceUserId: string, user: User): boolean {
   return resourceUserId === user.id || hasRole(user, "MANAGER");
-}
-
-type RouteHandler<Ctx> = (req: Request, ctx: Ctx, user: User) => Promise<Response> | Response;
-
-export function withAuth<Ctx = unknown>(handler: RouteHandler<Ctx>, opts?: { role?: UserRole }) {
-  return async (req: Request, ctx: Ctx) => {
-    const result = opts?.role ? await requireRole(opts.role) : await requireUser();
-    if (result instanceof NextResponse) return result;
-    return handler(req, ctx, result.user);
-  };
 }

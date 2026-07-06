@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 export async function GET() {
   try {
     const user = await requireUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const data = await db.budget.findMany({
       where: user?.canSeeStaffBenefit

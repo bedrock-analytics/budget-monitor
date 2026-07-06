@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 
+import { requireUser } from "@/lib/auth";
 import { parseBudgetDetailCSV } from "@/lib/budget-detail";
 import { db } from "@/lib/db";
 
 export async function GET(request: Request) {
   try {
+    const user = await requireUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const { searchParams } = new URL(request.url);
     const projectCode = searchParams.get("projectCode");
     const data = await db.budgetDetail.findMany({

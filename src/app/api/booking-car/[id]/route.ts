@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
 
+import { requireUser } from "@/lib/auth";
+import { assertOwnership } from "@/lib/authz";
 import { db } from "@/lib/db";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const user = await requireUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const { id } = await params;
     const body = await request.json();
     const {
@@ -28,6 +33,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const existing = await db.carBooking.findUnique({ where: { id } });
     if (!existing) {
       return NextResponse.json({ error: "Booking not found" }, { status: 404 });
+    }
+    if (!assertOwnership(existing.userId, user)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     // Update core booking fields if provided
@@ -201,11 +209,17 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const user = await requireUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const { id } = await params;
 
     const existing = await db.carBooking.findUnique({ where: { id } });
     if (!existing) {
       return NextResponse.json({ error: "Booking not found" }, { status: 404 });
+    }
+    if (!assertOwnership(existing.userId, user)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     await db.carBooking.delete({ where: { id } });

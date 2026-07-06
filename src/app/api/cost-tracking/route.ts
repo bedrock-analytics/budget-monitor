@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import * as XLSX from "xlsx";
 
+import { requireUser } from "@/lib/auth";
 import {
   isBudgetSummaryCSV,
   type ParsedBudgetSummary,
@@ -60,6 +61,9 @@ async function extractSheets(file: File): Promise<ExtractedSheets> {
 
 export async function GET() {
   try {
+    const user = await requireUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const projects = await db.costTrackingProject.findMany({
       orderBy: { updatedAt: "desc" },
       select: {

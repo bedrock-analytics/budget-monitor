@@ -2,12 +2,17 @@ import { NextResponse } from "next/server";
 
 import { DeleteObjectsCommand } from "@aws-sdk/client-s3";
 
+import { requireUser } from "@/lib/auth";
+import { assertOwnership } from "@/lib/authz";
 import { db } from "@/lib/db";
 import { toNumber } from "@/lib/purchase-request";
 import { S3_BUCKET, s3 } from "@/lib/s3";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const user = await requireUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const { id } = await params;
     const pr = await db.purchaseRequest.findUnique({
       where: { id },
@@ -29,6 +34,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
     if (!pr) {
       return NextResponse.json({ error: "Purchase request not found" }, { status: 404 });
+    }
+    if (!assertOwnership(pr.requesterId, user)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     return NextResponse.json({
@@ -55,6 +63,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const user = await requireUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const { id } = await params;
     const body = await request.json();
     const {
@@ -76,6 +87,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const existing = await db.purchaseRequest.findUnique({ where: { id } });
     if (!existing) {
       return NextResponse.json({ error: "Purchase request not found" }, { status: 404 });
+    }
+    if (!assertOwnership(existing.requesterId, user)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     if (existing.status !== "DRAFT") {
@@ -155,8 +169,14 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   }
 }
 
+// NOTE: assertOwnership below permits the requester to drive their own SUBMITTED -> APPROVED
+// transition (no separation-of-duties check). Known gap, not owned by any milestone in the
+// current plan; flagged for a future approvals-workflow decision rather than fixed here.
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const user = await requireUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const { id } = await params;
     const body = await request.json();
     const { status } = body;
@@ -170,6 +190,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const existing = await db.purchaseRequest.findUnique({ where: { id } });
     if (!existing) {
       return NextResponse.json({ error: "Purchase request not found" }, { status: 404 });
+    }
+    if (!assertOwnership(existing.requesterId, user)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const allowed = validTransitions[existing.status];
@@ -202,11 +225,17 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const user = await requireUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const { id } = await params;
 
     const existing = await db.purchaseRequest.findUnique({ where: { id } });
     if (!existing) {
       return NextResponse.json({ error: "Purchase request not found" }, { status: 404 });
+    }
+    if (!assertOwnership(existing.requesterId, user)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     if (existing.status !== "DRAFT") {

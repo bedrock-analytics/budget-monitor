@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { generateInspectionNumber } from "@/lib/facility-quality-inspection";
 
@@ -21,6 +22,9 @@ const inspectionInclude = {
 
 export async function GET() {
   try {
+    const user = await requireUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const data = await db.facilityQualityInspection.findMany({
       orderBy: { createdAt: "desc" },
       include: inspectionInclude,
@@ -35,6 +39,9 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const user = await requireUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const body = await request.json();
     const { inspectorId, facilityName, facilityLocation, inspectionType, inspectionDate, description, notes, items } =
       body;

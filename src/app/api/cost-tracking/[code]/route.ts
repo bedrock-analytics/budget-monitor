@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
 
+import { requireUser } from "@/lib/auth";
+import { requireRole } from "@/lib/authz";
 import { db } from "@/lib/db";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ code: string }> }) {
   try {
+    const user = await requireUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const { code } = await params;
     const project = await db.costTrackingProject.findUnique({
       where: { projectCode: decodeURIComponent(code) },
@@ -25,6 +30,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ cod
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ code: string }> }) {
   try {
+    const auth = await requireRole("MANAGER");
+    if (auth instanceof NextResponse) return auth;
+
     const { code } = await params;
     await db.costTrackingProject.delete({
       where: { projectCode: decodeURIComponent(code) },

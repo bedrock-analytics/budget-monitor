@@ -4,6 +4,7 @@ import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { z } from "zod";
 
+import { requireUser } from "@/lib/auth";
 import {
   ALLOWED_CONTENT_TYPES,
   MAX_ATTACHMENT_SIZE,
@@ -23,6 +24,9 @@ const bodySchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    const user = await requireUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     if (!S3_BUCKET) {
       return NextResponse.json({ error: "S3 bucket not configured" }, { status: 500 });
     }
@@ -42,7 +46,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unsupported file type" }, { status: 400 });
     }
 
-    const key = `${PR_ATTACHMENT_PREFIX}/${randomUUID()}-${sanitizeFileName(fileName)}`;
+    const key = `${PR_ATTACHMENT_PREFIX}/${user.id}/${randomUUID()}-${sanitizeFileName(fileName)}`;
 
     const command = new PutObjectCommand({
       Bucket: S3_BUCKET,

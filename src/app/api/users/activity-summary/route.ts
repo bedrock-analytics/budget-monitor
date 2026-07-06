@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { requireUser } from "@/lib/auth";
+import { requireRole } from "@/lib/authz";
 import { db } from "@/lib/db";
 
 function getBangkokDate(offsetDays = 0) {
@@ -18,8 +18,8 @@ function formatDate(d: Date) {
 }
 
 export async function GET() {
-  const user = await requireUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireRole("MANAGER");
+  if (auth instanceof NextResponse) return auth;
 
   try {
     const today = getBangkokDate(0);

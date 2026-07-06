@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { requireUser } from "@/lib/auth";
+import { assertOwnership } from "@/lib/authz";
 import { db } from "@/lib/db";
 
 const inspectionInclude = {
@@ -20,6 +22,9 @@ const inspectionInclude = {
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const user = await requireUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const { id } = await params;
     const inspection = await db.facilityQualityInspection.findUnique({
       where: { id },
@@ -39,6 +44,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const user = await requireUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const { id } = await params;
     const body = await request.json();
     const { facilityName, facilityLocation, inspectionType, inspectionDate, description, notes, items } = body;
@@ -46,6 +54,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const existing = await db.facilityQualityInspection.findUnique({ where: { id } });
     if (!existing) {
       return NextResponse.json({ error: "Inspection not found" }, { status: 404 });
+    }
+    if (!assertOwnership(existing.inspectorId, user)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     if (existing.status !== "DRAFT") {
@@ -98,6 +109,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const user = await requireUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const { id } = await params;
     const body = await request.json();
     const { status, overallResult } = body;
@@ -105,6 +119,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const existing = await db.facilityQualityInspection.findUnique({ where: { id } });
     if (!existing) {
       return NextResponse.json({ error: "Inspection not found" }, { status: 404 });
+    }
+    if (!assertOwnership(existing.inspectorId, user)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     if (status) {
@@ -144,11 +161,17 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const user = await requireUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const { id } = await params;
 
     const existing = await db.facilityQualityInspection.findUnique({ where: { id } });
     if (!existing) {
       return NextResponse.json({ error: "Inspection not found" }, { status: 404 });
+    }
+    if (!assertOwnership(existing.inspectorId, user)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     if (existing.status !== "DRAFT") {

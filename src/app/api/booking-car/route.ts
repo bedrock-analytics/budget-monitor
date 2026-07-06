@@ -1,11 +1,18 @@
 import { NextResponse } from "next/server";
 
+import { requireUser } from "@/lib/auth";
+import { hasRole } from "@/lib/authz";
 import { generateBookingNumber } from "@/lib/booking-car";
 import { db } from "@/lib/db";
 
 export async function GET() {
   try {
+    const user = await requireUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const canSeeAll = hasRole(user, "MANAGER");
     const data = await db.carBooking.findMany({
+      where: canSeeAll ? undefined : { userId: user.id },
       orderBy: { createdAt: "desc" },
       include: {
         user: { select: { id: true, name: true, email: true, phone: true, dateOfBirth: true } },
@@ -29,6 +36,9 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const authedUser = await requireUser();
+    if (!authedUser) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const body = await request.json();
     const {
       userId,

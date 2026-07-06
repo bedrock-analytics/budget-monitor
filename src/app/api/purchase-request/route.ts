@@ -1,11 +1,18 @@
 import { NextResponse } from "next/server";
 
+import { requireUser } from "@/lib/auth";
+import { hasRole } from "@/lib/authz";
 import { db } from "@/lib/db";
 import { generatePRNumber, toNumber } from "@/lib/purchase-request";
 
 export async function GET() {
   try {
+    const user = await requireUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const canSeeAll = hasRole(user, "MANAGER");
     const data = await db.purchaseRequest.findMany({
+      where: canSeeAll ? undefined : { requesterId: user.id },
       orderBy: { createdAt: "desc" },
       include: {
         requester: { select: { id: true, name: true, email: true } },
@@ -49,12 +56,14 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const user = await requireUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const body = await request.json();
     const {
       orderType,
       title,
       description,
-      requesterId,
       department,
       currency,
       notes,
@@ -67,8 +76,8 @@ export async function POST(request: Request) {
       attachments,
     } = body;
 
-    if (!title || !requesterId || !items?.length) {
-      return NextResponse.json({ error: "Title, requester, and at least one item are required" }, { status: 400 });
+    if (!title || !items?.length) {
+      return NextResponse.json({ error: "Title and at least one item are required" }, { status: 400 });
     }
 
     const totalAmount = items.reduce(
@@ -82,7 +91,7 @@ export async function POST(request: Request) {
         orderType: orderType || "PURCHASE_ORDER",
         title,
         description: description || null,
-        requesterId,
+        requesterId: user.id,
         department: department || null,
         currency: currency || "THB",
         totalAmount,
