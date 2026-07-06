@@ -24,7 +24,7 @@ export async function requireUser(): Promise<AuthResult> {
   return { user: result.user };
 }
 
-export function hasRole(user: User, min: UserRole): boolean {
+export function hasRole(user: Pick<User, "role" | "allowedMenus">, min: UserRole): boolean {
   return isAdmin(user) || ROLE_RANK[user.role] >= ROLE_RANK[min];
 }
 

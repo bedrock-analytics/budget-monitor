@@ -1,3 +1,6 @@
+import { db } from "@/lib/db";
+import type { ImportMode } from "@/lib/import-validation";
+
 import fs from "node:fs";
 import path from "node:path";
 
@@ -125,6 +128,48 @@ export function parseBudgetCSV(): BudgetRow[] {
   const filePath = path.join(process.cwd(), "Budget Report 6.3.26.csv");
   const content = fs.readFileSync(filePath, "utf-8");
   return parseCSVContent(content);
+}
+
+export async function applyBudgetImport(
+  rows: BudgetRow[],
+  mode: ImportMode,
+  actorId: string,
+  action: string,
+  filename: string,
+): Promise<{ affected: number }> {
+  return db.$transaction(async (tx) => {
+    if (mode === "replace") {
+      await tx.budget.deleteMany();
+    }
+
+    await tx.budget.createMany({
+      data: rows.map((r) => ({
+        projectType: r.projectType,
+        projectTypeName: r.projectTypeName,
+        budgetItemName: r.budgetItemName,
+        year: r.year,
+        budgetTHB: r.budgetTHB,
+        reservedTHB: r.reservedTHB,
+        actualTHB: r.actualTHB,
+        availableTHB: r.availableTHB,
+        budgetUSD: r.budgetUSD,
+        reservedUSD: r.reservedUSD,
+        actualUSD: r.actualUSD,
+        availableUSD: r.availableUSD,
+      })),
+    });
+
+    await tx.auditLog.create({
+      data: {
+        actorId,
+        action,
+        target: "budget",
+        metadata: { mode, filename, imported: rows.length },
+      },
+    });
+
+    return { affected: rows.length };
+  });
 }
 
 // export function aggregateBudgetData(rows: BudgetRow[]): BudgetData {

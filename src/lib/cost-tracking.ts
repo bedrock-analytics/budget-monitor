@@ -1,3 +1,8 @@
+import type { CostTrackingProject, Prisma } from "@prisma/client";
+import * as XLSX from "xlsx";
+
+import { db } from "@/lib/db";
+
 export interface CostTrackingDailyValue {
   date: string;
   value: number;
@@ -30,6 +35,53 @@ export interface ParsedCostTracking {
   endDate: Date | null;
   dateColumns: string[];
   activities: CostTrackingActivityRow[];
+}
+
+export function isExcelFile(file: File): boolean {
+  const name = file.name.toLowerCase();
+  if (name.endsWith(".xlsx") || name.endsWith(".xls")) return true;
+  const type = file.type;
+  return (
+    type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" || type === "application/vnd.ms-excel"
+  );
+}
+
+function sheetHasActivitiesAnchor(csv: string): boolean {
+  const lines = csv.split(/\r?\n/).slice(0, 30);
+  return lines.some((line) => {
+    const cols = line.split(",");
+    return cols[1]?.replace(/^"|"$/g, "").trim().toLowerCase() === "activities";
+  });
+}
+
+export interface ExtractedSheets {
+  activitiesCSV: string;
+  budgetCSV: string | null;
+}
+
+export async function extractSheets(file: File): Promise<ExtractedSheets> {
+  if (isExcelFile(file)) {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const workbook = XLSX.read(buffer, { type: "buffer", cellDates: false });
+    if (workbook.SheetNames.length === 0) throw new Error("Excel file has no sheets");
+
+    let activitiesCSV = "";
+    let budgetCSV: string | null = null;
+    let firstCsv = "";
+
+    for (const name of workbook.SheetNames) {
+      const sheet = workbook.Sheets[name];
+      if (!sheet) continue;
+      const csv = XLSX.utils.sheet_to_csv(sheet, { blankrows: true });
+      if (!firstCsv) firstCsv = csv;
+      if (!activitiesCSV && sheetHasActivitiesAnchor(csv)) activitiesCSV = csv;
+      else if (!budgetCSV && isBudgetSummaryCSV(csv)) budgetCSV = csv;
+    }
+
+    if (!activitiesCSV) activitiesCSV = firstCsv;
+    return { activitiesCSV, budgetCSV };
+  }
+  return { activitiesCSV: await file.text(), budgetCSV: null };
 }
 
 function stripBom(text: string): string {
@@ -313,6 +365,78 @@ export function isBudgetSummaryCSV(content: string): boolean {
     if (label.startsWith("project revenue") || label.startsWith("project name")) return true;
   }
   return false;
+}
+
+export async function applyCostTrackingImport(
+  parsed: ParsedCostTracking,
+  budgetUSD: number | undefined,
+  budgetByItemCode: Record<string, number>,
+  hasSummary: boolean,
+  actorId: string,
+  action: string,
+  filename: string,
+): Promise<{ affected: number; project: CostTrackingProject }> {
+  return db.$transaction(async (tx) => {
+    const project = await tx.costTrackingProject.upsert({
+      where: { projectCode: parsed.projectCode },
+      create: {
+        projectCode: parsed.projectCode,
+        projectName: parsed.projectName,
+        startDate: parsed.startDate,
+        endDate: parsed.endDate,
+        actualChargeUSD: parsed.actualChargeUSD,
+        estimateUSD: parsed.estimateUSD,
+        exchangeRates: parsed.exchangeRates,
+        ...(budgetUSD !== undefined ? { budgetUSD } : {}),
+        budgetByItemCode: budgetByItemCode as Prisma.InputJsonValue,
+      },
+      update: {
+        projectName: parsed.projectName,
+        startDate: parsed.startDate,
+        endDate: parsed.endDate,
+        actualChargeUSD: parsed.actualChargeUSD,
+        estimateUSD: parsed.estimateUSD,
+        exchangeRates: parsed.exchangeRates,
+        ...(budgetUSD !== undefined ? { budgetUSD } : {}),
+        ...(hasSummary ? { budgetByItemCode: budgetByItemCode as Prisma.InputJsonValue } : {}),
+      },
+    });
+
+    await tx.costTrackingActivity.deleteMany({
+      where: { projectId: project.id },
+    });
+
+    await tx.costTrackingActivity.createMany({
+      data: parsed.activities.map((a) => ({
+        projectId: project.id,
+        position: a.position,
+        groupName: a.groupName,
+        description: a.description,
+        itemCode: a.itemCode,
+        lumpSum: a.lumpSum,
+        rate: a.rate,
+        invoiceLocal: a.invoiceLocal,
+        invoiceUSD: a.invoiceUSD,
+        sumPOLocal: a.sumPOLocal,
+        currency: a.currency,
+        sumPOUSD: a.sumPOUSD,
+        trackingAmount: a.trackingAmount,
+        poEstAmount: a.poEstAmount,
+        dailyValues: a.dailyValues as unknown as Prisma.InputJsonValue,
+      })),
+    });
+
+    await tx.auditLog.create({
+      data: {
+        actorId,
+        action,
+        target: "cost-tracking",
+        metadata: { filename, projectCode: project.projectCode, imported: parsed.activities.length },
+      },
+    });
+
+    return { affected: parsed.activities.length, project };
+  });
 }
 
 export function formatUSDCompact(value: number): string {

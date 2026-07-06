@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { requireUser } from "@/lib/auth";
 import { hasRole, requireRole } from "@/lib/authz";
-import { parseBudgetDetailCSV, validateBudgetDetailRows } from "@/lib/budget-detail";
+import { applyBudgetDetailImport, parseBudgetDetailCSV, validateBudgetDetailRows } from "@/lib/budget-detail";
 import { db } from "@/lib/db";
 import { checkRowCount, parseImportMode, validateImportFile } from "@/lib/import-validation";
 
@@ -69,49 +69,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Validation failed", errors }, { status: 400 });
     }
 
-    const imported = await db.$transaction(async (tx) => {
-      if (mode === "replace") {
-        await tx.budgetDetail.deleteMany();
-      }
+    const { affected } = await applyBudgetDetailImport(rows, mode, user.id, "budget-detail.import", file.name);
 
-      await tx.budgetDetail.createMany({
-        data: rows.map((r) => ({
-          projectType: r.projectType,
-          projectCode: r.projectCode,
-          budgetCategory: r.budgetCategory,
-          budgetItemName: r.budgetItemName,
-          system: r.system,
-          type: r.type,
-          no: r.no,
-          acctCode: r.acctCode,
-          accountName: r.accountName,
-          date: r.date,
-          vendor: r.vendor,
-          remark: r.remark,
-          reservedTHB: r.reservedTHB,
-          actualTHB: r.actualTHB,
-          totalSpentTHB: r.totalSpentTHB,
-          rate: r.rate,
-          reservedUSD: r.reservedUSD,
-          actualUSD: r.actualUSD,
-          totalSpentUSD: r.totalSpentUSD,
-          creator: r.creator,
-        })),
-      });
-
-      await tx.auditLog.create({
-        data: {
-          actorId: user.id,
-          action: "budget-detail.import",
-          target: "budget-detail",
-          metadata: { mode, filename: file.name, imported: rows.length },
-        },
-      });
-
-      return rows.length;
-    });
-
-    return NextResponse.json({ imported, mode });
+    return NextResponse.json({ imported: affected, mode });
   } catch (error) {
     console.error("Failed to import budget detail CSV:", error);
     return NextResponse.json({ error: "Failed to import budget detail data" }, { status: 500 });

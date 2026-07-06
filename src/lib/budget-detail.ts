@@ -1,3 +1,6 @@
+import { db } from "@/lib/db";
+import type { ImportMode } from "@/lib/import-validation";
+
 export interface BudgetDetailRow {
   projectType: string;
   projectCode: string;
@@ -142,4 +145,54 @@ export function parseBudgetDetailCSV(content: string): BudgetDetailRow[] {
       creator: cols[19]?.trim() ?? "",
     }))
     .filter((r) => ALLOWED_TYPES.has(r.type));
+}
+
+export async function applyBudgetDetailImport(
+  rows: BudgetDetailRow[],
+  mode: ImportMode,
+  actorId: string,
+  action: string,
+  filename: string,
+): Promise<{ affected: number }> {
+  return db.$transaction(async (tx) => {
+    if (mode === "replace") {
+      await tx.budgetDetail.deleteMany();
+    }
+
+    await tx.budgetDetail.createMany({
+      data: rows.map((r) => ({
+        projectType: r.projectType,
+        projectCode: r.projectCode,
+        budgetCategory: r.budgetCategory,
+        budgetItemName: r.budgetItemName,
+        system: r.system,
+        type: r.type,
+        no: r.no,
+        acctCode: r.acctCode,
+        accountName: r.accountName,
+        date: r.date,
+        vendor: r.vendor,
+        remark: r.remark,
+        reservedTHB: r.reservedTHB,
+        actualTHB: r.actualTHB,
+        totalSpentTHB: r.totalSpentTHB,
+        rate: r.rate,
+        reservedUSD: r.reservedUSD,
+        actualUSD: r.actualUSD,
+        totalSpentUSD: r.totalSpentUSD,
+        creator: r.creator,
+      })),
+    });
+
+    await tx.auditLog.create({
+      data: {
+        actorId,
+        action,
+        target: "budget-detail",
+        metadata: { mode, filename, imported: rows.length },
+      },
+    });
+
+    return { affected: rows.length };
+  });
 }

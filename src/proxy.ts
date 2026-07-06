@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 
 import { isAdmin } from "@/lib/admin";
+import { hasRole } from "@/lib/authz";
 import { db } from "@/lib/db";
 
 export async function proxy(req: NextRequest) {
@@ -22,11 +23,13 @@ export async function proxy(req: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Page-level admin gate lives here (not a layout/page server component) because nested
+  // Page-level admin/manager gates live here (not a layout/page server component) because nested
   // layouts and their children render in parallel in the App Router -- a redirect() thrown
   // from a layout loses that race and the child page still gets served with a 200.
   const isAdminTree = !isApi && (pathname === "/admin" || pathname.startsWith("/admin/"));
-  if (isAdminTree) {
+  const isDataManagementTree = !isApi && (pathname === "/data-management" || pathname.startsWith("/data-management/"));
+
+  if (isAdminTree || isDataManagementTree) {
     const email = typeof token.email === "string" ? token.email : null;
     const user = email
       ? await db.user.findUnique({
@@ -34,7 +37,8 @@ export async function proxy(req: NextRequest) {
           select: { role: true, allowedMenus: true, isActive: true },
         })
       : null;
-    if (!user || !user.isActive || !isAdmin(user)) {
+    const authorized = !!user && user.isActive && (isAdminTree ? isAdmin(user) : hasRole(user, "MANAGER"));
+    if (!authorized) {
       return NextResponse.redirect(new URL("/unauthorized", req.url));
     }
   }
@@ -47,6 +51,7 @@ export const config = {
     "/api/:path*",
     "/dashboard/:path*",
     "/admin/:path*",
+    "/data-management/:path*",
     "/budget/:path*",
     "/project/:path*",
     "/chat/:path*",

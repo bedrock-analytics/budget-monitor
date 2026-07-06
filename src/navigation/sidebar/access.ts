@@ -47,7 +47,7 @@ export function findItemByPath(path: string): NavMainItem | NavSubItem | null {
 // failing open -- covers admin pages added under /admin/* before they're registered
 // (or ever, if forgotten). Everything outside these prefixes keeps the legacy
 // allow-unless-restricted behavior since most routes intentionally aren't in the sidebar.
-const RESTRICTED_PATH_PREFIXES = ["/admin"];
+const RESTRICTED_PATH_PREFIXES = ["/admin", "/data-management"];
 
 function isUnderRestrictedTree(path: string): boolean {
   return RESTRICTED_PATH_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));

@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 
 import type { Prisma, User } from "@prisma/client";
-import * as XLSX from "xlsx";
 
 import { requireUser } from "@/lib/auth";
 import { requireRole } from "@/lib/authz";
 import {
+  applyCostTrackingImport,
+  extractSheets,
   isBudgetSummaryCSV,
+  isExcelFile,
   type ParsedBudgetSummary,
   type ParsedCostTracking,
   parseBudgetSummaryCSV,
@@ -15,53 +17,6 @@ import {
 } from "@/lib/cost-tracking";
 import { db } from "@/lib/db";
 import { checkRowCount, validateImportFile } from "@/lib/import-validation";
-
-function isExcelFile(file: File): boolean {
-  const name = file.name.toLowerCase();
-  if (name.endsWith(".xlsx") || name.endsWith(".xls")) return true;
-  const type = file.type;
-  return (
-    type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" || type === "application/vnd.ms-excel"
-  );
-}
-
-function sheetHasActivitiesAnchor(csv: string): boolean {
-  const lines = csv.split(/\r?\n/).slice(0, 30);
-  return lines.some((line) => {
-    const cols = line.split(",");
-    return cols[1]?.replace(/^"|"$/g, "").trim().toLowerCase() === "activities";
-  });
-}
-
-interface ExtractedSheets {
-  activitiesCSV: string;
-  budgetCSV: string | null;
-}
-
-async function extractSheets(file: File): Promise<ExtractedSheets> {
-  if (isExcelFile(file)) {
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const workbook = XLSX.read(buffer, { type: "buffer", cellDates: false });
-    if (workbook.SheetNames.length === 0) throw new Error("Excel file has no sheets");
-
-    let activitiesCSV = "";
-    let budgetCSV: string | null = null;
-    let firstCsv = "";
-
-    for (const name of workbook.SheetNames) {
-      const sheet = workbook.Sheets[name];
-      if (!sheet) continue;
-      const csv = XLSX.utils.sheet_to_csv(sheet, { blankrows: true });
-      if (!firstCsv) firstCsv = csv;
-      if (!activitiesCSV && sheetHasActivitiesAnchor(csv)) activitiesCSV = csv;
-      else if (!budgetCSV && isBudgetSummaryCSV(csv)) budgetCSV = csv;
-    }
-
-    if (!activitiesCSV) activitiesCSV = firstCsv;
-    return { activitiesCSV, budgetCSV };
-  }
-  return { activitiesCSV: await file.text(), budgetCSV: null };
-}
 
 export async function GET() {
   try {
@@ -164,72 +119,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Validation failed", errors }, { status: 400 });
     }
 
-    const result = await db.$transaction(async (tx) => {
-      const project = await tx.costTrackingProject.upsert({
-        where: { projectCode: parsed.projectCode },
-        create: {
-          projectCode: parsed.projectCode,
-          projectName: parsed.projectName,
-          startDate: parsed.startDate,
-          endDate: parsed.endDate,
-          actualChargeUSD: parsed.actualChargeUSD,
-          estimateUSD: parsed.estimateUSD,
-          exchangeRates: parsed.exchangeRates,
-          ...(budgetUSD !== undefined ? { budgetUSD } : {}),
-          budgetByItemCode: budgetByItemCode as Prisma.InputJsonValue,
-        },
-        update: {
-          projectName: parsed.projectName,
-          startDate: parsed.startDate,
-          endDate: parsed.endDate,
-          actualChargeUSD: parsed.actualChargeUSD,
-          estimateUSD: parsed.estimateUSD,
-          exchangeRates: parsed.exchangeRates,
-          ...(budgetUSD !== undefined ? { budgetUSD } : {}),
-          ...(summary ? { budgetByItemCode: budgetByItemCode as Prisma.InputJsonValue } : {}),
-        },
-      });
-
-      await tx.costTrackingActivity.deleteMany({
-        where: { projectId: project.id },
-      });
-
-      await tx.costTrackingActivity.createMany({
-        data: parsed.activities.map((a) => ({
-          projectId: project.id,
-          position: a.position,
-          groupName: a.groupName,
-          description: a.description,
-          itemCode: a.itemCode,
-          lumpSum: a.lumpSum,
-          rate: a.rate,
-          invoiceLocal: a.invoiceLocal,
-          invoiceUSD: a.invoiceUSD,
-          sumPOLocal: a.sumPOLocal,
-          currency: a.currency,
-          sumPOUSD: a.sumPOUSD,
-          trackingAmount: a.trackingAmount,
-          poEstAmount: a.poEstAmount,
-          dailyValues: a.dailyValues as unknown as Prisma.InputJsonValue,
-        })),
-      });
-
-      await tx.auditLog.create({
-        data: {
-          actorId: user.id,
-          action: "cost-tracking.import",
-          target: "cost-tracking",
-          metadata: { filename: fileObj.name, projectCode: project.projectCode, imported: parsed.activities.length },
-        },
-      });
-
-      return project;
-    });
+    const { affected, project } = await applyCostTrackingImport(
+      parsed,
+      budgetUSD,
+      budgetByItemCode,
+      summary !== null,
+      user.id,
+      "cost-tracking.import",
+      fileObj.name,
+    );
 
     return NextResponse.json({
-      projectCode: result.projectCode,
-      projectName: result.projectName,
-      activities: parsed.activities.length,
+      projectCode: project.projectCode,
+      projectName: project.projectName,
+      activities: affected,
       budgetUSD: budgetUSD ?? null,
       budgetItems: Object.keys(budgetByItemCode).length,
     });

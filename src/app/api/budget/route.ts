@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { requireUser } from "@/lib/auth";
 import { hasRole, requireRole } from "@/lib/authz";
-import { aggregateBudgetData, parseCSVContent, validateBudgetRows } from "@/lib/budget";
+import { aggregateBudgetData, applyBudgetImport, parseCSVContent, validateBudgetRows } from "@/lib/budget";
 import { db } from "@/lib/db";
 import { checkRowCount, parseImportMode, validateImportFile } from "@/lib/import-validation";
 
@@ -104,41 +104,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Validation failed", errors }, { status: 400 });
     }
 
-    const imported = await db.$transaction(async (tx) => {
-      if (mode === "replace") {
-        await tx.budget.deleteMany();
-      }
+    const { affected } = await applyBudgetImport(rows, mode, user.id, "budget.import", file.name);
 
-      await tx.budget.createMany({
-        data: rows.map((r) => ({
-          projectType: r.projectType,
-          projectTypeName: r.projectTypeName,
-          budgetItemName: r.budgetItemName,
-          year: r.year,
-          budgetTHB: r.budgetTHB,
-          reservedTHB: r.reservedTHB,
-          actualTHB: r.actualTHB,
-          availableTHB: r.availableTHB,
-          budgetUSD: r.budgetUSD,
-          reservedUSD: r.reservedUSD,
-          actualUSD: r.actualUSD,
-          availableUSD: r.availableUSD,
-        })),
-      });
-
-      await tx.auditLog.create({
-        data: {
-          actorId: user.id,
-          action: "budget.import",
-          target: "budget",
-          metadata: { mode, filename: file.name, imported: rows.length },
-        },
-      });
-
-      return rows.length;
-    });
-
-    return NextResponse.json({ imported, mode });
+    return NextResponse.json({ imported: affected, mode });
   } catch (error) {
     console.error("Failed to import budget CSV:", error);
     return NextResponse.json({ error: "Failed to import budget data" }, { status: 500 });

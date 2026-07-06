@@ -3,6 +3,7 @@ import {
   Car,
   ClipboardCheck,
   ClipboardList,
+  Database,
   type LucideIcon,
   MessageSquare,
   RainbowIcon,
@@ -90,6 +91,13 @@ export const sidebarItems: NavGroup[] = [
         title: "Menu Access",
         url: "/admin/menu-access",
         icon: ShieldUserIcon,
+        restricted: true,
+      },
+      {
+        key: "data-management",
+        title: "Data Management",
+        url: "/data-management",
+        icon: Database,
         restricted: true,
       },
       // {
