@@ -8,10 +8,14 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ADMIN_MENU_KEY } from "@/lib/admin";
 import { getAllMenuKeys } from "@/navigation/sidebar/access";
+
+type UserRole = "ADMIN" | "MANAGER" | "USER";
 
 type AdminUser = {
   id: string;
@@ -19,7 +23,18 @@ type AdminUser = {
   name: string | null;
   department: string | null;
   allowedMenus: string[];
+  role: UserRole;
+  isActive: boolean;
 };
+
+type UpdateUserPayload = {
+  userId: string;
+  allowedMenus?: string[];
+  role?: UserRole;
+  isActive?: boolean;
+};
+
+const ROLE_OPTIONS: UserRole[] = ["ADMIN", "MANAGER", "USER"];
 
 async function fetchUsers(): Promise<AdminUser[]> {
   const res = await fetch("/api/admin/menu-access");
@@ -28,14 +43,15 @@ async function fetchUsers(): Promise<AdminUser[]> {
   return data.users;
 }
 
-async function updateUserMenus(payload: { userId: string; allowedMenus: string[] }) {
+async function updateUser(payload: UpdateUserPayload) {
   const res = await fetch("/api/admin/menu-access", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error("Failed to update");
-  return res.json();
+  const data = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(data?.error ?? "Failed to update");
+  return data;
 }
 
 export default function MenuAccessPage() {
@@ -45,13 +61,13 @@ export default function MenuAccessPage() {
   const usersQuery = useQuery({ queryKey: ["admin-menu-access"], queryFn: fetchUsers });
 
   const mutation = useMutation({
-    mutationFn: updateUserMenus,
+    mutationFn: updateUser,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-menu-access"] });
       qc.invalidateQueries({ queryKey: ["allowed-menus"] });
-      toast.success("Menu access updated");
+      toast.success("User updated");
     },
-    onError: () => toast.error("Update failed"),
+    onError: (error: Error) => toast.error(error.message),
   });
 
   const filtered = useMemo(() => {
@@ -61,12 +77,23 @@ export default function MenuAccessPage() {
     return usersQuery.data.filter((u) => u.email.toLowerCase().includes(q) || (u.name ?? "").toLowerCase().includes(q));
   }, [usersQuery.data, search]);
 
-  const toggle = (user: AdminUser, menuKey: string) => {
+  const toggleMenu = (user: AdminUser, menuKey: string) => {
     const next = user.allowedMenus.includes(menuKey)
       ? user.allowedMenus.filter((k) => k !== menuKey)
       : [...user.allowedMenus, menuKey];
     mutation.mutate({ userId: user.id, allowedMenus: next });
   };
+
+  const changeRole = (user: AdminUser, role: UserRole) => {
+    if (role === user.role) return;
+    mutation.mutate({ userId: user.id, role });
+  };
+
+  const toggleActive = (user: AdminUser, isActive: boolean) => {
+    mutation.mutate({ userId: user.id, isActive });
+  };
+
+  const columnCount = menuKeys.length + 3;
 
   return (
     <div className="flex flex-col gap-4">
@@ -74,7 +101,8 @@ export default function MenuAccessPage() {
         <div>
           <h1 className="font-semibold text-2xl">Menu Access</h1>
           <p className="text-muted-foreground text-sm">
-            Grant users access to restricted sidebar items. Unrestricted menus are visible to everyone.
+            Manage user roles, active status, and access to restricted sidebar items. Unrestricted menus are visible to
+            everyone.
           </p>
         </div>
         <Input
@@ -90,6 +118,8 @@ export default function MenuAccessPage() {
           <TableHeader>
             <TableRow>
               <TableHead className="min-w-48">User</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead className="text-center">Active</TableHead>
               {menuKeys.map((m) => (
                 <TableHead key={m.key} className="text-center">
                   <div className="flex flex-col items-center gap-1">
@@ -108,14 +138,14 @@ export default function MenuAccessPage() {
             {usersQuery.isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell colSpan={menuKeys.length + 1}>
+                  <TableCell colSpan={columnCount}>
                     <Skeleton className="h-6 w-full" />
                   </TableCell>
                 </TableRow>
               ))
             ) : filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={menuKeys.length + 1} className="text-center text-muted-foreground">
+                <TableCell colSpan={columnCount} className="text-center text-muted-foreground">
                   No users
                 </TableCell>
               </TableRow>
@@ -126,11 +156,36 @@ export default function MenuAccessPage() {
                     <div className="font-medium">{user.name ?? "—"}</div>
                     <div className="text-muted-foreground text-xs">{user.email}</div>
                   </TableCell>
+                  <TableCell>
+                    <Select
+                      value={user.role}
+                      onValueChange={(value) => changeRole(user, value as UserRole)}
+                      disabled={mutation.isPending}
+                    >
+                      <SelectTrigger size="sm" className="w-28">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ROLE_OPTIONS.map((role) => (
+                          <SelectItem key={role} value={role}>
+                            {role}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Switch
+                      checked={user.isActive}
+                      onCheckedChange={(checked) => toggleActive(user, checked)}
+                      disabled={mutation.isPending}
+                    />
+                  </TableCell>
                   {menuKeys.map((m) => (
                     <TableCell key={m.key} className="text-center">
                       <Checkbox
                         checked={user.allowedMenus.includes(m.key)}
-                        onCheckedChange={() => toggle(user, m.key)}
+                        onCheckedChange={() => toggleMenu(user, m.key)}
                         disabled={mutation.isPending}
                       />
                     </TableCell>
