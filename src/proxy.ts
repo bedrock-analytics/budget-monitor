@@ -23,6 +23,27 @@ export async function proxy(req: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  const email = typeof token.email === "string" ? token.email : null;
+  const user = email
+    ? await db.user.findUnique({
+        where: { email },
+        select: { role: true, allowedMenus: true, isActive: true },
+      })
+    : null;
+
+  // Reject a deactivated account here, once, for every matched route -- rather than relying on
+  // whichever per-route helper happens to run (lib/auth's requireUser and authz.ts's requireUser
+  // return different status codes -- 401 generic vs 403 "Account deactivated" -- for the same
+  // condition). `user` is null for a brand-new Cognito login whose row hasn't been upserted yet
+  // (resolveUser() does that on first API call), so only an explicit isActive:false is rejected
+  // here -- a missing row must fall through to let first-login provisioning happen.
+  if (user?.isActive === false) {
+    if (isApi) {
+      return NextResponse.json({ error: "Account deactivated" }, { status: 403 });
+    }
+    return NextResponse.redirect(new URL("/unauthorized", req.url));
+  }
+
   // Page-level admin/manager gates live here (not a layout/page server component) because nested
   // layouts and their children render in parallel in the App Router -- a redirect() thrown
   // from a layout loses that race and the child page still gets served with a 200.
@@ -30,14 +51,7 @@ export async function proxy(req: NextRequest) {
   const isDataManagementTree = !isApi && (pathname === "/data-management" || pathname.startsWith("/data-management/"));
 
   if (isAdminTree || isDataManagementTree) {
-    const email = typeof token.email === "string" ? token.email : null;
-    const user = email
-      ? await db.user.findUnique({
-          where: { email },
-          select: { role: true, allowedMenus: true, isActive: true },
-        })
-      : null;
-    const authorized = !!user && user.isActive && (isAdminTree ? isAdmin(user) : hasRole(user, "MANAGER"));
+    const authorized = !!user && (isAdminTree ? isAdmin(user) : hasRole(user, "MANAGER"));
     if (!authorized) {
       return NextResponse.redirect(new URL("/unauthorized", req.url));
     }
