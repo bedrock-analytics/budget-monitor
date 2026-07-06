@@ -19,10 +19,13 @@
     "build:local": "NEXT_PUBLIC_NODE_ENVIRONMENT=local next build",
     "build:dev": "NEXT_PUBLIC_NODE_ENVIRONMENT=development next build",
     "build:qa": "NEXT_PUBLIC_NODE_ENVIRONMENT=qa next build",
-    "build:prod": "NEXT_PUBLIC_NODE_ENVIRONMENT=production next build"
+    "build:prod": "NEXT_PUBLIC_NODE_ENVIRONMENT=production next build",
+    "test:e2e": "playwright test"
   },
   "lint-staged": {
-    "*.{js,ts,jsx,tsx}": ["biome check --write --no-errors-on-unmatched"]
+    "*.{js,ts,jsx,tsx}": [
+      "biome check --write --no-errors-on-unmatched"
+    ]
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-agent-runtime": "^3.1012.0",
@@ -72,6 +75,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.8",
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4.2.1",
     "@types/node": "^22.19.15",
     "@types/react": "^19.2.14",
