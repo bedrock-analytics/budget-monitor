@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { hasRole, requireRole } from "@/lib/authz";
 import { getProvider } from "@/lib/data-registry/registry";
 import { parseImportMode, validateImportFile } from "@/lib/import-validation";
+import { rateLimitResponse } from "@/lib/rate-limit";
 
 export async function POST(request: Request, { params }: { params: Promise<{ key: string }> }) {
   try {
@@ -14,6 +15,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ key
     const provider = getProvider(key);
     if (!provider) return NextResponse.json({ error: "Unknown dataset" }, { status: 404 });
     if (!hasRole(user, provider.minRole)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+    const limited = rateLimitResponse(`import:${user.id}`, 10, 60_000);
+    if (limited) return limited;
 
     const url = new URL(request.url);
     const mode = parseImportMode(url.searchParams.get("mode"));

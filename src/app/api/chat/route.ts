@@ -4,6 +4,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { BedrockAgentRuntimeClient, RetrieveAndGenerateCommand } from "@aws-sdk/client-bedrock-agent-runtime";
 
 import { requireUser } from "@/lib/auth";
+import { rateLimitResponse } from "@/lib/rate-limit";
 
 const client = new BedrockAgentRuntimeClient({
   region: process.env.AWS_REGION || "ap-southeast-1",
@@ -17,6 +18,9 @@ export async function POST(req: NextRequest) {
   try {
     const user = await requireUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const limited = rateLimitResponse(`chat:${user.id}`, 20, 60_000);
+    if (limited) return limited;
 
     const { message } = await req.json();
 

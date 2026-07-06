@@ -5,6 +5,7 @@ import { hasRole, requireRole } from "@/lib/authz";
 import { aggregateBudgetData, applyBudgetImport, parseCSVContent, validateBudgetRows } from "@/lib/budget";
 import { db } from "@/lib/db";
 import { checkRowCount, parseImportMode, validateImportFile } from "@/lib/import-validation";
+import { rateLimitResponse } from "@/lib/rate-limit";
 
 export async function GET() {
   try {
@@ -64,6 +65,9 @@ export async function POST(request: Request) {
     const auth = await requireRole("MANAGER");
     if (auth instanceof NextResponse) return auth;
     const { user } = auth;
+
+    const limited = rateLimitResponse(`import:${user.id}`, 10, 60_000);
+    if (limited) return limited;
 
     const url = new URL(request.url);
     const mode = parseImportMode(url.searchParams.get("mode"));

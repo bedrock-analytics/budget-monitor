@@ -76,7 +76,7 @@ X-Rovula: Enterprise dashboard application (Next.js 16 App Router + TypeScript) 
 - **State**: Zustand (UI state), TanStack React Query (server state), TanStack React Table
 - **Forms**: React Hook Form + Zod validation
 - **Database**: PostgreSQL via Prisma ORM (singleton client in `src/lib/db.ts`)
-- **Auth**: NextAuth v4 + Azure AD (JWT strategy, AuthGuard component)
+- **Auth**: NextAuth v4 + AWS Cognito (JWT strategy, role-based authorization, AuthGuard component)
 - **AI**: AWS Bedrock Agent (Knowledge Base RAG)
 - **Linter/Formatter**: Biome 2
 - **Deployment**: Kubernetes on AWS EKS with ECR
@@ -112,29 +112,47 @@ src/
       purchase/        # Purchase request CRUD
       booking-car/     # Car booking CRUD
       budget/          # Budget management
+      project/         # Cost tracking dashboards
       chat/            # AI chat with Bedrock
+      admin/           # Menu Access console (ADMIN only)
+      data-management/ # Dataset registry console (MANAGER+; Clear is ADMIN only)
     api/               # REST API routes
       auth/            # NextAuth [...nextauth]
+      admin/           # Menu-access admin console + data registry (menu-access, data)
       chat/            # Bedrock AI chat
       chats/           # Chat CRUD + messages
       purchase-request/# PR CRUD
       booking-car/     # Booking CRUD + users + project-options
       budget/          # Budget data + options
-      user/            # User profile
+      budget-detail/   # Budget line-item detail
+      cost-tracking/   # Cost tracking projects + activities
+      user/            # User profile + allowed-menus
+      users/           # User list + activity summary (MANAGER+)
   components/
     ui/                # Shadcn UI components (excluded from Biome)
     sidebar/           # Sidebar navigation components
     auth/              # AuthGuard component
-  hooks/               # Custom hooks (use-chat, use-message, use-mobile)
+  hooks/               # Custom hooks (use-chat, use-message, use-allowed-menus, use-mobile)
   lib/                 # Utilities (db, utils, fonts, preferences, domain helpers)
+    auth.ts            # resolveUser()/requireUser() -- session + user upsert on first login
+    authz.ts           # requireRole/requireAdmin/hasRole/assertOwnership -- role-based authz
+    admin.ts           # isAdmin() (role === ADMIN)
+    rate-limit.ts      # lightweight in-memory rate limiting (chat + import endpoints)
+    data-registry/     # DatasetProvider interface + registry powering the Data Management console
+  navigation/sidebar/  # sidebar-items.ts (nav config) + access.ts (menu ACL: hasMenuAccess/isPathAllowed)
   providers/           # NextAuth session provider
   stores/              # Zustand stores (preferences)
   styles/              # TailwindCSS & theme presets
   server/              # Server actions (cookies, preferences)
   types/               # TypeScript type definitions
   config/              # App configuration
-  data/                # Static data (users)
+  data/                # Static mock data (users) -- still wired into AccountSwitcher's avatar; not the real session
   scripts/             # Code generation scripts (theme presets, theme boot)
+proxy.ts               # Next.js 16's proxy (successor to middleware.ts): blanket authn gate on
+                        # /api/* and protected page trees, plus page-level admin/manager role
+                        # gates for /admin/* and /data-management/* (kept out of layouts --
+                        # nested layouts and children render in parallel in the App Router, so a
+                        # redirect() in a layout can lose the race against its child page)
 prisma/
   schema.prisma        # Database schema
 deployments/           # K8s deployment configs (dev, qa, prod)
@@ -142,9 +160,22 @@ deployments/           # K8s deployment configs (dev, qa, prod)
 
 ## Database Models
 
-Key models: User, Chat, Message, Budget, PurchaseRequest, PurchaseRequestItem, CarBooking, CarBookingPassenger, CarBookingHotel, CarBookingFlight, CarBookingTrip
+Key models: User (role, isActive, allowedMenus), AuditLog, Chat, Message, Budget, BudgetDetail, CostTrackingProject, CostTrackingActivity, PurchaseRequest, PurchaseRequestItem, CarBooking, CarBookingPassenger, CarBookingHotel, CarBookingFlight, CarBookingTrip, FacilityQualityInspection, FacilityQualityInspectionItem
 
-Enums: MessageRole, PurchaseRequestStatus, CarBookingStatus
+Enums: UserRole (ADMIN/MANAGER/USER), MessageRole, PurchaseRequestStatus, CarBookingStatus, InspectionStatus, InspectionResult, InspectionItemResult
+
+## Authorization
+
+- **Roles**: `UserRole` enum on `User.role` -- `ADMIN` > `MANAGER` > `USER`, ranked in `src/lib/authz.ts`. `hasRole(user, min)` checks the requester meets a minimum rank; `isAdmin(user)` (`src/lib/admin.ts`) checks `role === "ADMIN"` exactly.
+- **Route guards** (`src/lib/authz.ts`): `requireUser()` (401 unauthenticated / 403 "Account deactivated"), `requireRole(min)`, `requireAdmin()`. Each returns `{ user } | NextResponse` -- routes check `if (auth instanceof NextResponse) return auth;` before destructuring `user`. `assertOwnership(resourceUserId, user)` allows the resource owner or any MANAGER+.
+- **`src/proxy.ts`** (Next.js 16's successor to `middleware.ts`) is the first gate: rejects any `/api/*` request without a valid session (401) or redirects unauthenticated page requests to `/auth/login`; rejects a deactivated account's request everywhere (403 for API, redirect to `/unauthorized` for pages) before any route handler runs; and gates `/admin/*` (ADMIN only) and `/data-management/*` (MANAGER+) page trees.
+- **Menu ACL** (`src/navigation/sidebar/access.ts`): sidebar items marked `restricted: true` are hidden unless the user's `allowedMenus` includes that item's `key`, or the user is an admin (short-circuits everything). `/api/user/allowed-menus` is the single source of truth the client reads from; it also injects the `data-management` key for any MANAGER+ so the sidebar stays consistent with the proxy gate without a DB-stored grant.
+- **Admin bootstrap**: `ADMIN_BOOTSTRAP_EMAILS` (comma-separated) in the environment; `npm run db:seed` (`prisma/seed.ts`) sets `role=ADMIN` for those emails. The last active ADMIN cannot be demoted or deactivated via the admin console (`/admin/menu-access`) -- guarded server-side in `PUT /api/admin/menu-access`.
+- **Data import** (`budget`, `budget-detail`, `cost-tracking`, and any dataset registered in `src/lib/data-registry/`): import POSTs require MANAGER; `mode=replace` (wipe-then-reload) and dataset `clear` both require ADMIN. `?dryRun=1` parses and validates without writing, returning row counts/errors for a client-side preview before commit. Every commit writes the row data and an `AuditLog` row in the same transaction (not two separate writes) so the audit trail can't drift from the data.
+
+## Rate Limiting
+
+`src/lib/rate-limit.ts` provides a lightweight in-memory limiter (per-user key, fixed window) applied to `chat` POST and every import endpoint. In-memory only -- resets on restart, doesn't coordinate across multiple instances/replicas. Fine at this app's current scale; move to a shared store (Redis) if horizontally scaled.
 
 ## Code Style (Biome)
 
@@ -170,7 +201,7 @@ Husky + lint-staged runs `biome check` on staged `*.{js,ts,jsx,tsx}` files befor
 - **Shadcn UI**: Components live in `src/components/ui` (excluded from Biome linting)
 - **Client components**: Use `"use client"` directive explicitly
 - **Server components**: Default in App Router (no directive needed)
-- **Auth protection**: `AuthGuard` client component wraps protected routes; API routes use `getServerSession()`
+- **Auth protection**: `src/proxy.ts` gates every request first (see Authorization); `AuthGuard` client component additionally hides restricted pages client-side; API routes call `requireUser`/`requireRole`/`requireAdmin` from `src/lib/authz.ts`
 - **API validation**: Zod schemas for request body validation in API routes
 - **Database**: Singleton PrismaClient pattern with global caching for dev
 - **ID generation**: PR numbers (PR-YYYYMM-XXXX), Booking numbers (CB-YYMM-XXXX)
