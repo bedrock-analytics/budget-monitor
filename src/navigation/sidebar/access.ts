@@ -3,22 +3,28 @@ import { type NavGroup, type NavMainItem, type NavSubItem, sidebarItems } from "
 export function hasMenuAccess(
   item: Pick<NavMainItem | NavSubItem, "key" | "restricted">,
   allowedMenus?: string[] | null,
+  isAdminUser = false,
 ): boolean {
+  if (isAdminUser) return true;
   if (!item.restricted) return true;
   if (!item.key) return true;
   if (!allowedMenus || allowedMenus.length === 0) return false;
   return allowedMenus.includes(item.key);
 }
 
-export function filterSidebarByMenus(groups: readonly NavGroup[], allowedMenus?: string[] | null): NavGroup[] {
+export function filterSidebarByMenus(
+  groups: readonly NavGroup[],
+  allowedMenus?: string[] | null,
+  isAdminUser = false,
+): NavGroup[] {
   return groups
     .map((group) => ({
       ...group,
       items: group.items
-        .filter((item) => hasMenuAccess(item, allowedMenus))
+        .filter((item) => hasMenuAccess(item, allowedMenus, isAdminUser))
         .map((item) => ({
           ...item,
-          subItems: item.subItems?.filter((sub) => hasMenuAccess(sub, allowedMenus)),
+          subItems: item.subItems?.filter((sub) => hasMenuAccess(sub, allowedMenus, isAdminUser)),
         })),
     }))
     .filter((group) => group.dynamicChats || group.items.length > 0);
@@ -37,10 +43,21 @@ export function findItemByPath(path: string): NavMainItem | NavSubItem | null {
   return null;
 }
 
-export function isPathAllowed(path: string, allowedMenus?: string[] | null): boolean {
+// Trees that must default-deny when a path isn't found in sidebarItems, instead of
+// failing open -- covers admin pages added under /admin/* before they're registered
+// (or ever, if forgotten). Everything outside these prefixes keeps the legacy
+// allow-unless-restricted behavior since most routes intentionally aren't in the sidebar.
+const RESTRICTED_PATH_PREFIXES = ["/admin"];
+
+function isUnderRestrictedTree(path: string): boolean {
+  return RESTRICTED_PATH_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
+}
+
+export function isPathAllowed(path: string, allowedMenus?: string[] | null, isAdminUser = false): boolean {
+  if (isAdminUser) return true;
   const item = findItemByPath(path);
-  if (!item) return true;
-  return hasMenuAccess(item, allowedMenus);
+  if (!item) return !isUnderRestrictedTree(path);
+  return hasMenuAccess(item, allowedMenus, isAdminUser);
 }
 
 export function getAllMenuKeys(): { key: string; title: string }[] {

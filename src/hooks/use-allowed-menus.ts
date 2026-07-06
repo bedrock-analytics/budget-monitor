@@ -1,10 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 
-async function fetchAllowedMenus(): Promise<string[]> {
+interface AllowedMenusResponse {
+  allowedMenus: string[];
+  isAdmin: boolean;
+}
+
+async function fetchAllowedMenus(): Promise<AllowedMenusResponse> {
   const res = await fetch("/api/user/allowed-menus");
   if (!res.ok) throw new Error("Failed to fetch allowed menus");
   const data = await res.json();
-  return data.allowedMenus ?? [];
+  return { allowedMenus: data.allowedMenus ?? [], isAdmin: data.isAdmin ?? false };
 }
 
 export function useAllowedMenus(enabled = true) {

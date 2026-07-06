@@ -146,8 +146,8 @@ const NavItemCollapsed = ({
 export function NavMain({ items }: NavMainProps) {
   const path = usePathname();
   const { state, isMobile } = useSidebar();
-  const { data: allowedMenus } = useAllowedMenus();
-  const visibleItems = filterSidebarByMenus(items, allowedMenus);
+  const { data } = useAllowedMenus();
+  const visibleItems = filterSidebarByMenus(items, data?.allowedMenus, data?.isAdmin ?? false);
 
   const isItemActive = (url: string, subItems?: NavMainItem["subItems"]) => {
     if (subItems?.length) {

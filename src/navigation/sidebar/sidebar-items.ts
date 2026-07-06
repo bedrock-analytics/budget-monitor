@@ -90,7 +90,7 @@ export const sidebarItems: NavGroup[] = [
         title: "Menu Access",
         url: "/admin/menu-access",
         icon: ShieldUserIcon,
-        restricted: false,
+        restricted: true,
       },
       // {
       //   title: "SSHE",
