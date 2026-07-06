@@ -96,7 +96,8 @@ export async function POST(request: Request) {
     const errors = validateBudgetRows(rows);
 
     if (dryRun) {
-      return NextResponse.json({ dryRun: true, mode, rowCount: rows.length, errors });
+      const currentCount = await db.budget.count();
+      return NextResponse.json({ dryRun: true, mode, rowCount: rows.length, currentCount, errors });
     }
 
     if (errors.length > 0) {

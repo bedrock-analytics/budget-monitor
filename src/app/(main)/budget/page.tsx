@@ -2,18 +2,16 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { useSession } from "next-auth/react";
-
+import { ImportDialog } from "@/components/import/import-dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAllowedMenus } from "@/hooks/use-allowed-menus";
 import type { BudgetData, BudgetItemSummary, BudgetRow, BudgetSummary, ProjectSummary } from "@/lib/budget";
 
 import { BudgetDetailTable } from "./_components/budget-detail-table";
-import { BudgetDetailUploadButton } from "./_components/budget-detail-upload-button";
 import { BudgetItemsBreakdown } from "./_components/budget-items-breakdown";
 import { BudgetKpiCards } from "./_components/budget-kpi-cards";
 import { BudgetProjectChart } from "./_components/budget-project-chart";
-import { BudgetUploadButton } from "./_components/budget-upload-button";
 import { BudgetUtilization } from "./_components/budget-utilization";
 
 function aggregateFiltered(rows: BudgetRow[]) {
@@ -88,13 +86,16 @@ function aggregateFiltered(rows: BudgetRow[]) {
 }
 
 export default function BudgetPage() {
-  const { data: session } = useSession();
+  const { data: allowedMenus } = useAllowedMenus();
+  const canUpload = allowedMenus?.canManage ?? false;
+  const canReplace = allowedMenus?.isAdmin ?? false;
   const [data, setData] = useState<BudgetData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [projectFilter, _setProjectFilter] = useState("all");
   const [projectNameFilter, setProjectNameFilter] = useState("all");
+  const [detailReloadKey, setDetailReloadKey] = useState(0);
 
   const fetchBudget = useCallback(async () => {
     setLoading(true);
@@ -169,17 +170,64 @@ export default function BudgetPage() {
           )}
         </div>
         <div className="flex items-center gap-3">
-          {(() => {
-            const email = session?.user?.email?.toLocaleLowerCase();
-            const canUpload = email === "thanabutc@rovula.com" || email === "nuttapongsa@rovula.com";
-            if (!canUpload) return null;
-            return (
-              <>
-                <BudgetUploadButton onSuccess={fetchBudget} />
-                <BudgetDetailUploadButton />
-              </>
-            );
-          })()}
+          {canUpload && (
+            <>
+              <ImportDialog
+                triggerLabel="Import Budget CSV"
+                title="Import Budget CSV"
+                description="Preview the file before committing it to the budget table."
+                endpoint="/api/budget"
+                accept=".csv"
+                supportsReplace
+                canReplace={canReplace}
+                onImported={fetchBudget}
+                renderSummary={(preview, mode) => {
+                  const after = mode === "replace" ? preview.rowCount : preview.currentCount + preview.rowCount;
+                  return (
+                    <div className="flex flex-col gap-1">
+                      <span>{preview.rowCount} rows in file</span>
+                      <span className="text-muted-foreground">
+                        Budget table: {preview.currentCount} rows now &rarr; {after} rows after{" "}
+                        {mode === "replace" ? "replace" : "import"}
+                      </span>
+                    </div>
+                  );
+                }}
+                renderResult={(result) => (
+                  <span>
+                    Imported {result.imported} rows ({result.mode} mode)
+                  </span>
+                )}
+              />
+              <ImportDialog
+                triggerLabel="Import Budget Detail CSV"
+                title="Import Budget Detail CSV"
+                description="Preview the file before committing it to the budget detail table."
+                endpoint="/api/budget-detail"
+                accept=".csv"
+                supportsReplace
+                canReplace={canReplace}
+                onImported={() => setDetailReloadKey((k) => k + 1)}
+                renderSummary={(preview, mode) => {
+                  const after = mode === "replace" ? preview.rowCount : preview.currentCount + preview.rowCount;
+                  return (
+                    <div className="flex flex-col gap-1">
+                      <span>{preview.rowCount} rows in file</span>
+                      <span className="text-muted-foreground">
+                        Budget detail table: {preview.currentCount} rows now &rarr; {after} rows after{" "}
+                        {mode === "replace" ? "replace" : "import"}
+                      </span>
+                    </div>
+                  );
+                }}
+                renderResult={(result) => (
+                  <span>
+                    Imported {result.imported} rows ({result.mode} mode)
+                  </span>
+                )}
+              />
+            </>
+          )}
         </div>
       </div>
 
@@ -228,7 +276,7 @@ export default function BudgetPage() {
       {data && (
         <>
           <BudgetKpiCards summary={filtered.summary} />
-          <BudgetDetailTable rows={filteredRows} />
+          <BudgetDetailTable key={detailReloadKey} rows={filteredRows} />
           <BudgetProjectChart byProject={filtered.byProject} />
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <BudgetUtilization byProject={filtered.byProject} />

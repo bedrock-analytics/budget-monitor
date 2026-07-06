@@ -5,14 +5,15 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
-import { useSession } from "next-auth/react";
 
+import { ImportDialog } from "@/components/import/import-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useAllowedMenus } from "@/hooks/use-allowed-menus";
 import { formatUSD } from "@/lib/utils";
 
-import { CostTrackingUploadButton } from "./_components/cost-tracking-upload-button";
+import { renderCostTrackingResult, renderCostTrackingSummary } from "./_components/cost-tracking-import-copy";
 import type { ProjectListItem } from "./_components/types";
 
 type SortKey =
@@ -41,7 +42,7 @@ interface Row extends ProjectListItem {
 const formatDate = (d: string | null) => (d ? new Date(d).toLocaleDateString() : "—");
 
 export default function ProjectOverviewPage() {
-  const { data: session } = useSession();
+  const { data: allowedMenus } = useAllowedMenus();
   const [projects, setProjects] = useState<ProjectListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -68,10 +69,7 @@ export default function ProjectOverviewPage() {
     fetchProjects();
   }, [fetchProjects]);
 
-  const canUpload = useMemo(() => {
-    const email = session?.user?.email?.toLowerCase();
-    return email === "thanabutc@rovula.com" || email === "nuttapongsa@rovula.com";
-  }, [session]);
+  const canUpload = allowedMenus?.canManage ?? false;
 
   const rows = useMemo<Row[]>(() => {
     return projects.map((p) => {
@@ -217,7 +215,20 @@ export default function ProjectOverviewPage() {
             {filtered.length} of {projects.length} projects
           </p>
         </div>
-        {canUpload && <CostTrackingUploadButton onSuccess={fetchProjects} />}
+        {canUpload && (
+          <ImportDialog
+            triggerLabel="Import Project CSV/Excel"
+            title="Import Project Cost Tracking"
+            description="Preview the file before committing it. Each project's activities are always fully replaced by the import."
+            endpoint="/api/cost-tracking"
+            accept=".csv,.xlsx,.xls"
+            supportsReplace={false}
+            canReplace={false}
+            onImported={fetchProjects}
+            renderSummary={renderCostTrackingSummary}
+            renderResult={renderCostTrackingResult}
+          />
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">

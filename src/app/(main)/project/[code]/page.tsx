@@ -5,15 +5,16 @@ import { use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 
 import { ArrowLeft } from "lucide-react";
-import { useSession } from "next-auth/react";
 
+import { ImportDialog } from "@/components/import/import-dialog";
 import { Button } from "@/components/ui/button";
+import { useAllowedMenus } from "@/hooks/use-allowed-menus";
 
 import { ActivitiesTable } from "../_components/activities-table";
 import { BudgetSpendChart } from "../_components/budget-spend-chart";
 import { CostCategoryChart } from "../_components/cost-category-chart";
 import { CostKpiCards } from "../_components/cost-kpi-cards";
-import { CostTrackingUploadButton } from "../_components/cost-tracking-upload-button";
+import { renderCostTrackingResult, renderCostTrackingSummary } from "../_components/cost-tracking-import-copy";
 import { ProjectBudgetDetailTable } from "../_components/project-budget-detail-table";
 import { SCurveChart } from "../_components/s-curve-chart";
 import type { ProjectDetail } from "../_components/types";
@@ -24,7 +25,7 @@ interface PageProps {
 
 export default function ProjectDetailPage({ params }: PageProps) {
   const { code } = use(params);
-  const { data: session } = useSession();
+  const { data: allowedMenus } = useAllowedMenus();
   const [detail, setDetail] = useState<ProjectDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,8 +49,7 @@ export default function ProjectDetailPage({ params }: PageProps) {
     fetchDetail();
   }, [fetchDetail]);
 
-  const email = session?.user?.email?.toLowerCase();
-  const canUpload = email === "thanabutc@rovula.com" || email === "nuttapongsa@rovula.com";
+  const canUpload = allowedMenus?.canManage ?? false;
 
   const budgetUSD = detail ? Number(detail.budgetUSD) : 0;
   const estimateUSD = detail ? Number(detail.estimateUSD) : 0;
@@ -78,7 +78,20 @@ export default function ProjectDetailPage({ params }: PageProps) {
             </p>
           )}
         </div>
-        {canUpload && <CostTrackingUploadButton onSuccess={fetchDetail} />}
+        {canUpload && (
+          <ImportDialog
+            triggerLabel="Import Project CSV/Excel"
+            title="Import Project Cost Tracking"
+            description="Preview the file before committing it. Each project's activities are always fully replaced by the import."
+            endpoint="/api/cost-tracking"
+            accept=".csv,.xlsx,.xls"
+            supportsReplace={false}
+            canReplace={false}
+            onImported={fetchDetail}
+            renderSummary={renderCostTrackingSummary}
+            renderResult={renderCostTrackingResult}
+          />
+        )}
       </div>
 
       {loading && <p className="text-muted-foreground text-sm">Loading project...</p>}

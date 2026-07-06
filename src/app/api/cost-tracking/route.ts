@@ -145,10 +145,17 @@ export async function POST(request: Request) {
     const budgetByItemCode = summary?.budgetByItemCode ?? {};
 
     if (dryRun) {
+      const existingProject = await db.costTrackingProject.findUnique({ where: { projectCode: parsed.projectCode } });
+      const currentActivityCount = existingProject
+        ? await db.costTrackingActivity.count({ where: { projectId: existingProject.id } })
+        : 0;
       return NextResponse.json({
         dryRun: true,
         projectCode: parsed.projectCode,
+        projectName: parsed.projectName,
         rowCount: parsed.activities.length,
+        currentActivityCount,
+        isNewProject: !existingProject,
         errors,
       });
     }
@@ -250,6 +257,7 @@ async function applyBudgetSummaryOnly(summary: ParsedBudgetSummary, user: User, 
       projectCode: summary.projectCode,
       budgetUSD: summary.projectRevenue,
       budgetItems: Object.keys(summary.budgetByItemCode).length,
+      errors: [],
     });
   }
 
